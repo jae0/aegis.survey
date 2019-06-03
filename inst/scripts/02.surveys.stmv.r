@@ -12,7 +12,7 @@
   # ----------------------------------------------------------
   # glue biological data sets together from various surveys and lookup environmental data where possible
 
-  p = aegis::aegis_parameters( DS="survey", yrs=1970:year.assessment )
+  p = aegis.survey::survey_parameters( yrs=1970:year.assessment )
 
   survey.db( DS="set.init.redo", p=p )
   survey.db( DS="cat.init.redo", p=p )
@@ -36,7 +36,7 @@
 # or modify as supplemntary data for distributional models
 if (0) {
 
-  pl = aegis::aegis_parameters( DS="landings", yrs=1970:year.assessment )  # these are default years
+  pl = aegis.survey::landings_parameters( yrs=1970:year.assessment )  # these are default years
   landings.db( DS="rawdata", p=pl )
 
    for ( vn in p$varstomodel) {

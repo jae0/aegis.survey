@@ -28,8 +28,8 @@
         # 7=mesh/gear studies,
         # 8=explorartory fishing,
         # 9=hydrography
-        pg = aegis::aegis_parameters(DS="groundfish", yrs=1970:max(p$yrs) )
-        y = aegis::groundfish.db(p=pg, "set.base" )
+
+        y = aegis.survey::groundfish.db(DS="set.base", yrs=1970:max(p$yrs) )
         y$data.source = "groundfish"
         y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
         # y$sa_towdistance_wing = y$wing.sa
@@ -86,8 +86,7 @@
       cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno", "totwgt", "cf_cat" )
       if ( "groundfish" %in% p$data.sources ) {
 
-        pg = aegis_parameters( DS="groundfish" )
-        x = aegis::groundfish.db(p=pg, "gscat" )  #kg/set, no/set
+        x = aegis.survey::groundfish.db(DS="gscat" )  #kg/set, no/set
         x$data.source = "groundfish"
         x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
         x$id2 = paste(x$id, x$spec_bio, sep=".")
@@ -237,8 +236,8 @@
 
       det.names =  c("data.source", "id", "id2", "spec", "spec_bio", "sex", "mass", "len", "mat")
       if ( "groundfish" %in% p$data.sources ) {
-        pg = aegis_parameters( DS="groundfish" )
-        x = aegis::groundfish.db(p=pg, "gsdet" )
+
+        x = aegis.survey::groundfish.db(DS="gsdet" )
         x$data.source = "groundfish"
 
         x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
@@ -646,7 +645,7 @@
           cat$qn[jjj] = quantile_estimate( cat$totno[jjj] * cat$cf_cat[jjj]  )  # convert to quantiles, by species, geartype and survey
         }
       }
-     
+
 			cat$qm = NA   # default when no data
       oo = which( cat$totwgt == 0 )  # retain as zero values
       if (length(oo)>0 ) cat$qm[oo] = 0
@@ -933,7 +932,7 @@
           set$qn[jjj] = quantile_estimate( set$totno_adjusted[jjj] )  # convert to quantiles, by species, geartype and survey
         }
       }
-     
+
 			set$qm = NA   # default when no data
       oo = which( set$totwgt_adjusted == 0 )  # retain as zero values
       if (length(oo)>0 ) set$qm[oo] = 0
@@ -945,7 +944,7 @@
       }
 
       set$uid = NULL
-      
+
 
 
      # convert from quantile to z-score
@@ -1032,7 +1031,7 @@
 
       # indiviudal measurements filter
       # catvars= c("id", "totno", "totwgt", "cf_cat")
-      cat = aegis::survey.db(DS="cat", p=p) #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
+      cat = aegis.survey::survey.db(DS="cat", p=p) #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
       cat = cat[ which( cat$id %in% unique( set$id) ), ]
         if (exists("selection", p)) {
           if (exists("biologicals", p$selection)) {  # filter biologicals
@@ -1066,7 +1065,7 @@
           set$qn[jjj] = quantile_estimate( set$totno_adjusted[jjj] )  # convert to quantiles, by species, geartype and survey
         }
       }
-     
+
 			set$qm = NA   # default when no data
       oo = which( set$totwgt_adjusted == 0 )  # retain as zero values
       if (length(oo)>0 ) set$qm[oo] = 0
@@ -1078,7 +1077,7 @@
       }
 
       set$uid = NULL
-      
+
 
      # convert from quantile to z-score
       set$zm = quantile_to_normal( set$qm )
@@ -1245,7 +1244,7 @@
       ii = which(!is.finite(set$cf_set_no ))
       if (length(ii) > 0) set$cf_set_no[ii] = set$cf_tow[ii]
 
-    
+
 			# in the following:	quantiles are computed,
       set$uid = paste( set$data.source, set$gear )
 
@@ -1258,7 +1257,7 @@
           set$qn[jjj] = quantile_estimate( set$totno_adjusted[jjj] )  # convert to quantiles, by species, geartype and survey
         }
       }
-     
+
 			set$qm = NA   # default when no data
       oo = which( set$totwgt_adjusted == 0 )  # retain as zero values
       if (length(oo)>0 ) set$qm[oo] = 0
@@ -1270,7 +1269,7 @@
       }
 
       set$uid = NULL
-      
+
 
      # convert from quantile to z-score
       set$zm = quantile_to_normal( set$qm )

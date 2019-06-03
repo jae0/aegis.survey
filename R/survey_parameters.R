@@ -1,4 +1,4 @@
-groundfish_parameters = function( p=NULL, project.name=NULL, project.mode="default", ... ) {
+survey_parameters = function( p=NULL, project.name=NULL, project.mode="default", ... ) {
 
   # ---------------------
   # deal with additional passed parameters
@@ -15,7 +15,7 @@ groundfish_parameters = function( p=NULL, project.name=NULL, project.mode="defau
     "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
   p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.survey", "netmensuration" ) )
 
-  p$project.name = ifelse ( !is.null(project.name), project.name, "groundfish" )
+  p$project.name = ifelse ( !is.null(project.name), project.name, "survey" )
 
   if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project.name )
   if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
@@ -23,6 +23,7 @@ groundfish_parameters = function( p=NULL, project.name=NULL, project.mode="defau
 
   if ( !file.exists(p$datadir) ) dir.create( p$datadir, showWarnings=F, recursive=T )
   if ( !file.exists(p$modeldir) ) dir.create( p$modeldir, showWarnings=F, recursive=T )
+
 
   if (!exists("spatial.domain", p) ) p$spatial.domain = "SSE"
   if (!exists("spatial.domain.subareas", p)) p$spatial.domain.subareas = c( "snowcrab", "SSE.mpa" )
@@ -44,15 +45,21 @@ groundfish_parameters = function( p=NULL, project.name=NULL, project.mode="defau
     return(p)
   }
 
+
   if (project.mode=="stmv") {
     p$libs = c( p$libs, project.library ( "stmv" ) )
+    p$DATA = 'survey.db( p=p, DS="stmv_inputs" )'
+    p$varstomodel = c()
+    if (!exists("variables", p)) p$variables = list()
+    if (!exists("LOCS", p$variables)) p$variables$LOCS=c("plon", "plat")
+    if (!exists("TIME", p$variables)) p$variables$TIME="tiyr"
+    p = aegis_parameters(p=p, DS="stmv_spatiotemporal_model", stmv_dimensionality="space-year" )
     return(p)
   }
 
 
   if (project.mode=="carstm") {
     p$libs = c( p$libs, project.library ( "carstm" ) )
-
     return(p)
   }
 

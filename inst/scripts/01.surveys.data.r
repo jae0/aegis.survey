@@ -15,7 +15,7 @@
 
 
   # prepare groundfish data -- requires DFO oracle database connectivity
-  aegis.surveys::groundfish.db(p=p, DS="refresh.all.data.tables", yrs=1970:year.assessment )
+  aegis.survey::groundfish.db(p=p, DS="refresh.all.data.tables", yrs=1970:year.assessment )
 
 
   # prepare snow crab data -- requires DFO oracle database connectivity
