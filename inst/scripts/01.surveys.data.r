@@ -2,7 +2,7 @@
 # update all incoming raw survey data that exist "outside of aegis"
 # requires DFO oracle database connectivity
 
-# these are here to show the dependencies of aegis::survey.db()
+# these are here to show the dependencies of aegis.survey::survey.db()
 # run only if they have not already been updated
 # .. show other sources here as they become available
 

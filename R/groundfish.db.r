@@ -453,8 +453,8 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
     if (mean(gsinf$lon,na.rm=T) >0 ) gsinf$lon = - gsinf$lon  # make sure form is correct
     if (mean(gsinf$lon.end,na.rm=T) >0 ) gsinf$lon.end = - gsinf$lon.end  # make sure form is correct
 
-    gsinf = aegis::convert.degmin2degdec(gsinf, vnames=c("lon", "lat") )
-    gsinf = aegis::convert.degmin2degdec(gsinf, vnames=c("lon.end", "lat.end") )
+    gsinf = convert.degmin2degdec(gsinf, vnames=c("lon", "lat") )
+    gsinf = convert.degmin2degdec(gsinf, vnames=c("lon.end", "lat.end") )
 
     gsinf$dist_km = gsinf$dist * 1.852  # nautical mile to km
     gsinf$dist_pos = geosphere::distGeo( gsinf[, c("lon","lat")], gsinf[, c("lon.end", "lat.end")])/1000
