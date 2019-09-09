@@ -827,8 +827,8 @@
       if (add_groundfish_strata) {
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
-        # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs_planar) )
-        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) / 1000/1000 # (m^2 -> km^2)
+        # sppoly = spTransform(sppoly, sp::CRS(p$proj4string_planar_km) )
+        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE)  # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs) )
         set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$internal.crs, plotdata=TRUE )
       }
@@ -1000,8 +1000,8 @@
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
         set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$internal.crs, plotdata=TRUE )
-        # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs_planar) )
-        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) / 1000/1000 # (m^2 -> km^2)
+        # sppoly = spTransform(sppoly, sp::CRS(p$proj4string_planar_km) )
+        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs) )
       }
 
@@ -1131,8 +1131,8 @@
       if (add_groundfish_strata) {
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
-        # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs_planar) )
-        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) / 1000/1000 # (m^2 -> km^2)
+        # sppoly = spTransform(sppoly, sp::CRS(p$proj4string_planar_km) )
+        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs) )
         set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$internal.crs, plotdata=TRUE )
       }
