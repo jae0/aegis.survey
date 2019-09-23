@@ -1,4 +1,4 @@
-survey_parameters = function( p=NULL, project.name=NULL, project.mode="default", ... ) {
+survey_parameters = function( p=NULL, project_name=NULL, project_class="default", ... ) {
 
   # ---------------------
   # deal with additional passed parameters
@@ -15,9 +15,9 @@ survey_parameters = function( p=NULL, project.name=NULL, project.mode="default",
     "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
   p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.survey", "netmensuration" ) )
 
-  p$project.name = ifelse ( !is.null(project.name), project.name, "survey" )
+  p$project_name = ifelse ( !is.null(project_name), project_name, "survey" )
 
-  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project.name )
+  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
   if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
   if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
@@ -25,8 +25,8 @@ survey_parameters = function( p=NULL, project.name=NULL, project.mode="default",
   if ( !file.exists(p$modeldir) ) dir.create( p$modeldir, showWarnings=F, recursive=T )
 
 
-  if (!exists("spatial.domain", p) ) p$spatial.domain = "SSE"
-  if (!exists("spatial.domain.subareas", p)) p$spatial.domain.subareas = c( "snowcrab", "SSE.mpa" )
+  if (!exists("spatial_domain", p) ) p$spatial_domain = "SSE"
+  if (!exists("spatial_domain_subareas", p)) p$spatial_domain_subareas = c( "snowcrab", "SSE.mpa" )
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
 
   if ( !exists("scanmar.dir", p) )  p$scanmar.dir = file.path( p$datadir, "nets", "Scanmar" )
@@ -41,12 +41,12 @@ survey_parameters = function( p=NULL, project.name=NULL, project.mode="default",
   p$clusters = rep("localhost", detectCores() )
 
 
-  if (project.mode=="default") {
+  if (project_class=="default") {
     return(p)
   }
 
 
-  if (project.mode=="stmv") {
+  if (project_class=="stmv") {
     p$libs = c( p$libs, project.library ( "stmv" ) )
     p$DATA = 'survey.db( p=p, DS="stmv_inputs" )'
     p$varstomodel = c()
@@ -58,7 +58,7 @@ survey_parameters = function( p=NULL, project.name=NULL, project.mode="default",
   }
 
 
-  if (project.mode=="carstm") {
+  if (project_class=="carstm") {
     p$libs = c( p$libs, project.library ( "carstm" ) )
     return(p)
   }

@@ -17,7 +17,7 @@
 			set.names =  c("data.source", "id", "timestamp", "yr", "lon", "lat",
                      "z", "t", "sal", "oxyml", "sa", "sa_towdistance", "gear", "setquality", "settype", "cf_tow" )
 
-      if ( "groundfish" %in% p$data.sources ) {
+      if ( "groundfish" %in% p$data_sources ) {
         # settype:
         # 1=stratified random,
         # 2=regular survey,
@@ -45,7 +45,7 @@
         rm (y); gc()
       }
 
-      if ( "snowcrab" %in% p$data.sources ) {
+      if ( "snowcrab" %in% p$data_sources ) {
         ps = bio.snowcrab::snowcrab.parameters(DS="groundfish", yrs=1999:max(p$yrs))
         y =  bio.snowcrab::snowcrab.db( p=ps, DS ="set.clean" )
         y$data.source = "snowcrab"
@@ -84,7 +84,7 @@
       ###  NOTE:: cf == correction factor is a reweighting required to make each totno and totwgt comparable for each set and species subsampling
 
       cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno", "totwgt", "cf_cat" )
-      if ( "groundfish" %in% p$data.sources ) {
+      if ( "groundfish" %in% p$data_sources ) {
 
         x = aegis.survey::groundfish.db(DS="gscat" )  #kg/set, no/set
         x$data.source = "groundfish"
@@ -175,7 +175,7 @@
         rm (x); gc()
       }
 
-      if ( "snowcrab" %in% p$data.sources ) {
+      if ( "snowcrab" %in% p$data_sources ) {
         x = bio.snowcrab::snowcrab.db( DS ="cat.georeferenced" ) # sa corrected ; kg/km2; no./km2
         x$data.source = "snowcrab"
         x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
@@ -235,7 +235,7 @@
 
 
       det.names =  c("data.source", "id", "id2", "spec", "spec_bio", "sex", "mass", "len", "mat")
-      if ( "groundfish" %in% p$data.sources ) {
+      if ( "groundfish" %in% p$data_sources ) {
 
         x = aegis.survey::groundfish.db(DS="gsdet" )
         x$data.source = "groundfish"
@@ -284,7 +284,7 @@
 
       }
 
-      if ( "snowcrab" %in% p$data.sources ) {
+      if ( "snowcrab" %in% p$data_sources ) {
         # snow crab only ... add bycatch from survey :: TODO
         x = bio.snowcrab::snowcrab.db( DS ="det.georeferenced" )
         x$data.source = "snowcrab"
@@ -327,7 +327,7 @@
       set = set[ which(is.finite(set$lon + set$lat + set$yr ) ) , ]  #  fields are required
       oo =  which( !duplicated(set$id) )
       if (length(oo) > 0 ) set = set[ oo, ]
-      set = lonlat2planar( set, proj.type=p$internal.crs )  # plon+plat required for lookups
+      set = lonlat2planar( set, proj.type=p$aegis_proj4string_planar_km )  # plon+plat required for lookups
 
       set$dyear = lubridate::decimal_date( set$timestamp ) - set$yr
 
@@ -827,10 +827,10 @@
       if (add_groundfish_strata) {
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
-        # sppoly = spTransform(sppoly, sp::CRS(p$proj4string_planar_km) )
+        # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
         # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE)  # ( km^2)
-        # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs) )
-        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$internal.crs, plotdata=TRUE )
+        # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
+        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
       }
 
       # filter non-biologicals ... i.e, set characteristics
@@ -999,10 +999,10 @@
       if (add_groundfish_strata) {
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
-        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$internal.crs, plotdata=TRUE )
-        # sppoly = spTransform(sppoly, sp::CRS(p$proj4string_planar_km) )
+        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
+        # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
         # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
-        # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs) )
+        # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
       }
 
       # filter non-biologicals ... i.e, set characteristics
@@ -1131,10 +1131,10 @@
       if (add_groundfish_strata) {
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
-        # sppoly = spTransform(sppoly, sp::CRS(p$proj4string_planar_km) )
+        # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
         # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
-        # sppoly = spTransform(sppoly, sp::CRS(p$internal.crs) )
-        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$internal.crs, plotdata=TRUE )
+        # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
+        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
       }
 
       # filter non-biologicals ... i.e, set characteristics
