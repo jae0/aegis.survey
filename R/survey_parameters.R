@@ -31,13 +31,16 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
 
   if ( !exists("scanmar.dir", p) )  p$scanmar.dir = file.path( p$datadir, "nets", "Scanmar" )
   if ( !exists("marport.dir", p) )  p$marport.dir = file.path( p$datadir, "nets", "Marport" )
+
   if ( !exists("yrs", p) ) p$yrs=1970:lubridate::year(lubridate::now())
+  p = temporal_parameters(p=p, aegis_dimensionality="space-year")
+
   if ( !exists("netmensuration.years", p) ) p$netmensuration.years = c(1990:1992, 2004:lubridate::year(lubridate::now())) # 2009 is the first year with set logs from scanmar available .. if more are found, alter this date
+
 
   p$taxa.of.interest = aegis.survey::groundfish.variablelist("catch.summary")
   p$season = "summer"
   p$taxa =  "maxresolved"
-  p$nw = 10  # from temperature.r, number of intervals in a year
   p$clusters = rep("localhost", detectCores() )
 
 
@@ -53,13 +56,14 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
     if (!exists("variables", p)) p$variables = list()
     if (!exists("LOCS", p$variables)) p$variables$LOCS=c("plon", "plat")
     if (!exists("TIME", p$variables)) p$variables$TIME="tiyr"
-    p = aegis_parameters(p=p, DS="stmv_spatiotemporal_model", stmv_dimensionality="space-year" )
+    p = aegis_parameters(p=p, DS="stmv" )
     return(p)
   }
 
 
   if (project_class=="carstm") {
     p$libs = c( p$libs, project.library ( "carstm" ) )
+    p = aegis_parameters(p=p, DS="carstm" )
     return(p)
   }
 

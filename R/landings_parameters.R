@@ -30,11 +30,12 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="defaul
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
 
   if ( !exists("yrs", p) ) p$yrs=1970:lubridate::year(lubridate::now())
+  p = temporal_parameters(p=p, aegis_dimensionality="space-year")
+
   p$marfis.years=2002:lubridate::year(lubridate::now())
 
   p$taxa.of.interest = aegis.survey::groundfish.variablelist("catch.summary")
   p$taxa =  "maxresolved"
-  p$nw = 10  # from temperature.r, number of intervals in a year
   p$clusters = rep("localhost", detectCores() )
 
 
@@ -50,13 +51,14 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="defaul
     if (!exists("variables", p)) p$variables = list()
     if (!exists("LOCS", p$variables)) p$variables$LOCS=c("plon", "plat")
     if (!exists("TIME", p$variables)) p$variables$TIME="tiyr"
-    p = aegis_parameters(p=p, DS="stmv_spatiotemporal_model", stmv_dimensionality="space-year" )
+    p = aegis_parameters(p=p, DS="stmv" )
     return(p)
   }
 
 
   if (project_class=="carstm") {
     p$libs = c( p$libs, project.library ( "carstm" ) )
+    p = aegis_parameters(p=p, DS="carstm" )
     return(p)
   }
 
