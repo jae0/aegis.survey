@@ -15,9 +15,10 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
     "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
   p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.survey", "netmensuration" ) )
 
-  p$project_name = ifelse ( !is.null(project_name), project_name, "survey" )
+  if (is.null(project_name)) if (exists("project_name", p)) project_name=p$project_name
+  if (is.null(project_name)) p$project_name = project_name= "survey"   # give up
 
-  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
+  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", project_name )
   if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
   if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
