@@ -334,13 +334,13 @@
       # merge depth
       iz = which( !is.finite(set$z) )
       if (length(iz) > 0) {
-        set$z[iz] = bathymetry.lookup( p=p, locs=set[iz, c("plon","plat")], vnames="z" )
+        set$z[iz] = bathymetry_stmv_lookup( p=p, locs=set[iz, c("plon","plat")], vnames="z" )
       }
 
       # merge temperature
       it = which( !is.finite(set$t) )
       if (length(it) > 0) {
-        set$t[it] = temperature.lookup( p=p, locs=set[it, c("plon","plat")], timestamp=set$timestamp[it] )
+        set$t[it] = temperature_stmv_lookup( p=p, locs=set[it, c("plon","plat")], timestamp=set$timestamp[it] )
       }
 
       set$oxysat = compute.oxygen.saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
