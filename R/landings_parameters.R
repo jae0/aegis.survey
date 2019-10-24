@@ -56,10 +56,4 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="defaul
   }
 
 
-  if (project_class=="carstm") {
-    p$libs = c( p$libs, project.library ( "carstm" ) )
-    p = carstm_parameters(p=p, DS="basic" )
-    return(p)
-  }
-
 }
