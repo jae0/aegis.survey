@@ -828,7 +828,7 @@
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
         # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
-        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE)  # ( km^2)
+        # sppoly$au_sa_km2 = gArea(sppoly, byid=TRUE)  # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
         set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
       }
@@ -836,16 +836,16 @@
       # filter non-biologicals ... i.e, set characteristics
       if (exists("selection", p)) {
         if (exists("survey", p$selection)) {  # filter survey information
-          if (exists("StrataID", set) ) {
+          if (exists("AUID", set) ) {
             if (exists("polygon_enforce", p$selection$survey) ) {
-              set = set[ which(!is.na(set$StrataID)), ] # remove unsetegorized sets
+              set = set[ which(!is.na(set$AUID)), ] # remove unsetegorized sets
             }
             if (exists("strata_toremove", p$selection$survey) ) {
-              todrop = which( set$StrataID %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) )
+              todrop = which( set$AUID %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) )
               if (length(todrop) > 0) set = set[- todrop, ]
             }
             if (exists("strata_tokeep", p$selection$survey) ){
-              set = set[which( set$StrataID %in% p$selection$survey[["strata_to_keep"]] ) , ]
+              set = set[which( set$AUID %in% p$selection$survey[["strata_to_keep"]] ) , ]
             }
           }
           if (exists("months", p$selection$survey) ) set = set[ which(month(set$timestamp) %in% p$selection$survey[["months"]] ), ]
@@ -1001,7 +1001,7 @@
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
         set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
         # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
-        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
+        # sppoly$au_sa_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
       }
 
@@ -1009,16 +1009,16 @@
       if (exists("selection", p)) {
         if (exists("survey", p$selection)) {  # filter survey information
 
-          if (exists("StrataID", set) ) {
+          if (exists("AUID", set) ) {
             if (exists("polygon_enforce", p$selection$survey) ) {
-              set = set[ which(!is.na(set$StrataID)), ] # remove unsetegorized sets
+              set = set[ which(!is.na(set$AUID)), ] # remove unsetegorized sets
             }
             if (exists("strata_toremove", p$selection$survey) ) {
-              todrop = which( set$StrataID %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) )
+              todrop = which( set$AUID %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) )
               if (length(todrop) > 0) set = set[- todrop, ]
             }
             if (exists("strata_tokeep", p$selection$survey) ){
-              set = set[which( set$StrataID %in% p$selection$survey[["strata_to_keep"]] ) , ]
+              set = set[which( set$AUID %in% p$selection$survey[["strata_to_keep"]] ) , ]
             }
           }
 
@@ -1132,7 +1132,7 @@
         polygon_source = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
         # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
-        # sppoly$sa_strata_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
+        # sppoly$au_sa_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
         set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
       }
@@ -1140,16 +1140,16 @@
       # filter non-biologicals ... i.e, set characteristics
       if (exists("selection", p)) {
         if (exists("survey", p$selection)) {  # filter survey information
-          if (exists("StrataID", set) ) {
+          if (exists("AUID", set) ) {
             if (exists("polygon_enforce", p$selection$survey) ) {
-              set = set[ which(!is.na(set$StrataID)), ] # remove unsetegorized sets
+              set = set[ which(!is.na(set$AUID)), ] # remove unsetegorized sets
             }
             if (exists("strata_toremove", p$selection$survey) ) {
-              todrop = which( set$StrataID %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) )
+              todrop = which( set$AUID %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) )
               if (length(todrop) > 0) set = set[- todrop, ]
             }
             if (exists("strata_tokeep", p$selection$survey) ){
-              set = set[which( set$StrataID %in% p$selection$survey[["strata_to_keep"]] ) , ]
+              set = set[which( set$AUID %in% p$selection$survey[["strata_to_keep"]] ) , ]
             }
           }
           if (exists("months", p$selection$survey) ) set = set[ which(month(set$timestamp) %in% p$selection$survey[["months"]] ), ]
