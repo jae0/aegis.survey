@@ -48,9 +48,9 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="defaul
     p$libs = c( p$libs, project.library ( "stmv" ) )
     p$DATA = 'landings.db( p=p, DS="stmv_inputs" )'
     p$varstomodel = c()
-    if (!exists("variables", p)) p$variables = list()
-    if (!exists("LOCS", p$variables)) p$variables$LOCS=c("plon", "plat")
-    if (!exists("TIME", p$variables)) p$variables$TIME="tiyr"
+    if (!exists("stmv_variables", p)) p$stmv_variables = list()
+    if (!exists("LOCS", p$stmv_variables)) p$stmv_variables$LOCS=c("plon", "plat")
+    if (!exists("TIME", p$stmv_variables)) p$stmv_variables$TIME="tiyr"
     p = aegis_parameters(p=p, DS="stmv" )
     return(p)
   }
