@@ -182,10 +182,12 @@
         x$id = paste( x$trip, x$set, sep="." )
         x$id2 = paste( x$trip, x$set, x$spec_bio, sep="." )
 
-        x$totno[ x$totno > 1e7] = NA
         x$totno = ceiling(x$totno * x$sa) # return to total rather than density
         x$totwgt = x$totmass * x$sa  # return to total rather than density
         x$cf_cat = 1 / x$sa  # == cf_tow (ie., no vessel "corrections")
+
+        x$totno[ x$totno > 500 ] = 500
+
         x = x[, cat.names]
 
         # snow crab are assumed to be real zeros .. find them and force 0 value

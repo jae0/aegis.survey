@@ -17,6 +17,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
 
   p$project_name = ifelse ( !is.null(project_name), project_name, "survey" )
 
+  p$data_sources = c("groundfish", "snowcrab")
+
   if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", project_name )
   if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
   if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
