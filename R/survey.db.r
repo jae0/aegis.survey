@@ -336,15 +336,14 @@
       # merge depth
       iz = which( !is.finite(set$z) )
       if (length(iz) > 0) {
-        pB = carstm::bathymetry_carstm(p=p, DS="parameters_override" )
-        set$z[iz] = lookup_bathymetry_from_surveys( p=pB, locs=set[iz, c("lon","lat")])
+        set$z[iz] = lookup_bathymetry_from_surveys( p=p, locs=set[iz, c("lon","lat")])
       }
 
       # merge temperature
       it = which( !is.finite(set$t) )
       if (length(it) > 0) {
         pT = carstm::temperature_carstm(p=p, DS="parameters_override" )
-        set$t[it] = lookup_temperature_from_surveys( p=pT, locs=set[it, c("lon","lat")], timestamp=set$timestamp[it] )
+        set$t[it] = lookup_temperature_from_surveys( p=p, locs=set[it, c("lon","lat")], timestamp=set$timestamp[it] )
       }
 
       set$oxysat = compute.oxygen.saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
