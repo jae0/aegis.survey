@@ -342,7 +342,7 @@
       # merge temperature
       it = which( !is.finite(set$t) )
       if (length(it) > 0) {
-        pT = carstm::temperature_carstm(p=p, DS="parameters_override" )
+        # pT = carstm::temperature_carstm(p=p, DS="parameters_override" )
         set$t[it] = lookup_temperature_from_surveys( p=p, locs=set[it, c("lon","lat")], timestamp=set$timestamp[it] )
       }
 
