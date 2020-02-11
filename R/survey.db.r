@@ -46,7 +46,7 @@
       }
 
       if ( "snowcrab" %in% p$data_sources ) {
-        ps = bio.snowcrab::snowcrab_parameters(DS="groundfish", yrs=1999:max(p$yrs))
+        ps = bio.snowcrab::snowcrab_parameters(DS="groundfish", yrs=1999:max(p$yrs))  # to obtain planar projection information and force snowcrab to use it
         y =  bio.snowcrab::snowcrab.db( p=ps, DS ="set.clean" )
         y$data.source = "snowcrab"
         y$gear ="Nephrops trawl"

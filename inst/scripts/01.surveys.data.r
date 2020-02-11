@@ -57,7 +57,7 @@
   survey.db( DS="cat.redo", p=p ) # sanity checking and fixing mass estimates from det etc ...
   survey.db( DS="set.redo", p=p ) # sanity checking and year filtering to 1999 - present
 
-  figure.bio.map.survey.locations(p=p)  # see mpa/src/_Rfunctions/figure.trawl.density for more control
+  aegis.mpa::figure.bio.map.survey.locations(p=p)  # see mpa/src/_Rfunctions/figure.trawl.density for more control
 
 
 
