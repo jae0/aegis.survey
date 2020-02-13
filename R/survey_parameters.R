@@ -13,7 +13,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
   # create/update library list
   p$libs = c( p$libs, RLibrary ( "colorspace",  "fields", "geosphere", "lubridate",  "lattice",
     "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
-  p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.substrate", "aegis.temperature", "aegis.survey", "aegis.mpa", "netmensuration" ) )
+  p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.substrate", "aegis.temperature", "aegis.survey", "aegis.mpa", "netmensuration", "bio.taxonomy" ) )
 
   p$project_name = ifelse ( !is.null(project_name), project_name, "survey" )
 
