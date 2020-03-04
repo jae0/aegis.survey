@@ -51,7 +51,7 @@
         y$data.source = "snowcrab"
         y$gear ="Nephrops trawl"
         y$id = paste( y$trip, y$set, sep="." )
-        y$settype  = y$towquality  # copy
+        y$settype  = y$towquality  # copy  and overwrite  .. NOTE: in case of confusion, set_type is used in snow crab to indcate MAP or survey stations ...
         y$setquality = NA
         y$setquality[ which( y$towquality == 1 ) ] = "good"  # 1=good
         y$sal = NA  # dummy
