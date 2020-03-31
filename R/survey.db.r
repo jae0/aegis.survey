@@ -895,8 +895,8 @@
       set$setno = as.numeric( u[,2] )
 
       if (add_groundfish_strata) {
-        polygon_source = "pre2014"  # "pre2014" for older
-        sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
+        areal_units_timeperiod = "pre2014"  # "pre2014" for older
+        sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod, returntype="polygons" )
         # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
         # sppoly$au_sa_km2 = gArea(sppoly, byid=TRUE)  # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
@@ -1067,8 +1067,8 @@
 
 
       if (add_groundfish_strata) {
-        polygon_source = "pre2014"  # "pre2014" for older
-        sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
+        areal_units_timeperiod = "pre2014"  # "pre2014" for older
+        sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod, returntype="polygons" )
         set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
         # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
         # sppoly$au_sa_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
@@ -1199,8 +1199,8 @@
       set$setno = as.numeric( u[,2] )
 
       if (add_groundfish_strata) {
-        polygon_source = "pre2014"  # "pre2014" for older
-        sppoly = maritimes_groundfish_strata( timeperiod=polygon_source, returntype="polygons" )
+        areal_units_timeperiod = "pre2014"  # "pre2014" for older
+        sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod, returntype="polygons" )
         # sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
         # sppoly$au_sa_km2 = gArea(sppoly, byid=TRUE) # ( km^2)
         # sppoly = spTransform(sppoly, sp::CRS(p$aegis_proj4string_planar_km) )
