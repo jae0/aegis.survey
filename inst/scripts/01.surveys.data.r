@@ -7,11 +7,7 @@
 # .. show other sources here as they become available
 
 # 02.surveys.*.r assimilates and models these data
-
-  if (!exists("year.assessment")) {
-    year.assessment=lubridate::year(Sys.Date()) - 1  # choose one
-    year.assessment=lubridate::year(Sys.Date())
-  }
+   year.assessment = 2020
 
 
   # prepare groundfish data -- requires DFO oracle database connectivity
@@ -33,11 +29,6 @@
   # assimilate survey raw data into aegis and lookup some environmental that has been processed by aegis.*
     ## NOTE resolution is fixed at SSE for the following
 
-
-  if (!exists("year.assessment")) {
-    year.assessment=lubridate::year(Sys.Date()) - 1  # choose one
-    year.assessment=lubridate::year(Sys.Date())
-  }
 
 
   # ----------------------------------------------------------
