@@ -33,7 +33,7 @@
 
   if (0) {
     plot(sppoly[,"AUID"], col="orange")
-    plot( sppoly@nb, coords=st_centroid(st_geometry( as(sppoly, "sf")) ), add=T, col="green" )
+    plot( slot(sppoly, "nb"), coords=st_centroid(st_geometry( as(sppoly, "sf")) ), add=T, col="green" )
   }
 
 

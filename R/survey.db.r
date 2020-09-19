@@ -336,7 +336,7 @@
       # merge depth
       iz = which( !is.finite(set$z) )
       if (length(iz) > 0) {
-        set$z[iz] = lookup_bathymetry_from_surveys( p=p, locs=set[iz, c("lon","lat")])
+        set$z[iz] = bathymetry_lookup( p=p, locs=set[iz, c("lon","lat")], source_data_class="aggregated_rawdata" )
       }
 
       # merge temperature

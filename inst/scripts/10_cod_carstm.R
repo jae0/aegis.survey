@@ -372,7 +372,7 @@ lines( space_iid.year_iid ~ yr, data=RES, lty=1, lwd=2.5, col="blue", type="b")
 # map it
 vn = "pred"
 yr = "2017"
-sppoly@data[,vn] = out[,yr] * weight_year[,yr]  # biomass density
+slot(sppoly, "data")[,vn] = out[,yr] * weight_year[,yr]  # biomass density
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -465,7 +465,7 @@ lines( space_iid.year_ar1 ~ yr, data=RES, lty=1, lwd=2.5, col="blue", type="b")
 # map it
 vn = "pred"
 yr = "2017"
-sppoly@data[,vn] = out[,yr] * weight_year[,yr]  # biomass density
+slot(sppoly, "data")[,vn] = out[,yr] * weight_year[,yr]  # biomass density
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -483,7 +483,7 @@ fit = inla(
     + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(year, model="iid", hyper=H$iid)
-    + f(strata, model="bym2", graph=sppoly@nb, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
+    + f(strata, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
   family = "poisson",
   data=M,
   control.compute=list(cpo=TRUE, waic=TRUE, dic=TRUE, config=TRUE),
@@ -555,7 +555,7 @@ plot( fit$marginals.hyperpar$"Phi for strata", type="l")  # posterior distributi
 
 # map it ..mean density
 vn = "pred"
-sppoly@data[,vn] = out[,"2017"]
+slot(sppoly, "data")[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -572,7 +572,7 @@ fit = inla(
     + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(year, model="ar1", hyper=H$ar1)
-    + f(strata, model="bym2", graph=sppoly@nb, group = year, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
+    + f(strata, model="bym2", graph=slot(sppoly, "nb"), group = year, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
   family = "poisson",
   data=M,
   control.compute=list(cpo=TRUE, waic=TRUE, dic=TRUE, config=TRUE),
@@ -645,7 +645,7 @@ lines( space_car.year_ar1 ~ yr, data=RES, lty=1, lwd=2.5, col="red", type="b")
 
 # map it ..mean density
 vn = "pred"
-sppoly@data[,vn] = out[,"2017"]
+slot(sppoly, "data")[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -677,7 +677,7 @@ fit = inla(
   + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(year, model="iid", hyper=H$iid)
-  + f(strata, model="bym2", graph=sppoly@nb, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
+  + f(strata, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
   family="binomial",  # alternates family="zeroinflatedbinomial0", family="zeroinflatedbinomial1",
   data=M,
   control.family=list(control.link=list(model="logit")),
@@ -747,7 +747,7 @@ RES$habitat_strata_CAR.yr_iid = colSums( {out * sppoly$au_sa_km2 }[sppoly$strata
 
 # map it
 vn = "pred"
-sppoly@data[,vn] = out[,"2017"]
+slot(sppoly, "data")[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -762,7 +762,7 @@ fit = inla(
   + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(year, model="iid", hyper=H$iid)
-  + f(strata, model="bym2", graph=sppoly@nb, group = year, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
+  + f(strata, model="bym2", graph=slot(sppoly, "nb"), group = year, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
   family="binomial",  # alternates family="zeroinflatedbinomial0", family="zeroinflatedbinomial1",
   data=M,
   control.family=list(control.link=list(model="logit")),
@@ -801,7 +801,7 @@ RES$habitat_strata_CAR_yr.yr_iid = colSums( {out * sppoly$au_sa_km2 }[sppoly$str
 
 # map it
 vn = "pred"
-sppoly@data[,vn] = out[,"2017"]
+slot(sppoly, "data")[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
