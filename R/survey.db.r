@@ -342,7 +342,7 @@
       # merge temperature
       it = which( !is.finite(set$t) )
       if (length(it) > 0) {
-        set$t[it] = lookup_temperature_from_surveys( p=p, locs=set[it, c("lon","lat")], timestamp=set$timestamp[it] )
+        set$t[it] = temperature_lookup( p=p, locs=set[it, c("lon","lat")], timestamp=set$timestamp[it], source_data_class="aggregated_rawdata" )
       }
 
       set$oxysat = compute.oxygen.saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)

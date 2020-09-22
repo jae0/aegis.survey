@@ -126,7 +126,7 @@ weight_year = meanweights_by_arealunit( set=set, AUID=as.character( sppoly$AUID 
 
 
 # adjust based upon RAM requirements and ncores
-ncores = trunc( ram_local( "ncores", ram_main=4, ram_process=6 ) / 2 )
+ncores = floor( ram_local( "ncores", ram_main=4, ram_process=6 ) / 2 )
 inla.setOption(num.threads=ncores)
 inla.setOption(blas.num.threads=ncores)
 
