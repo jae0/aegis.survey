@@ -2,7 +2,7 @@
 # update all incoming raw survey data that exist "outside of aegis"
 # requires DFO oracle database connectivity
 
-# these are here to show the dependencies of aegis.survey::survey.db()
+# these are here to show the dependencies of aegis.survey::survey_db()
 # run only if they have not already been updated
 # .. show other sources here as they become available
 
@@ -36,17 +36,17 @@
 
   p = aegis.survey::survey_parameters( yrs=1970:year.assessment )
 
-  survey.db( DS="set.init.redo", p=p )
-  survey.db( DS="cat.init.redo", p=p )
-  survey.db( DS="det.init.redo", p=p )
+  survey_db( DS="set.init.redo", p=p )
+  survey_db( DS="cat.init.redo", p=p )
+  survey_db( DS="det.init.redo", p=p )
 
   # the following does a lookup of env data ...
   # want to make sure the relevent ones are complete (t, z, etc.)
-  survey.db( DS="lengthweight.redo", p=p  )  # # TODO:: parallelize me ... update the local tables (not necessary)
-  survey.db( DS="set.base.redo", p=p ) # adds temperature required for metabolism lookup in "det.redo"
-  survey.db( DS="det.redo", p=p ) # mass/length imputation and sanity checking
-  survey.db( DS="cat.redo", p=p ) # sanity checking and fixing mass estimates from det etc ...
-  survey.db( DS="set.redo", p=p ) # sanity checking and year filtering to 1999 - present
+  survey_db( DS="lengthweight.redo", p=p  )  # # TODO:: parallelize me ... update the local tables (not necessary)
+  survey_db( DS="set.base.redo", p=p ) # adds temperature required for metabolism lookup in "det.redo"
+  survey_db( DS="det.redo", p=p ) # mass/length imputation and sanity checking
+  survey_db( DS="cat.redo", p=p ) # sanity checking and fixing mass estimates from det etc ...
+  survey_db( DS="set.redo", p=p ) # sanity checking and year filtering to 1999 - present
 
   aegis.mpa::figure.bio.map.survey.locations(p=p)  # see mpa/src/_Rfunctions/figure.trawl.density for more control
 

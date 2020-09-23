@@ -33,7 +33,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
 
 
-    # specific selection params required for survey.db(DS="filter") data selection mechanism
+    # specific selection params required for survey_db(DS="filter") data selection mechanism
     p = aegis.survey::survey_parameters(
       p=p,
       selection=list(
@@ -58,7 +58,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     if (0) {
       # used for DEBUGGING:  access via strata_dataformat .. ie. directly from groundfish.db .. gscat
       # gscat does not have the data corrections due to miscoding etc, vessel-species "catchability" corrections, etc
-      # .. but the totals are nearly identical to survey.db access
+      # .. but the totals are nearly identical to survey_db access
       p$selection$biologicals$spec = groundfish_species_code
       p$selection$biologicals$spec_bio = NULL
 
@@ -71,16 +71,16 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
     # ------------------------------------------------
     # NOTE polygon areas of strata are predetermined in GSSTRATUM and used by "stratanal"
-    # This behaviour is mimicked in survey.db .. although it does not have to be
+    # This behaviour is mimicked in survey_db .. although it does not have to be
     # .. The CAR variation computes surfaces directly from polygons
     # Using this approach is better in that there is more filter control
     # Results for the basic test cases are essentially identical to "stratanal" (via "strata_dataformat", above)
     # but faster and more QA/QC done on the input data
-    set = aegis.survey::survey.db( p=p, DS="filter", add_groundfish_strata=TRUE )   # return values in kg or no per set
+    set = aegis.survey::survey_db( p=p, DS="filter", add_groundfish_strata=TRUE )   # return values in kg or no per set
 
     if (0) {
       # the above merges based upon AUID's designated in groundfish tables.  Alternatively one can use positions directly:
-      set = survey.db( p=p, DS="filter" )
+      set = survey_db( p=p, DS="filter" )
       # categorize Strata
       sppoly = areal_units( areal_units_source="stratanal_polygons",  areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km, areal_units_timeperiod="pre2014" )
       sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )

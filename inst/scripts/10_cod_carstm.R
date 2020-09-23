@@ -32,7 +32,7 @@ p = carstm::carstm_parameters(
 
 
 # --------------------------------
-# parameter setting used to filter data via 'survey.db( DS="filter")'
+# parameter setting used to filter data via 'survey_db( DS="filter")'
 # unlike stratanl, we do not need to remove strata until the last /aggregation step
 p = aegis.survey::survey_parameters(
   p=p,
@@ -80,7 +80,7 @@ sppoly = neighbourhood_structure( sppoly=sppoly )
 # Get the data
 p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
 
-set = survey.db( p=p, DS="filter" )
+set = survey_db( p=p, DS="filter" )
 
 # categorize Strata
 o = over( SpatialPoints( set[,c("lon", "lat")], sp::CRS(projection_proj4string("lonlat_wgs84")) ), spTransform(sppoly, sp::CRS(projection_proj4string("lonlat_wgs84")) ) ) # match each datum to an area

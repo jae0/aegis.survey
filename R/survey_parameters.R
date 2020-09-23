@@ -59,7 +59,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
 
   if (project_class=="stmv") {
     p$libs = c( p$libs, project.library ( "stmv" ) )
-    p$DATA = 'survey.db( p=p, DS="stmv_inputs" )'
+    p$DATA = 'survey_db( p=p, DS="stmv_inputs" )'
     p$varstomodel = c()
     if (!exists("stmv_variables", p)) p$stmv_variables = list()
     if (!exists("LOCS", p$stmv_variables)) p$stmv_variables$LOCS=c("plon", "plat")
