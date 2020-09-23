@@ -529,7 +529,7 @@
           }
       }
 
-      # estimate metabolic rates estimates (requires temperature estimate )
+      # estimate metabolic_rates estimates (requires temperature estimate )
       set = survey_db( DS="set.base", p=p  ) # kg, no
       set = set[ , c("id", "t")]  # temperature is required to estimate MR ..
 
@@ -537,7 +537,7 @@
 
       # copied from aegis.metabolism as it is not yet part of aegis
 
-      metabolic.rates = function( mass.g, temperature.C=NULL ) {
+      metabolic_rates = function( mass.g, temperature.C=NULL ) {
 
         # require mass (g), temperature.C (C)
         # from Robinson et al. (1983)
@@ -602,7 +602,7 @@
       }
 
 
-      detmr = metabolic.rates ( mass.g=det$mass * 1000, temperature.C=det$t )
+      detmr = metabolic_rates ( mass.g=det$mass * 1000, temperature.C=det$t )
       det = cbind( det, detmr )
 
 
