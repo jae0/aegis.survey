@@ -1,5 +1,5 @@
 
-  groundfish.variablelist = function(component="all.data") {
+  groundfish_variablelist = function(component="all.data") {
     
     V = switch( EXPR=component,
       
@@ -23,20 +23,20 @@
       ),
 
       all = c(
-        paste( "totno", groundfish.variablelist("sp.list"), sep="." ),
-        paste( "totwgt", groundfish.variablelist("sp.list"),  sep="." ),
-        paste( "ntaxa", groundfish.variablelist("multispecies"),  sep="." ),
-        paste( "rmean", groundfish.variablelist("sp.list"),  sep="." ),
-        paste( "pmean", groundfish.variablelist("sp.list"),  sep="." ),
-        paste( "mmean", groundfish.variablelist("sp.list"),  sep="." ),
-  #      paste( "lmean", groundfish.variablelist("sp.list"),  sep="." ),
-        paste( "nss.rsquared", groundfish.variablelist("days"), sep="."),
-        paste( "nss.df", groundfish.variablelist("days"), sep="."),
-        paste( "nss.b0", groundfish.variablelist("days"), sep="."),
-        paste( "nss.b1", groundfish.variablelist("days"), sep="."),
-        paste( "nss.shannon", groundfish.variablelist("days"), sep="."),
-        paste( "nss.evenness", groundfish.variablelist("days"), sep="."),
-        paste( "nss.Hmax", groundfish.variablelist("days"), sep="."),
+        paste( "totno", groundfish_variablelist("sp.list"), sep="." ),
+        paste( "totwgt", groundfish_variablelist("sp.list"),  sep="." ),
+        paste( "ntaxa", groundfish_variablelist("multispecies"),  sep="." ),
+        paste( "rmean", groundfish_variablelist("sp.list"),  sep="." ),
+        paste( "pmean", groundfish_variablelist("sp.list"),  sep="." ),
+        paste( "mmean", groundfish_variablelist("sp.list"),  sep="." ),
+  #      paste( "lmean", groundfish_variablelist("sp.list"),  sep="." ),
+        paste( "nss.rsquared", groundfish_variablelist("days"), sep="."),
+        paste( "nss.df", groundfish_variablelist("days"), sep="."),
+        paste( "nss.b0", groundfish_variablelist("days"), sep="."),
+        paste( "nss.b1", groundfish_variablelist("days"), sep="."),
+        paste( "nss.shannon", groundfish_variablelist("days"), sep="."),
+        paste( "nss.evenness", groundfish_variablelist("days"), sep="."),
+        paste( "nss.Hmax", groundfish_variablelist("days"), sep="."),
         paste( "ntaxa", "annual",c(1,seq(20,200,20)), sep="."),
         "C", "Z", "sar.rsq", "Npred", 
         "mr", "mrT", "smr", "smrT", "mrPvalue", "mrPvalueT",
@@ -44,7 +44,7 @@
         "sdepth", "temp", "sal", "oxyml", "julian"
       ),
 
-      catch.summary = groundfish.variablelist("sp.list") ,
+      catch.summary = groundfish_variablelist("sp.list") ,
   
                
       physical = c("z", "t", "julian"),
@@ -52,8 +52,8 @@
       scaled.centered =c ("dummyvariable"), # swtich does not like a null vector
 
       log.transform = c(
-        paste( "totno", groundfish.variablelist("sp.list"), sep="." ),
-        paste( "totwgt", groundfish.variablelist("sp.list"),  sep="." ),
+        paste( "totno", groundfish_variablelist("sp.list"), sep="." ),
+        paste( "totwgt", groundfish_variablelist("sp.list"),  sep="." ),
         "Npred", "mr", "mrT",
         "landings", "dZ", "ddZ"
       )

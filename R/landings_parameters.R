@@ -30,7 +30,7 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="defaul
 
   p$marfis.years=2002:lubridate::year(lubridate::now())
 
-  p$taxa.of.interest = aegis.survey::groundfish.variablelist("catch.summary")
+  p$taxa.of.interest = aegis.survey::groundfish_variablelist("catch.summary")
   p$taxa =  "maxresolved"
   p$clusters = rep("localhost", detectCores() )
 

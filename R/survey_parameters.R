@@ -36,7 +36,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
   if ( !exists("netmensuration.years", p) ) p$netmensuration.years = c(1990:1992, 2004:lubridate::year(lubridate::now())) # 2009 is the first year with set logs from scanmar available .. if more are found, alter this date
 
 
-  p$taxa.of.interest = aegis.survey::groundfish.variablelist("catch.summary")
+  p$taxa.of.interest = aegis.survey::groundfish_variablelist("catch.summary")
   p$season = "summer"
   p$taxa =  "maxresolved"
   p$clusters = rep("localhost", detectCores() )
