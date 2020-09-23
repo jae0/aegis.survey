@@ -1,4 +1,4 @@
-landings.db = function(DS, p) {
+landings_db = function(DS, p) {
 
   #\\wrapper around Mike McMahon's marfisci tools
 

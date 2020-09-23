@@ -1,6 +1,6 @@
 
 
-groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netmensuration.do=FALSE, ...  ) {
+groundfish_survey_db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netmensuration.do=FALSE, ...  ) {
 
   # mostly for storage ... not too much processing
   if (is.null(p)) {
@@ -16,7 +16,7 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
 
   if (DS =="refresh.bio.species.codes") {
     # the following is copied from taxonomy/src/taxonomy.r
-    groundfish.db(p=p, DS="spcodes.rawdata.redo" )
+    groundfish_survey_db(p=p, DS="spcodes.rawdata.redo" )
     # bootstrap an initial set of tables .. these will be incomplete as a parsimonious tree needs to be created first but
     # it depends upon the last file created taxonomy.db("complete") .. so ...
     taxonomy.db( "groundfish.itis.redo" )  ## link itis with groundfish tables using taxa names, vernacular, etc
@@ -33,27 +33,27 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
   if (DS=="refresh.all.data.tables") {
 
     # rawdata data dump of aegis tables
-    groundfish.db(p=p, DS="gscat.rawdata.redo" )
-    groundfish.db(p=p, DS="gsdet.rawdata.redo" )
-    groundfish.db(p=p, DS="gsinf.rawdata.redo" )
+    groundfish_survey_db(p=p, DS="gscat.rawdata.redo" )
+    groundfish_survey_db(p=p, DS="gsdet.rawdata.redo" )
+    groundfish_survey_db(p=p, DS="gsinf.rawdata.redo" )
 
-    #groundfish.db(p=p, DS="gshyd.profiles.rawdata.redo" )
+    #groundfish_survey_db(p=p, DS="gshyd.profiles.rawdata.redo" )
 
-    groundfish.db(p=p, DS="gsmissions.rawdata.redo" ) #  not working?
+    groundfish_survey_db(p=p, DS="gsmissions.rawdata.redo" ) #  not working?
 
     update.infrequently = FALSE
     if (update.infrequently) {
       # the following do not need to be updated annually
-      groundfish.db(p=p, DS="gscoords.rawdata.redo"  )
-      groundfish.db(p=p, DS="spcodes.rawdata.redo"  )
-      groundfish.db(p=p, DS="gslist.rawdata.redo"  )
-      groundfish.db(p=p, DS="gsgear.rawdata.redo"  )
-      groundfish.db(p=p, DS="gsstratum.rawdata.redo"  )
+      groundfish_survey_db(p=p, DS="gscoords.rawdata.redo"  )
+      groundfish_survey_db(p=p, DS="spcodes.rawdata.redo"  )
+      groundfish_survey_db(p=p, DS="gslist.rawdata.redo"  )
+      groundfish_survey_db(p=p, DS="gsgear.rawdata.redo"  )
+      groundfish_survey_db(p=p, DS="gsstratum.rawdata.redo"  )
     }
 
-    groundfish.db(p=p, DS="gscat.base.redo" )
-    groundfish.db(p=p, DS="gsdet.redo" )
-    groundfish.db(p=p, DS="gsinf.redo" )
+    groundfish_survey_db(p=p, DS="gscat.base.redo" )
+    groundfish_survey_db(p=p, DS="gsdet.redo" )
+    groundfish_survey_db(p=p, DS="gsinf.redo" )
 
     if ( netmensuration.do ) {
       # requires gsinf
@@ -81,11 +81,11 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
     # swept areas are computed in bottom.contact.redo ..
     # this step estimates swept area for those where there was insufficient data to compute SA directly from logs,
     # estimate via approximation using speed etc.
-    groundfish.db(p=p, DS="sweptarea.redo" )  ## this is actually gsinf with updated data, etc.
+    groundfish_survey_db(p=p, DS="sweptarea.redo" )  ## this is actually gsinf with updated data, etc.
 
-    #groundfish.db(p=p, DS="gshyd.profiles.redo"  )
-    #groundfish.db(p=p, DS="gshyd.redo"  )
-    #groundfish.db(p=p, DS="gshyd.georef.redo"  )  # not used here but used in temperature re-analysis
+    #groundfish_survey_db(p=p, DS="gshyd.profiles.redo"  )
+    #groundfish_survey_db(p=p, DS="gshyd.redo"  )
+    #groundfish_survey_db(p=p, DS="gshyd.georef.redo"  )  # not used here but used in temperature re-analysis
 
     if (0) {
 
@@ -109,8 +109,8 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
     }
 
     # merged data sets
-    groundfish.db(p=p, DS="set.base.redo"  ) # set info .. includes netmensuration.scanmar("sweptarea")
-    groundfish.db(p=p, DS="gscat.redo"  ) # catches .. add correction factors
+    groundfish_survey_db(p=p, DS="set.base.redo"  ) # set info .. includes netmensuration.scanmar("sweptarea")
+    groundfish_survey_db(p=p, DS="gscat.redo"  ) # catches .. add correction factors
 
   }
 
@@ -196,7 +196,7 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
       return (gscat)
     }
 
-    gscat = groundfish.db(p=p, DS="gscat.rawdata"  )  # kg/set
+    gscat = groundfish_survey_db(p=p, DS="gscat.rawdata"  )  # kg/set
     gscat$year = NULL
 
     gscat = gscat[ - which(gscat$spec %in% c(9000, 9630, 1200, 9400) ), ]  # 9000 = unident, digested remains; 9630 = organic debris; 1200 fish eggs
@@ -300,7 +300,7 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
       return (gsdet)
     }
 
-    gsdet = groundfish.db(p=p, DS="gsdet.rawdata" )
+    gsdet = groundfish_survey_db(p=p, DS="gsdet.rawdata" )
     gsdet$year = NULL
 
     oo = which(!is.finite(gsdet$spec) )
@@ -376,10 +376,10 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
       return (gsinf)
     }
 
-    gsinf = groundfish.db(p=p, DS="gsinf.rawdata" )
+    gsinf = groundfish_survey_db(p=p, DS="gsinf.rawdata" )
     names(gsinf)[which(names(gsinf)=="type")] = "settype"
 
-    gsgear = groundfish.db(p=p, DS="gsgear" )
+    gsgear = groundfish_survey_db(p=p, DS="gsgear" )
     gsinf = merge (gsinf, gsgear, by="gear", all.x=TRUE, all.y=FALSE, sort= FALSE )
 
     # fix some time values that have lost the zeros due to numeric conversion
@@ -557,7 +557,7 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
       return (gshyd)
     }
 
-    gshyd = groundfish.db(p=p, DS="gshyd.profiles.rawdata" )
+    gshyd = groundfish_survey_db(p=p, DS="gshyd.profiles.rawdata" )
     gshyd$id = paste(gshyd$mission, gshyd$setno, sep=".")
     gshyd = gshyd[, c("id", "sdepth", "temp", "sal", "oxyml" )]
     save(gshyd, file=fn, compress=T)
@@ -576,7 +576,7 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
       load( fn )
       return (gshyd)
     }
-    gshyd = groundfish.db(p=p, DS="gshyd.profiles" )
+    gshyd = groundfish_survey_db(p=p, DS="gshyd.profiles" )
     nr = nrow( gshyd)
 
     # candidate depth estimates from profiles
@@ -592,7 +592,7 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
     oo = which( duplicated( gshyd$id ) )
     if (length(oo) > 0) stop( "Duplicated data in GSHYD" )
 
-    gsinf = groundfish.db(p=p, DS="gsinf" )
+    gsinf = groundfish_survey_db(p=p, DS="gsinf" )
     gsinf = gsinf[, c("id", "bottom_temperature", "bottom_salinity", "bottom_depth" ) ]
     gshyd = merge( gshyd, gsinf, by="id", all.x=T, all.y=F, sort=F )
 
@@ -629,13 +629,13 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
       load( fn )
       return (gshyd)
     }
-    gsinf = groundfish.db(p=p, DS="gsinf" )
+    gsinf = groundfish_survey_db(p=p, DS="gsinf" )
     gsinf$timestamp = gsinf$sdate
     gsinf$yr = lubridate::year( gsinf$timestamp)
     gsinf$longitude = gsinf$lon
     gsinf$latitude = gsinf$lat
     gsinf = gsinf[ , c( "id", "lon", "lat", "yr", "timestamp" ) ]
-    gshyd = groundfish.db(p=p, DS="gshyd.profiles" )
+    gshyd = groundfish_survey_db(p=p, DS="gshyd.profiles" )
     gshyd = merge( gshyd, gsinf, by="id", all.x=T, all.y=F, sort=F )
     gshyd$sal[gshyd$sal<5]=NA
     save(gshyd, file=fn, compress=T)
@@ -760,10 +760,10 @@ groundfish.db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netme
       return (gscat)
     }
 
-    gscat = groundfish.db(p=p, DS="gscat.base" ) #kg/set, no/set
+    gscat = groundfish_survey_db(p=p, DS="gscat.base" ) #kg/set, no/set
     gscat = gscat[, c("id", "spec", "totwgt", "totno", "sampwgt" )] # kg, no/set
 
-    set = groundfish.db(p=p, DS="set.base" )
+    set = groundfish_survey_db(p=p, DS="set.base" )
     gscat = merge(x=gscat, y=set, by=c("id"), all.x=T, all.y=F, sort=F)
     rm (set)
 
@@ -849,7 +849,7 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
     return( gsinf )
   }
 
-  gsinf = groundfish.db(p=p, DS="gsinf" )
+  gsinf = groundfish_survey_db(p=p, DS="gsinf" )
   gsinf_bc = netmensuration.scanmar( DS="bottom.contact", p=p )
 
   toreject = which( !is.na( gsinf_bc$bc.error.flag ) )
@@ -1152,9 +1152,9 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
       load( fn )
       return ( set )
     }
-    gsinf = groundfish.db(p=p, DS="sweptarea" )
+    gsinf = groundfish_survey_db(p=p, DS="sweptarea" )
 
-    gshyd = groundfish.db(p=p, DS="gshyd" ) # already contains temp data from gsinf
+    gshyd = groundfish_survey_db(p=p, DS="gshyd" ) # already contains temp data from gsinf
     set = merge(x=gsinf, y=gshyd, by=c("id"), all.x=TRUE, all.y=FALSE, sort=FALSE)
     rm (gshyd, gsinf)
     oo = which( !is.finite( set$sdate)) # NED1999842 has no accompanying gsinf data ... drop it

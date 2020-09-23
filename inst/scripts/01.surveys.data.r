@@ -11,7 +11,7 @@
 
 
   # prepare groundfish data -- requires DFO oracle database connectivity
-  aegis.survey::groundfish.db( DS="refresh.all.data.tables", yrs=1970:year.assessment )
+  aegis.survey::groundfish_survey_db( DS="refresh.all.data.tables", yrs=1970:year.assessment )
 
 
   # prepare snow crab data -- requires DFO oracle database connectivity
@@ -59,7 +59,7 @@
 if (0) {
 
   pl = aegis.survey::landings_parameters( yrs=1970:year.assessment )  # these are default years
-  landings.db( DS="rawdata", p=pl )
+  landings_db( DS="rawdata", p=pl )
 
    for ( vn in p$varstomodel) {
      print(vn)

@@ -56,7 +56,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
 
     if (0) {
-      # used for DEBUGGING:  access via strata_dataformat .. ie. directly from groundfish.db .. gscat
+      # used for DEBUGGING:  access via strata_dataformat .. ie. directly from groundfish_survey_db .. gscat
       # gscat does not have the data corrections due to miscoding etc, vessel-species "catchability" corrections, etc
       # .. but the totals are nearly identical to survey_db access
       p$selection$biologicals$spec = groundfish_species_code

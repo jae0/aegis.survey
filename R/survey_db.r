@@ -29,7 +29,7 @@
         # 8=explorartory fishing,
         # 9=hydrography
 
-        y = aegis.survey::groundfish.db(DS="set.base", yrs=1970:max(p$yrs) )
+        y = aegis.survey::groundfish_survey_db(DS="set.base", yrs=1970:max(p$yrs) )
         y$data.source = "groundfish"
         y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
         # y$sa_towdistance_wing = y$wing.sa
@@ -86,7 +86,7 @@
       cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno", "totwgt", "cf_cat" )
       if ( "groundfish" %in% p$data_sources ) {
 
-        x = aegis.survey::groundfish.db(DS="gscat" )  #kg/set, no/set
+        x = aegis.survey::groundfish_survey_db(DS="gscat" )  #kg/set, no/set
         x$data.source = "groundfish"
         x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
         x$id2 = paste(x$id, x$spec_bio, sep=".")
@@ -100,7 +100,7 @@
         mw = applyMean( x[, c("spec_bio", "meanwgt", "cf_cat")], newnames=c("spec_bio", "meanweight.crude") )
 
         # meansize directly:
-        k = groundfish.db( DS="gsdet" )
+        k = groundfish_survey_db( DS="gsdet" )
         k$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=k$spec )
         ml = applyMean( k[,c( "spec_bio", "len")], newnames=c("spec_bio", "meanlength.direct") )
         mw = merge( mw, ml, by="spec_bio", all=T, sort=T )
@@ -239,7 +239,7 @@
       det.names =  c("data.source", "id", "id2", "spec", "spec_bio", "sex", "mass", "len", "mat")
       if ( "groundfish" %in% p$data_sources ) {
 
-        x = aegis.survey::groundfish.db(DS="gsdet" )
+        x = aegis.survey::groundfish_survey_db(DS="gsdet" )
         x$data.source = "groundfish"
 
         x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
@@ -262,7 +262,7 @@
         if ( mean(x$len[u], na.rm=TRUE) > 20 ) {
           # 200 mm or 20 cm is really the upper limit of what is possible for snow crab (in 2016, it was 50)
           # if the mean is above this then there is an issue, assume it is recorded as mm
-          # and convert to cm as that is the expectation in groundfish.db p=p,and aegis_db
+          # and convert to cm as that is the expectation in groundfish_survey_db p=p,and aegis_db
           message( "groundfish gsdet seems to have stored snowcrab lengths in mm .. fixing ? -- please check other species such as lobster, etc.")
           x$len[u] = x$len[u] / 10
           # mass looks ok .. in kg
@@ -345,7 +345,7 @@
         set$t[it] = temperature_lookup( p=p, locs=set[it, c("lon","lat")], timestamp=set$timestamp[it], source_data_class="aggregated_rawdata" )
       }
 
-      set$oxysat = compute.oxygen.saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
+      set$oxysat = oxygen_concentration_to_saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
 
       save( set, file=fn, compress=T )
       return (fn)
@@ -876,7 +876,7 @@
 
     if (DS == "det.filter" ) {
       # selected for a given set of species  and size and sex and maturity
-      # wrapper around survey_db and groundfish.db to permit abundance data to be passed, including zero valued locations
+      # wrapper around survey_db and groundfish_survey_db to permit abundance data to be passed, including zero valued locations
       # selected for a given set of species  and size and sex and maturity
       # add zero valued locations too..
 
@@ -1046,7 +1046,7 @@
 
     if (DS == "cat.filter" ) {
       # selected for a given set of species  and size
-      # wrapper around survey_db and groundfish.db to permit abundance data to be passed, including zero valued locations
+      # wrapper around survey_db and groundfish_survey_db to permit abundance data to be passed, including zero valued locations
       # selected for a given set of species  and size and sex and maturity
       # add zero valued locations too..
 
@@ -1178,7 +1178,7 @@
 
     if (DS == "filter" ) {
       # selected for a given set of species  and size and sex and maturity
-      # wrapper around survey_db and groundfish.db to permit abundance data to be passed, including zero valued locations
+      # wrapper around survey_db and groundfish_survey_db to permit abundance data to be passed, including zero valued locations
       # selected for a given set of species  and size and sex and maturity
       # add zero valued locations too..
 
