@@ -2,7 +2,7 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="defaul
 
   # ---------------------
   # deal with additional passed parameters
-  p = parameters_control(p, list(...), control="add") # add passed args to parameter list, priority to args
+  p = parameters_add(p, list(...)) # add passed args to parameter list, priority to args
 
 
   # ---------------------
