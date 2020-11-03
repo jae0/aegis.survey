@@ -85,9 +85,15 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
       sppoly = areal_units( areal_units_source="stratanal_polygons",  areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km, areal_units_timeperiod="pre2014" )
       sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
 
-      o = over( SpatialPoints( set[,c("lon", "lat")], sp::CRS(projection_proj4string("lonlat_wgs84")) ), spTransform(sppoly, sp::CRS(projection_proj4string("lonlat_wgs84")) ) ) # match each datum to an area
-      set$AUID = o$AUID
-      o = NULL
+      crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
+      sppoly = st_transform(sppoly, crs=crs_lonlat )
+
+      set$AUID = st_points_in_polygons(
+        pts = st_as_sf( set, coords=c("lon","lat"), crs=crs_lonlat ),
+        polys = sppoly[, "AUID"],
+        varname="AUID"
+      )
+
       set = set[ which(!is.na(set$AUID)),]
     }
 

@@ -73,7 +73,7 @@ sppoly = areal_units(
 # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
 sppoly$strata_to_keep = TRUE
 
-sppoly = neighbourhood_structure( sppoly=sppoly )
+sppoly = neighbourhood_structure( sppoly=sppoly )  ##--- still needed ?
 
 
 # --------------------------------
@@ -83,9 +83,17 @@ p$selection$survey$strata_toremove = NULL  # emphasize that all data enters anal
 set = survey_db( p=p, DS="filter" )
 
 # categorize Strata
-o = over( SpatialPoints( set[,c("lon", "lat")], sp::CRS(projection_proj4string("lonlat_wgs84")) ), spTransform(sppoly, sp::CRS(projection_proj4string("lonlat_wgs84")) ) ) # match each datum to an area
-set$AUID = o$AUID
-o = NULL
+ # AUID reset to be consistent in both data and prediction areal units
+crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
+sppoly = st_transform(sppoly, crs=crs_lonlat )
+
+set$AUID = st_points_in_polygons(
+  pts = st_as_sf( set, coords=c("lon","lat"), crs=crs_lonlat ),
+  polys = sppoly[, "AUID"],
+  varname="AUID"
+)
+
+
 set = set[ which(!is.na(set$AUID)),]
 
 set$totno[which(!is.finite(set$totno))] = NA
@@ -182,7 +190,7 @@ set = aegis_db_lookup(
       dyear=p$prediction_dyear,
       returntype="data.frame",
       areal_units_resolution_km=p$areal_units_resolution_km,
-      aegis_proj4string_planar_km=sp::CRS(p$aegis_proj4string_planar_km)
+      aegis_proj4string_planar_km=p$aegis_proj4string_planar_km
     )
   }
 
@@ -206,11 +214,14 @@ set = aegis_db_lookup(
   # APS = planar2lonlat(APS, p$aegis_proj4string_planar_km )
 
   # AUID reset to be consistent in both data and prediction areal units
-  o = over( SpatialPoints( APS[,c("lon", "lat")], sp::CRS(projection_proj4string("lonlat_wgs84")) ), spTransform(sppoly, sp::CRS(projection_proj4string("lonlat_wgs84")) ) ) # match each datum to an area
-  APS$AUID = o$AUID
+  APS$AUID = st_points_in_polygons(
+    pts = st_as_sf( APS, coords=c("lon","lat"), crs=crs_lonlat ),
+    polys = sppoly[, "AUID"],
+    varname="AUID"
+  )
+
   APS = APS[ which(!is.na(APS$AUID)),]
 
-  o = NULL
 
   #  good data
   ok = which(
@@ -265,7 +276,15 @@ M = M[ which(
       is.finite(M$zi)
     ) , ]
 M$yr_factor = factor( as.character(M$yr) )
-M$AUID  = factor( as.character(M$AUID), levels=levels( sppoly$AUID ) )
+# M$AUID  = factor( as.character(M$AUID), levels=levels( sppoly$AUID ) )
+
+region.id = slot( slot(sppoly, "nb"), "region.id" )
+M$auid = match( M$AUID, region.id )
+
+M$AUID_character = M$AUID
+M$AUID = M$auid  -- temp fix to get numbers to match bym geometry
+
+
 M$strata  = as.numeric( M$AUID)
 M$year  = as.numeric( M$yr_factor)
 M$iid_error = 1:nrow(M) # for inla indexing for set level variation

@@ -57,12 +57,19 @@ p$selection=list(
   )
 )
 
-crs_lonlat = sp::CRS(projection_proj4string("lonlat_wgs84"))
 
 set = survey_db( p=p, DS="filter", add_groundfish_strata=TRUE )
 set$tag = "observations"
 
-set$AUID = over( SpatialPoints( set[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$AUID # match each datum to an area
+crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
+sppoly = st_transform(sppoly, crs=crs_lonlat )
+
+set$AUID = st_points_in_polygons(
+  pts = st_as_sf( set, coords=c("lon","lat"), crs=crs_lonlat ),
+  polys = sppoly[, "AUID"],
+  varname="AUID"
+)
+
 set$uid = paste(set$AUID, set$year, set$dyear_discret, sep=".")
 
 
