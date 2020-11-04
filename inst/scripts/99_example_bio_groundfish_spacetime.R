@@ -155,14 +155,14 @@ fit = carstm_model( p=pB, M=M, DS="redo", carstm_model_label="test"  ) # run mod
   ## see https://cran.r-project.org/web/packages/spdep/vignettes/nb.pdf
 
   areal_units_timeperiod = "pre2014"  # "pre2014" for older
-  sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod, returntype="polygons" )
-  sppoly = spTransform(sppoly, sp::CRS(p$areal_units_proj4string_planar_km) )
-  sppoly$au_sa_km2 = gArea(sppoly, byid=TRUE)  # (km^2 -> km^2)
-  sppoly = spTransform(sppoly, sp::CRS(projection_proj4string("lonlat_wgs84")) )
+  sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod  )
+  sppoly = st_transform(sppoly, st_crs(p$areal_units_proj4string_planar_km) )
+  sppoly$au_sa_km2 = st_area(sppoly)  # (km^2 -> km^2)
+  sppoly = st_transform(sppoly, st_crs(projection_proj4string("lonlat_wgs84")) )
   plot(sppoly)
 
   W.nb = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod, returntype="neighbourhoods" )
-  W <- spdep::nb2mat(W.nb, style="B", zero.policy=TRUE) # adjacency matrix ; B = binary ; W=row standardized etc
+  W = spdep::nb2mat(W.nb, style="B", zero.policy=TRUE) # adjacency matrix ; B = binary ; W=row standardized etc
 
   library(rgeos)
   # sset = maritimes_groundfish_strata_identify( Y=sset, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$areal_units_proj4string_planar_km, plotdata=TRUE )
@@ -181,7 +181,7 @@ fit = carstm_model( p=pB, M=M, DS="redo", carstm_model_label="test"  ) # run mod
   X = model.matrix( ~ sdat$dummy -1 )
 
   DATAINPUT = c( list(
-    nAU = length(sppoly),  # number of Areal Units
+    nAU = nrow(sppoly),  # number of Areal Units
     nTU = length(unique(sdat$yr)),   # number of Temporal Units
     K = nrow(X),         # number of observations
     L = ncol(X),         # number of coefficients
@@ -266,4 +266,4 @@ fit_loo_1
   sppoly$mu = apply( rstan::extract( fit, "mu")[["mu"]][,,tu], 2, mean )
   vn = "mu"
   brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
-  spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent", xlim=p$boundingbox$xlim, ylim=p$boundingbox$ylim )
+  spplot( as(sppoly, "Spatial"), vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent", xlim=p$boundingbox$xlim, ylim=p$boundingbox$ylim )
