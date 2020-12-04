@@ -1,4 +1,4 @@
-groundfish_parameters = function( p=NULL, project_name=NULL, project_class="default", ... ) {
+groundfish_parameters = function( p=NULL, project_name=NULL, project_class="core", ... ) {
 
   # ---------------------
   # deal with additional passed parameters
@@ -36,17 +36,23 @@ groundfish_parameters = function( p=NULL, project_name=NULL, project_class="defa
   p$clusters = rep("localhost", detectCores() )
 
 
-  if (project_class=="default") {
+  if (project_class=="core") {
     return(p)
   }
 
-  if (project_class=="stmv") {
+  if (project_class %in% c("stmv") ) {
     p$libs = c( p$libs, project.library ( "stmv" ) )
     return(p)
   }
 
 
-  if (project_class=="carstm") {
+  if (project_class %in% c("default", "hybrid") ) {
+    p$libs = c( p$libs, project.library ( "stmv" ) )
+    return(p)
+  }
+
+
+  if (project_class %in% c("carstm") ) {
     p$libs = c( p$libs, project.library ( "carstm" ) )
 
     return(p)

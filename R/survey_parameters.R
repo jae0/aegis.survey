@@ -1,4 +1,4 @@
-survey_parameters = function( p=NULL, project_name=NULL, project_class="default", ... ) {
+survey_parameters = function( p=NULL, project_name=NULL, project_class="core", ... ) {
 
   # ---------------------
   # deal with additional passed parameters
@@ -45,17 +45,29 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="default"
   if ( !exists("inputdata_temporal_discretization_yr", p)) p$inputdata_temporal_discretization_yr = 1/12  # ie., monthly .. controls resolution of data prior to modelling to reduce data set and speed up modelling }
 
 
-  if (project_class=="default") {
+  if (project_class=="core") {
     return(p)
   }
 
 
-  if (project_class=="carstm") {
+  if (project_class %in% c("carstm") ) {
     return(p)
   }
 
 
-  if (project_class=="stmv") {
+  if (project_class %in% c( "stmv") ) {
+    p$libs = c( p$libs, project.library ( "stmv" ) )
+    p$DATA = 'survey_db( p=p, DS="stmv_inputs" )'
+    p$varstomodel = c()
+    if (!exists("stmv_variables", p)) p$stmv_variables = list()
+    if (!exists("LOCS", p$stmv_variables)) p$stmv_variables$LOCS=c("plon", "plat")
+    if (!exists("TIME", p$stmv_variables)) p$stmv_variables$TIME="tiyr"
+    p = aegis_parameters(p=p, DS="stmv" )
+    return(p)
+  }
+
+
+  if (project_class %in% c( "hybrid", "default") ) {
     p$libs = c( p$libs, project.library ( "stmv" ) )
     p$DATA = 'survey_db( p=p, DS="stmv_inputs" )'
     p$varstomodel = c()

@@ -1,4 +1,4 @@
-landings_parameters = function( p=NULL, project_name=NULL, project_class="default", ... ) {
+landings_parameters = function( p=NULL, project_name=NULL, project_class="core", ... ) {
 
   # ---------------------
   # deal with additional passed parameters
@@ -35,12 +35,31 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="defaul
   p$clusters = rep("localhost", detectCores() )
 
 
-  if (project_class=="default") {
+  if (project_class=="core") {
     return(p)
   }
 
 
-  if (project_class=="stmv") {
+  if (project_class %in% c("carstm") ) {
+    p$libs = c( p$libs, project.library ( "carstm" ) )
+    return(p)
+  }
+
+
+
+  if (project_class %in% c("stmv") ) {
+    p$libs = c( p$libs, project.library ( "stmv" ) )
+    p$DATA = 'landings_db( p=p, DS="stmv_inputs" )'
+    p$varstomodel = c()
+    if (!exists("stmv_variables", p)) p$stmv_variables = list()
+    if (!exists("LOCS", p$stmv_variables)) p$stmv_variables$LOCS=c("plon", "plat")
+    if (!exists("TIME", p$stmv_variables)) p$stmv_variables$TIME="tiyr"
+    p = aegis_parameters(p=p, DS="stmv" )
+    return(p)
+  }
+
+
+  if (project_class %in% c("hybrid", "default") ) {
     p$libs = c( p$libs, project.library ( "stmv" ) )
     p$DATA = 'landings_db( p=p, DS="stmv_inputs" )'
     p$varstomodel = c()
