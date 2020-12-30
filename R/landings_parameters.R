@@ -11,6 +11,8 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="core",
     "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
   p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.survey", "netmensuration" ) )
 
+  p$project_class = project_class
+
   p$project_name = ifelse ( !is.null(project_name), project_name, "landings" )
 
   if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )

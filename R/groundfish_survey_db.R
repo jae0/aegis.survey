@@ -15,7 +15,10 @@ groundfish_survey_db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL
   # ----------------
 
   if (DS =="refresh.bio.species.codes") {
-    # the following is copied from taxonomy/src/taxonomy.r
+	
+	#    p = groundfish_parameters(yrs=2019:2020)
+
+	# the following is copied from taxonomy/src/taxonomy.r
     groundfish_survey_db(p=p, DS="spcodes.rawdata.redo" )
     # bootstrap an initial set of tables .. these will be incomplete as a parsimonious tree needs to be created first but
     # it depends upon the last file created taxonomy.db("complete") .. so ...

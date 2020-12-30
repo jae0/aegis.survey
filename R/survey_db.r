@@ -336,13 +336,32 @@
       # merge depth
       iz = which( !is.finite(set$z) )
       if (length(iz) > 0) {
-        set$z[iz] = bathymetry_lookup( p=p, locs=set[iz, c("lon","lat")], source_data_class="aggregated_rawdata" )
+        BS = bathymetry_db ( p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="core"  ), DS="aggregated_data" )  # raw data
+        BS_map = array_map( "xy->1", BS[,c("plon","plat")], gridparams=p$gridparams )
+        set_map = array_map( "xy->1", set[iz, c("plon","plat")], gridparams=p$gridparams )
+        set$z[iz] = BS[ match( set_map, BS_map ), "z.mean" ]
+        BS = NULL
+        BS_map = NULL
+        set_map = NULL
       }
 
       # merge temperature
       it = which( !is.finite(set$t) )
       if (length(it) > 0) {
-        set$t[it] = temperature_lookup( p=p, locs=set[it, c("lon","lat")], timestamp=set$timestamp[it], source_data_class="aggregated_rawdata" )
+        tz = "America/Halifax"
+        locs = set[it, c("plon","plat")]
+        timestamp = set$timestamp[it]
+        if (! "POSIXct" %in% class(timestamp)  ) timestamp = as.POSIXct( timestamp, tz=tz, origin=lubridate::origin  )
+        BS = temperature_db ( p=p, year.assessment=max(p$yrs) ), DS="aggregated_data" )  # raw data
+        BT_map = array_map( "ts->1", BS[,c("yr", "dyear")], dims=c(p$ny, p$nw), res=c( 1, 1/p$nw ), origin=c( min(p$yrs), 0) )
+        BS_map = array_map( "xy->1", BS[,c("plon","plat")], gridparams=gridparams )
+        tstamp = data.frame( yr = lubridate::year(timestamp) )
+        tstamp$dyear = lubridate::decimal_date( timestamp ) - tstamp$yr
+        timestamp_map = array_map( "ts->1", tstamp[, c("yr", "dyear")], dims=c(p$ny, p$nw), res=c( 1, 1/p$nw ), origin=c( min(p$yrs), 0) )
+        locs_map = array_map( "xy->1", locs[,c("plon","plat")], gridparams=gridparams )
+        locs_index = match( paste(locs_map, timestamp_map, sep="_"), paste(BS_map, BT_map, sep="_") )
+        set$t[it] = BS[locs_index, vnames]
+        BS = BT_map = BS_map = tstamp = timestamp_map = locs_map = locs_index = NULL
       }
 
       set$oxysat = oxygen_concentration_to_saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
