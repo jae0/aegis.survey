@@ -21,7 +21,7 @@
   p$areal_units_overlay="none"
   p$areal_units_proj4string_planar_km=projection_proj4string("utm20")
   p$areal_units_resolution_km = 50  # length scale to base mesh sizes
-  p$aegis_internal_resolution_km = 1
+  p$inputdata_spatial_discretization_planar_km = 1
 
   p$boundingbox = list( xlim = c(-70.5, -56.5), ylim=c(39.5, 47.5)) # bounding box for plots using spplot
   p = c(p, aegis.coastline::coastline_layout( p=p ) )
