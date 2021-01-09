@@ -17,7 +17,7 @@
 
   # set up default map projection
   # p$areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")   # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
-  p$areal_units_source="groundfish_polygons_inla_mesh"
+  p$areal_units_type="inla_mesh"
   p$areal_units_overlay="none"
   p$areal_units_proj4string_planar_km=projection_proj4string("utm20")
   p$areal_units_resolution_km = 50  # length scale to base mesh sizes
@@ -28,8 +28,8 @@
   p$mypalette=RColorBrewer::brewer.pal(9, "YlOrRd")
 
 
-  sppoly = areal_units( p=p, areal_units_source="groundfish_polygons_inla_mesh", sa_threshold_km2=10, redo=TRUE )
-  sppoly = areal_units( p=p, areal_units_source="groundfish_polygons_tesselation", sa_threshold_km2=10, redo=TRUE )
+  sppoly = areal_units( p=p, areal_units_type="inla_mesh", sa_threshold_km2=10, redo=TRUE )
+  sppoly = areal_units( p=p, areal_units_type="tesselation", sa_threshold_km2=10, redo=TRUE )
 
   if (0) {
     plot(sppoly[,"AUID"], col="orange")

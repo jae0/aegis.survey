@@ -61,7 +61,7 @@ p = aegis.survey::survey_parameters(
 
 
 sppoly = areal_units(
-  areal_units_source="lattice",
+  areal_units_type="lattice",
   areal_units_resolution_km=p$areal_units_resolution_km,
   areal_units_overlay="groundfish_strata",
   aegis_internal_resolution_km=p$pres,

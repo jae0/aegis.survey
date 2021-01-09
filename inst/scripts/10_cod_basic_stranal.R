@@ -82,7 +82,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
       # the above merges based upon AUID's designated in groundfish tables.  Alternatively one can use positions directly:
       set = survey_db( p=p, DS="filter" )
       # categorize Strata
-      sppoly = areal_units( areal_units_source="stratanal_polygons",  areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km, areal_units_timeperiod="pre2014" )
+      sppoly = areal_units( areal_units_type="stratanal_polygons_pre2014",  areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km  )
       sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
 
       crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
