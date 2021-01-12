@@ -59,11 +59,11 @@ p = aegis.survey::survey_parameters(
 # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
 # This adds some variabilty relative to "statanal" (which uses sa in sq nautical miles, btw)
 
-
 sppoly = areal_units(
   areal_units_type="lattice",
   areal_units_resolution_km=p$areal_units_resolution_km,
   areal_units_overlay="groundfish_strata",
+  xydata=survey_db(p=p, DS="areal_units_input"),
   inputdata_spatial_discretization_planar_km =p$pres,
   sa_threshold_km2 = 1,
   spatial_domain=p$spatial_domain,

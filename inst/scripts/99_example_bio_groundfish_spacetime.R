@@ -22,14 +22,15 @@
   p$areal_units_proj4string_planar_km=projection_proj4string("utm20")
   p$areal_units_resolution_km = 50  # length scale to base mesh sizes
   p$inputdata_spatial_discretization_planar_km = 1
+  p$areal_units_timeperiod = "pre2014"
 
   p$boundingbox = list( xlim = c(-70.5, -56.5), ylim=c(39.5, 47.5)) # bounding box for plots using spplot
   p = c(p, aegis.coastline::coastline_layout( p=p ) )
   p$mypalette=RColorBrewer::brewer.pal(9, "YlOrRd")
 
 
-  sppoly = areal_units( p=p, areal_units_type="inla_mesh", sa_threshold_km2=10, redo=TRUE )
-  sppoly = areal_units( p=p, areal_units_type="tesselation", sa_threshold_km2=10, redo=TRUE )
+  sppoly = areal_units( p=p, xydata=survey_db(p=p, DS="areal_units_input"), areal_units_type="inla_mesh", sa_threshold_km2=10, redo=TRUE )
+  sppoly = areal_units( p=p, xydata=survey_db(p=p, DS="areal_units_input"), areal_units_type="tesselation", sa_threshold_km2=10, redo=TRUE )
 
   if (0) {
     plot(sppoly[,"AUID"], col="orange")

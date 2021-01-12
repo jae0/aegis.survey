@@ -35,14 +35,15 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
   if ( !exists("netmensuration.years", p) ) p$netmensuration.years = c(1990:1992, 2004:lubridate::year(lubridate::now())) # 2009 is the first year with set logs from scanmar available .. if more are found, alter this date
 
-
-  p$taxa.of.interest = aegis.survey::groundfish_variablelist("catch.summary")
-  p$season = "summer"
-  p$taxa =  "maxresolved"
-  p$clusters = rep("localhost", detectCores() )
-
-  if ( !exists("inputdata_spatial_discretization_planar_km", p)) p$inputdata_spatial_discretization_planar_km = 1  # 1 km .. requires 32 GB RAM and limit of speed -- controls resolution of data prior to modelling to reduce data set and speed up modelling
-  if ( !exists("inputdata_temporal_discretization_yr", p)) p$inputdata_temporal_discretization_yr = 1/12  # ie., monthly .. controls resolution of data prior to modelling to reduce data set and speed up modelling }
+  p = parameters_add_without_overwriting( p,
+    taxa =  "maxresolved",
+    varstomodel = c( "pca1", "pca2", "ca1", "ca2" ),
+    inputdata_spatial_discretization_planar_km = p$pres/2, # controls resolution of data prior to modelling (km .. ie 100 linear units smaller than the final discretization pres)
+    inputdata_temporal_discretization_yr = 1/12,  # ie., controls resolution of data prior to modelling to reduce data set and speed up modelling;; use 1/12 -- monthly or even 1/4.. if data density is low
+    taxa.of.interest = aegis.survey::groundfish_variablelist("catch.summary"), 
+    season = "summer", 
+    clusters = rep("localhost", detectCores() )
+    )
 
 
   if (project_class=="core") {
@@ -51,6 +52,69 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
 
   if (project_class %in% c("carstm") ) {
+        p$project_class = "carstm"
+
+    if (!exists("variabletomodel", p)) stop( "The dependent variable, p$variabletomodel needs to be defined")
+
+
+    # defaults in case not provided ...
+    p = parameters_add_without_overwriting( p,
+      areal_units_type = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
+      areal_units_resolution_km = 25, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
+      areal_units_proj4string_planar_km =  p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm
+      # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
+      areal_units_overlay = "none",
+      areal_units_timeperiod = "none",
+      tus="yr", 
+      fraction_cv = 1.0, 
+      fraction_good_bad = 0.8, 
+      nAU_min = 5,  
+      carstm_modelengine = "inla",  # {model engine}.{label to use to store}
+      carstm_model_label = "default",
+      carstm_inputs_aggregated = FALSE
+    )
+
+
+
+    if ( !exists("carstm_inputadata_model_source", p))  p$carstm_inputadata_model_source = list()
+    if ( !exists("bathymetry", p$carstm_inputadata_model_source ))  p$carstm_inputadata_model_source$bathymetry = "stmv"  # "stmv", "hybrid", "carstm"
+    if ( !exists("substrate", p$carstm_inputadata_model_source ))  p$carstm_inputadata_model_source$substrate = "stmv"  # "stmv", "hybrid", "carstm"
+    if ( !exists("temperature", p$carstm_inputadata_model_source ))  p$carstm_inputadata_model_source$temperature = "carstm"  # "stmv", "hybrid", "carstm"
+    if ( !exists("speciescomposition", p$carstm_inputadata_model_source ))  p$carstm_inputadata_model_source$speciescomposition = "carstm"  # "stmv", "hybrid", "carstm"
+
+
+    if ( !exists("carstm_model_call", p)) {
+      if ( grepl("inla", p$carstm_modelengine) ) {
+        p$carstm_model_call = paste(
+          'inla( formula = ', p$variabletomodel,
+          ' ~ 1
+            + f( dyri, model="ar1", hyper=H$ar1 )
+            + f( inla.group( t, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
+            + f( inla.group( z, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
+            + f( inla.group( substrate.grainsize, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
+            + f( auid, model="bym2", graph=slot(sppoly, "nb"), group=year_factor, scale.model=TRUE, constr=TRUE, hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)),
+            family = "normal",
+            data= M,
+            control.compute = list(dic=TRUE, waic=TRUE, cpo=TRUE, config=TRUE),
+            control.results = list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
+            control.predictor = list(compute=FALSE, link=1 ),
+            control.fixed = H$fixed,  # priors for fixed effects, generic is ok
+            control.inla = list( cmin = 0, h=1e-4, tolerance=1e-9, strategy="adaptive", optimise.strategy="smart"), # restart=3), # restart a few times in case posteriors are poorly defined
+            verbose=TRUE
+          )'
+        )
+      }
+        #    + f(tiyr, model="ar1", hyper=H$ar1 )
+        # + f(year,  model="ar1", hyper=H$ar1 )
+    }
+
+    p = carstm_parameters( p=p )  #generics
+
+    if ( p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km ) {
+      warning( "p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km " )
+    }
+    message ("p$areal_units_resolution_km: ", p$areal_units_resolution_km)
+
     return(p)
   }
 
