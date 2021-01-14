@@ -67,6 +67,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       areal_units_overlay = "none",
       areal_units_timeperiod = "none",
       tus="yr", 
+      fraction_todrop = 1/5,
       fraction_cv = 1.0, 
       fraction_good_bad = 0.8, 
       nAU_min = 5,  
@@ -78,35 +79,28 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
 
     if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
-    if ( !exists("bathymetry", p$carstm_inputdata_model_source ))  p$carstm_inputdata_model_source$bathymetry = "stmv"  # "stmv", "hybrid", "carstm"
-    if ( !exists("substrate", p$carstm_inputdata_model_source ))  p$carstm_inputdata_model_source$substrate = "stmv"  # "stmv", "hybrid", "carstm"
-    if ( !exists("temperature", p$carstm_inputdata_model_source ))  p$carstm_inputdata_model_source$temperature = "carstm"  # "stmv", "hybrid", "carstm"
-    if ( !exists("speciescomposition", p$carstm_inputdata_model_source ))  p$carstm_inputdata_model_source$speciescomposition = "carstm"  # "stmv", "hybrid", "carstm"
+    p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
+      bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
+      substrate = "stmv",  # "stmv", "hybrid", "carstm"
+      temperature = "carstm",  # "stmv", "hybrid", "carstm"
+      speciescomposition = "carstm" # "stmv", "hybrid", "carstm"
+    )
 
 
-    if ( !exists("carstm_model_call", p)) {
-      if ( grepl("inla", p$carstm_modelengine) ) {
-        p$carstm_model_call = paste(
-          'inla( formula = ', p$variabletomodel,
-          ' ~ 1
-            + f( dyri, model="ar1", hyper=H$ar1 )
-            + f( inla.group( t, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
-            + f( inla.group( z, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
-            + f( inla.group( substrate.grainsize, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
-            + f( auid, model="bym2", graph=slot(sppoly, "nb"), group=year_factor, scale.model=TRUE, constr=TRUE, hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)),
-            family = "normal",
-            data= M,
-            control.compute = list(dic=TRUE, waic=TRUE, cpo=TRUE, config=TRUE),
-            control.results = list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
-            control.predictor = list(compute=FALSE, link=1 ),
-            control.fixed = H$fixed,  # priors for fixed effects, generic is ok
-            control.inla = list( cmin = 0, h=1e-4, tolerance=1e-9, strategy="adaptive", optimise.strategy="smart"), # restart=3), # restart a few times in case posteriors are poorly defined
-            verbose=TRUE
-          )'
-        )
-      }
-        #    + f(tiyr, model="ar1", hyper=H$ar1 )
-        # + f(year,  model="ar1", hyper=H$ar1 )
+    
+    if ( grepl("inla", p$carstm_modelengine) ) {
+      if ( !exists("carstm_model_label", p))  p$carstm_model_label = "production"
+      if ( !exists("carstm_model_formula", p)  ) {
+        p$carstm_model_formula = as.formula( paste(
+         p$variabletomodel, ' ~ 1',
+            ' + f( dyri, model="ar1", hyper=H$ar1 ) ',
+            ' + f( inla.group( t, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
+            ' + f( inla.group( z, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
+            ' + f( inla.group( substrate.grainsize, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
+            ' + f( auid, model="bym2", graph=slot(sppoly, "nb"), group=year_factor, scale.model=TRUE, constr=TRUE, hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) '
+        ))
+       }
+      if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "normal"
     }
 
     p = carstm_parameters( p=p )  #generics
