@@ -80,13 +80,13 @@ set$uid = paste(set$AUID, set$year, set$dyear_discret, sep=".")
     APS[,p$variabletomodel] = NA
 
 
-    BI = carstm_summary ( p=pB )
+    BI = carstm_model ( p=pB, DS="carstm_modelled_summary" )
     jj = match( as.character( APS$AUID), as.character( BI$AUID) )
     APS[, pB$variabletomodel] = BI[[ paste(pB$variabletomodel,"predicted",sep="." ) ]] [jj]
     jj =NULL
     BI = NULL
 
-    SI = carstm_summary ( p=pS )
+    SI = carstm_model ( p=pS, DS="carstm_modelled_summary" )
     jj = match( as.character( APS$AUID), as.character( SI$AUID) )
     APS[, pS$variabletomodel] = SI[[ paste(pS$variabletomodel,"predicted",sep="." )]] [jj]
     jj =NULL
@@ -106,7 +106,7 @@ set$uid = paste(set$AUID, set$year, set$dyear_discret, sep=".")
     APS$dyear = APS$tiyr - APS$year
 
 
-    TI = carstm_summary ( p=pT )
+    TI = carstm_model ( p=pT, DS="carstm_modelled_summary" )
     TI = TI[[ paste(pT$variabletomodel,"predicted",sep="." )]]
     au_map = match( APS$AUID, dimnames(TI)$AUID )
     year_map = match( as.character(APS$year), dimnames(TI)$year )
@@ -117,7 +117,7 @@ set$uid = paste(set$AUID, set$year, set$dyear_discret, sep=".")
     TI = NULL
 
 
-    PI = carstm_summary ( p=pPC1 )
+    PI = carstm_model ( p=pPC1, DS="carstm_modelled_summary" )
     PI = PI[[ paste(pPC1$variabletomodel,"predicted",sep="." )]]
     au_map = match( APS$AUID, dimnames(PI)$AUID )
     year_map = match( as.character(APS$year), dimnames(PI)$year )
@@ -125,7 +125,7 @@ set$uid = paste(set$AUID, set$year, set$dyear_discret, sep=".")
     APS[, pPC1$variabletomodel] = PI [dindex]
     PI = NULL
 
-    PI = carstm_summary ( p=pPC2 )
+    PI = carstm_model ( p=pPC2, DS="carstm_modelled_summary" )
     PI = PI[[ paste(pPC2$variabletomodel,"predicted",sep="." )]]
     au_map = match( APS$AUID, dimnames(PI)$AUID )
     year_map = match( as.character(APS$year), dimnames(PI)$year )
@@ -133,7 +133,7 @@ set$uid = paste(set$AUID, set$year, set$dyear_discret, sep=".")
     APS[, pPC2$variabletomodel] = PI [dindex]
     PI = NULL
 
-    # useful vars to have for analyses outside of carstm_summary
+    # useful vars to have for analyses outside of carstm_model
     varstoadd = c( "totwgt", "totno", "sa", "data_offset",  "zn", "qn" )
 
     for (vn in varstoadd) if (!exists( vn, APS)) APS[,vn] = NA
