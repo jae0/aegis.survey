@@ -22,16 +22,22 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   if ( !file.exists(p$datadir) ) dir.create( p$datadir, showWarnings=F, recursive=T )
   if ( !file.exists(p$modeldir) ) dir.create( p$modeldir, showWarnings=F, recursive=T )
 
+  if ( !exists("scanmar.dir", p) )  p$scanmar.dir = file.path( p$datadir, "nets", "Scanmar" )
+  if ( !exists("marport.dir", p) )  p$marport.dir = file.path( p$datadir, "nets", "Marport" )
 
   if (!exists("spatial_domain", p) ) p$spatial_domain = "SSE"
   if (!exists("spatial_domain_subareas", p)) p$spatial_domain_subareas = c( "snowcrab", "SSE.mpa" )
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
 
-  if ( !exists("scanmar.dir", p) )  p$scanmar.dir = file.path( p$datadir, "nets", "Scanmar" )
-  if ( !exists("marport.dir", p) )  p$marport.dir = file.path( p$datadir, "nets", "Marport" )
+  # define focal years for modelling and interpolation
+  if (!exists("year.assessment", p )) {
+    message("need probably want to assign current year.assessment, using current year for now")  
+    p$year.assessment = lubridate::year(lubridate::now()) 
+  }
 
-  if ( !exists("yrs", p) ) p$yrs=1970:lubridate::year(lubridate::now())
-  p = temporal_parameters(p=p, aegis_dimensionality="space-year")
+  yrs_default = 1970:year.assessment
+  p = parameters_add_without_overwriting( p, yrs = yrs_default, timezone="America/Halifax" )  # default unless already provided
+  p = temporal_parameters(p=p)
 
   if ( !exists("netmensuration.years", p) ) p$netmensuration.years = c(1990:1992, 2004:lubridate::year(lubridate::now())) # 2009 is the first year with set logs from scanmar available .. if more are found, alter this date
 
