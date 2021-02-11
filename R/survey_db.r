@@ -360,7 +360,7 @@
       # merge depth
       iM = which( !is.finite(set$z) )
       if (length(iM > 0)) {
-        set$z[iM] = bathymetry_lookup( LOCS=set[ iM, c("lon", "lat")], spatial_domain=p$spatial_domain, lookup_from="core", lookup_to="points", lookup_from_class="aggregated_data" ) # core=="rawdata"
+        set$z[iM] = bathymetry_lookup( LOCS=set[ iM, c("lon", "lat")], lookup_from="core", lookup_to="points", lookup_from_class="aggregated_data" ) # core=="rawdata"
       }
 
       # substrate lookup
@@ -368,7 +368,7 @@
       if (!(exists(pS$variabletomodel, set ))) set[,pS$variabletomodel] = NA
       iM = which(!is.finite( set[, pS$variabletomodel] ))
       if (length(iM > 0)) {
-        set[iM, pS$variabletomodel] = substrate_lookup( LOCS=set[iM, c("lon", "lat")], spatial_domain=p$spatial_domain, lookup_from="core", lookup_to="points" , lookup_from_class="aggregated_data" ) # core=="rawdata"
+        set[iM, pS$variabletomodel] = substrate_lookup( LOCS=set[iM, c("lon", "lat")], lookup_from="core", lookup_to="points" , lookup_from_class="aggregated_data" ) # core=="rawdata"
       }
  
       # merge temperature
