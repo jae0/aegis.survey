@@ -25,9 +25,14 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   if ( !exists("scanmar.dir", p) )  p$scanmar.dir = file.path( p$datadir, "nets", "Scanmar" )
   if ( !exists("marport.dir", p) )  p$marport.dir = file.path( p$datadir, "nets", "Marport" )
 
-  if (!exists("spatial_domain", p) ) p$spatial_domain = "SSE"
-  if (!exists("spatial_domain_subareas", p)) p$spatial_domain_subareas = c( "snowcrab", "SSE.mpa" )
-  p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
+  p = parameters_add_without_overwriting( p,
+    variabletomodel = "none",
+    spatial_domain = "SSE", 
+    spatial_domain_subareas = c( "SSE.mpa" , "snowcrab"),  # this is for bathymetry_db, not stmv
+    aegis_dimensionality="space-year"
+  )
+
+  p = spatial_parameters( p=p )  # default grid and resolution
 
   # define focal years for modelling and interpolation
   if (!exists("year.assessment", p )) {
@@ -35,7 +40,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     p$year.assessment = lubridate::year(lubridate::now()) 
   }
 
-  yrs_default = 1970:year.assessment
+  yrs_default = 1970:p$year.assessment
   p = parameters_add_without_overwriting( p, yrs = yrs_default, timezone="America/Halifax" )  # default unless already provided
   p = temporal_parameters(p=p)
 
@@ -47,9 +52,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     inputdata_spatial_discretization_planar_km = p$pres/2, # controls resolution of data prior to modelling (km .. ie 100 linear units smaller than the final discretization pres)
     inputdata_temporal_discretization_yr = 1/12,  # ie., controls resolution of data prior to modelling to reduce data set and speed up modelling;; use 1/12 -- monthly or even 1/4.. if data density is low
     taxa.of.interest = aegis.survey::groundfish_variablelist("catch.summary"), 
-    season = "summer", 
-    clusters = rep("localhost", detectCores() )
-    )
+    season = "summer" 
+  )
 
 
   if (project_class=="core") {
