@@ -5,10 +5,10 @@
 # this is a spatial-temporal example with multiple stations in AU's and unique TU's temporal components
 
 
-  require(sp)
-  require(spdep)
-  require(rgeos)
-  require(rstan)
+
+  require(sf)
+  require(cmdstanr)
+
   require(aegis.polygons)
   require(carstm)
 
@@ -199,22 +199,22 @@ fit = carstm_model( p=pB, M=M, DS="redo", carstm_model_label="test"  ) # run mod
 
 
 
-# stcode = stan_model_code( "bym_scaled_heirarchical_ar1_nonseparable" )  # derived from basic scaled form with multiple samples per AU permitted, # ~ 800 sec = 6 min
+stcode = stan_model_code( "bym_scaled_heirarchical_ar1_nonseparable" )  # derived from basic scaled form with multiple samples per AU permitted, # ~ 800 sec = 6 min
 # stcode = stan_model_code( "bym_scaled_heirarchical_ar1_separable" )  # derived from basic scaled form with multiple samples per AU permitted, # ~ 800 sec = 6 min
 
 # -----------------------------
 
-  MS = rstan::stan_model( model_code=stcode )
+  MS = stan_initialize( stan_code=stan_model_code( "bym_scaled_heirarchical_ar1_nonseparable" ) )
+  MS$compile()
 
-  fit  = rstan::sampling(
-      object=MS,
+  fit = MS$sample(
       data=DATAINPUT,
-      iter=2000,            # total number of iterations per chain
+      iter_warmup = 1000,
+      iter_sampling = 1000,
       chains=4,               # number of Markov chains
       cores = 4,               # number of cores (using 2 just for the vignette)
-      warmup = 1000,          # number of warmup iterations per chain
-      # thin=20,
-      control = list(adapt_delta = 0.975, max_treedepth=14),
+      adapt_delta = 0.975, 
+      max_treedepth=14,
       verbose=TRUE ); # ~ 1 min per chain
 
   pars = c('B[1]',  'rho[1,1]', 'sigma[1,1]',  'mu[1,1]', 'ar1[1]', 'lp__')
@@ -222,7 +222,10 @@ fit = carstm_model( p=pB, M=M, DS="redo", carstm_model_label="test"  ) # run mod
   print(fit, pars =pars)
   traceplot(fit, pars = pars)   # visualize results
 
-  yhat = apply( rstan::extract( fit, "yhat")[["yhat"]], 2, mean )
+  M = stan_extract( as_draws_df( fit$draws() ) )
+
+  yhat = apply( M[["yhat"]], 2, mean )
+
   plot( yhat ~ log(DATAINPUT$Y+0.1) )
   cor(yhat , log(DATAINPUT$Y+0.1)  ) #  0.5772 ; R^2=0.333
 
@@ -255,7 +258,7 @@ fit_loo_1
 
 
   tu  = 1 # time unit
-  sppoly$mu = apply( rstan::extract( fit, "mu")[["mu"]][,,tu], 2, mean )
+  sppoly$mu = apply( M[["mu"]][,,tu], 2, mean )
 
   vn = "mu"
   brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
@@ -264,7 +267,7 @@ fit_loo_1
   dev.new()
 
   tu  = 2 # time unit
-  sppoly$mu = apply( rstan::extract( fit, "mu")[["mu"]][,,tu], 2, mean )
+  sppoly$mu = apply( M[["mu"]][,,tu], 2, mean )
   vn = "mu"
   brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
   spplot( as(sppoly, "Spatial"), vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent", xlim=p$boundingbox$xlim, ylim=p$boundingbox$ylim )
