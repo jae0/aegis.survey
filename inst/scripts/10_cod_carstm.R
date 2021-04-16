@@ -391,7 +391,7 @@ lines( space_iid.year_iid ~ yr, data=RES, lty=1, lwd=2.5, col="blue", type="b")
 # map it
 vn = "pred"
 yr = "2017"
-slot(sppoly, "data")[,vn] = out[,yr] * weight_year[,yr]  # biomass density
+sppoly[,vn] = out[,yr] * weight_year[,yr]  # biomass density
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -484,7 +484,7 @@ lines( space_iid.year_ar1 ~ yr, data=RES, lty=1, lwd=2.5, col="blue", type="b")
 # map it
 vn = "pred"
 yr = "2017"
-slot(sppoly, "data")[,vn] = out[,yr] * weight_year[,yr]  # biomass density
+sppoly[,vn] = out[,yr] * weight_year[,yr]  # biomass density
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -574,7 +574,7 @@ plot( fit$marginals.hyperpar$"Phi for strata", type="l")  # posterior distributi
 
 # map it ..mean density
 vn = "pred"
-slot(sppoly, "data")[,vn] = out[,"2017"]
+sppoly[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -664,7 +664,7 @@ lines( space_car.year_ar1 ~ yr, data=RES, lty=1, lwd=2.5, col="red", type="b")
 
 # map it ..mean density
 vn = "pred"
-slot(sppoly, "data")[,vn] = out[,"2017"]
+sppoly[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -766,7 +766,7 @@ RES$habitat_strata_CAR.yr_iid = colSums( {out * sppoly$au_sa_km2 }[sppoly$strata
 
 # map it
 vn = "pred"
-slot(sppoly, "data")[,vn] = out[,"2017"]
+sppoly[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
@@ -820,7 +820,7 @@ RES$habitat_strata_CAR_yr.yr_iid = colSums( {out * sppoly$au_sa_km2 }[sppoly$str
 
 # map it
 vn = "pred"
-slot(sppoly, "data")[,vn] = out[,"2017"]
+sppoly[,vn] = out[,"2017"]
 brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
 spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
 
