@@ -104,7 +104,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
         p$carstm_model_formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',
             ' + f( dyri, model="ar1", hyper=H$ar1 ) ',
-            ' + f( yr, model="ar1", hyper=H$ar1 ) ',
+            ' + f( year, model="ar1", hyper=H$ar1 ) ',
             ' + f( inla.group( t, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
             ' + f( inla.group( z, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
             ' + f( inla.group( substrate.grainsize, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
