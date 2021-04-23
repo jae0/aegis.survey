@@ -126,6 +126,7 @@ set$tag = "observations"
 ## --------------------------------
 # construct meanweights matrix
 weight_year = meanweights_by_arealunit( set=set, AUID=as.character( sppoly$AUID ), yrs=p$yrs, fillall=TRUE, annual_breakdown=TRUE )
+# weight_year = meanweights_by_arealunit_modelled( p=p, redo=TRUE )  -- note: data passing of M needs to be modularized 
 # weight_year = weight_year[, match(as.character(p$yrs), colnames(weight_year) )]
 # weight_year = weight_year[ match(as.character(sppoly$AUID), rownames(weight_year) )]
 

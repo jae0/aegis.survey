@@ -114,7 +114,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
        
       }
       
-      if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "normal"
+      if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "gaussian"
     }
 
     p = carstm_parameters( p=p )  #generics
