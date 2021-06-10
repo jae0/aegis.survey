@@ -280,16 +280,14 @@ M$yr_factor = factor( as.character(M$yr) )
 # M$AUID  = factor( as.character(M$AUID), levels=levels( sppoly$AUID ) )
 
 region.id = slot( slot(sppoly, "nb"), "region.id" )
-M$auid = match( M$AUID, region.id )
-
-M$AUID_character = M$AUID
-M$AUID = M$auid  -- temp fix to get numbers to match bym geometry
-
+M$space = M$space_time = match( M$AUID, region.id )
 
 M$strata  = as.numeric( M$AUID)
+
 M$year  = as.numeric( M$yr_factor)
 M$iid_error = 1:nrow(M) # for inla indexing for set level variation
 
+M$time = M$time_space = M$year
 
 M$pa = presence.absence( X={M$totno / M$data_offset}, px=0.05 )$pa  # determine presence absence and weighting
 
