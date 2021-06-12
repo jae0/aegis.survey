@@ -8,8 +8,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   # ---------------------
   # create/update library list
   p$libs = c( p$libs, RLibrary ( "colorspace",  "fields", "geosphere", "lubridate",  "lattice",
-    "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
-  p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.substrate", "aegis.temperature", "aegis.survey", "aegis.mpa", "netmensuration", "bio.taxonomy" ) )
+    "parallel",  "rgdal", "rgeos",  "sf",  "GADMTools" ) )
+  p$libs = c( p$libs, project.library ( "aegis", "aegis.polygons", "aegis.coastline", "aegis.bathymetry", "aegis.substrate", "aegis.temperature", "aegis.survey", "aegis.mpa", "netmensuration", "bio.taxonomy" ) )
 
   p$project_name = ifelse ( !is.null(project_name), project_name, "survey" )
 
@@ -27,7 +27,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
   p = parameters_add_without_overwriting( p,
     variabletomodel = "none",
-    spatial_domain = "SSE", 
+    spatial_domain = "SSE",
     spatial_domain_subareas = c( "SSE.mpa" , "snowcrab"),  # this is for bathymetry_db, not stmv
     aegis_dimensionality="space-year"
   )
@@ -36,8 +36,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
   # define focal years for modelling and interpolation
   if (!exists("year.assessment", p )) {
-    message("need probably want to assign current year.assessment, using current year for now")  
-    p$year.assessment = lubridate::year(lubridate::now()) 
+    message("need probably want to assign current year.assessment, using current year for now")
+    p$year.assessment = lubridate::year(lubridate::now())
   }
 
   yrs_default = 1970:p$year.assessment
@@ -51,8 +51,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     varstomodel = c( "pca1", "pca2", "ca1", "ca2" ),
     inputdata_spatial_discretization_planar_km = p$pres/2, # controls resolution of data prior to modelling (km .. ie 100 linear units smaller than the final discretization pres)
     inputdata_temporal_discretization_yr = 1/12,  # ie., controls resolution of data prior to modelling to reduce data set and speed up modelling;; use 1/12 -- monthly or even 1/4.. if data density is low
-    taxa.of.interest = aegis.survey::groundfish_variablelist("catch.summary"), 
-    season = "summer" 
+    taxa.of.interest = aegis.survey::groundfish_variablelist("catch.summary"),
+    season = "summer"
   )
 
 
@@ -76,11 +76,11 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
       areal_units_overlay = "none",
       areal_units_timeperiod = "none",
-      tus="yr", 
+      tus="yr",
       fraction_todrop = 1/5,
-      fraction_cv = 1.0, 
-      fraction_good_bad = 0.8, 
-      nAU_min = 5,  
+      fraction_cv = 1.0,
+      fraction_good_bad = 0.8,
+      nAU_min = 5,
       carstm_modelengine = "inla",  # {model engine}.{label to use to store}
       carstm_model_label = "default",
       carstm_inputs_aggregated = FALSE
@@ -97,7 +97,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     )
 
 
-    
+
     if ( grepl("inla", p$carstm_modelengine) ) {
       if ( !exists("carstm_model_label", p))  p$carstm_model_label = "production"
       if ( !exists("carstm_model_formula", p)  ) {
@@ -112,9 +112,9 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
             ' + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE ) ',
             ' + f( space_time, model="bym2", graph=slot(sppoly, "nb"), group=time_space, scale.model=TRUE, constr=TRUE, hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) '
         ))
-       
+
       }
-      
+
       if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "gaussian"
     }
 
