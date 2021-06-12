@@ -15,7 +15,9 @@
 
 
   # prepare snow crab data -- requires DFO oracle database connectivity
-  source( system.file( "scripts", "01.snowcrab.R", package = "bio.snowcrab") )
+  source( file.path( find.package(package="bio.snowcrab"), "scripts", "01.snowcrab.r") )
+
+
 
 
   # add other data such as biochem, etc  here

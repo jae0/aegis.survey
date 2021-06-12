@@ -8,6 +8,9 @@
 # ------------------------------------------------
 # load data environment
 
+require(aegis.polygons)
+
+
 RES = data.frame(yr=1970:2017)  # collect model comparisons in this data frame
 if (0) {
   fn = file.path( getwd(), "RES.rdata" )
@@ -22,11 +25,13 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
     # construct basic parameter list defining the main characteristics of the study and some plotting params
     p = carstm::carstm_parameters(
+      project_name="atlantic_cod",
       label ="Atlantic cod summer standardtow",
       speciesname = "Atlantic_cod",
       groundfish_species_code = 10,   #  10= cod
       yrs = yrs,
       areal_units_timeperiod = "pre2014",   # "pre2014" for older
+      areal_units_resolution_km = 25,
       areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia"),  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
       trawlable_units = tu
     )
@@ -51,6 +56,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
           polygon_enforce=TRUE,
           ranged_data="dyear"
         )
+      )
     )
 
 
@@ -59,6 +65,8 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
       # used for DEBUGGING:  access via strata_dataformat .. ie. directly from groundfish_survey_db .. gscat
       # gscat does not have the data corrections due to miscoding etc, vessel-species "catchability" corrections, etc
       # .. but the totals are nearly identical to survey_db access
+      groundfish_species_code = 10
+
       p$selection$biologicals$spec = groundfish_species_code
       p$selection$biologicals$spec_bio = NULL
 
@@ -142,7 +150,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
     (results_basic)
 
-    RES[,paste("stratanal", tu, sep="_")] = results_basic$pop.total[match(results_basic$year, RES$yr)]
+    RES[,paste("stratanal", tu, sep="_")] = results_basic$pop.total[ match(RES$yr, results_basic$year)]
     # plot( stratanal ~ yr, data=RES, lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
     # lines ( stratanal ~ yr, data=RES, lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
 

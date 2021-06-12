@@ -1,5 +1,5 @@
 
-  survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE ) {
+  survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE ) {
     #\\ assimilation of all survey data into a coherent form
     surveydir = project.datadirectory( "aegis", "survey" )
 
@@ -9,7 +9,7 @@
       # survet sets
       set = NULL # trip/set loc information
       fn = file.path( surveydir, "set.init.rdata"  )
-      if (DS=="set.init") {
+      if ( DS=="set.init" | !redo ) {
         if (file.exists( fn) ) load( fn)
         return ( set )
       }
@@ -76,7 +76,7 @@
       # all species caught
       cat = NULL # trip/cat loc information
       fn = file.path( surveydir, "cat.init.rdata"  )
-      if (DS=="cat.init") {
+      if (DS=="cat.init" | !redo ) {
         if (file.exists( fn) ) load( fn)
         return ( cat )
       }
@@ -219,7 +219,7 @@
       # all species caught
       det = NULL # biologicals
       fn = file.path( surveydir, "det.init.rdata"  )
-      if (DS=="det.init") {
+      if (DS=="det.init" | !redo ) {
         if (file.exists( fn) ) load( fn)
         return ( det )
       }
@@ -312,7 +312,7 @@
 
 
     # -------------
- 
+
     if ( DS=="areal_units_input" ) {
 
       fn = file.path( p$datadir,  "areal_units_input.rdata" )
@@ -327,8 +327,8 @@
       }
       xydata = survey_db( p=p, DS="set.base"  )  #
       xydata = xydata[ , c("lon", "lat", "yr" )]
-      xydata = lonlat2planar(xydata, p$areal_units_proj4string_planar_km)  # should not be required but to make sure
-      xydata = st_as_sf ( xydata, coords= c('lon', 'lat'), crs = st_crs(projection_proj4string("lonlat_wgs84")) )
+      xydata = st_as_sf ( xydata, coords= c('lon', 'lat') )
+      st_crs(xydata) = st_crs(projection_proj4string("lonlat_wgs84"))
       xydata = st_transform( xydata, st_crs( p$areal_units_proj4string_planar_km ))
       save(xydata, file=fn, compress=TRUE )
       return( xydata )
@@ -343,7 +343,7 @@
 
       set = NULL # trip/set loc information
       fn = file.path( surveydir, "set.base.rdata"  )
-      if (DS=="set.base") {
+      if (DS=="set.base" | !redo ) {
         if (file.exists( fn) ) load( fn)
         if( year.filter) if (exists("yrs", p) ) set = set[ set$yr %in% p$yrs, ]  # select to correct years
         return ( set )
@@ -370,7 +370,7 @@
       if (length(iM > 0)) {
         set[iM, pS$variabletomodel] = substrate_lookup( LOCS=set[iM, c("lon", "lat")], lookup_from="core", lookup_to="points" , lookup_from_class="aggregated_data" ) # core=="rawdata"
       }
- 
+
       # merge temperature
       pT = temperature_parameters( p=parameters_reset(p), project_class="core", year.assessment=p$year.assessment  )
       if (!(exists(pT$variabletomodel, set ))) set[,pT$variabletomodel] = NA
@@ -400,16 +400,18 @@
       fn = file.path( ddir, "bio.length.weight.parameters.rdata" )
       fn2 = file.path( ddir, "bio.length.weight.residuals.rdata" )
 
-      if (DS=="lengthweight.parameters") {
-        res = NULL
-        if (file.exists( fn ) ) load( fn )
-        return( res )
-      }
+      if ( !redo ) {
+        if (DS=="lengthweight.parameters" ) {
+          res = NULL
+          if (file.exists( fn ) ) load( fn )
+          return( res )
+        }
 
-      if (DS=="lengthweight.residuals") {
-        lwr = NULL
-        if (file.exists( fn2 ) ) load( fn2 )
-        return( lwr )
+        if (DS=="lengthweight.residuals") {
+          lwr = NULL
+          if (file.exists( fn2 ) ) load( fn2 )
+          return( lwr )
+        }
       }
 
       # this mirrors the relevent changes/recoding in aegis_db("det")
@@ -494,7 +496,7 @@
       # error checking, imputation, etc
       det = NULL
       fn = file.path( surveydir, "det.rdata"  )
-      if (DS=="det") {
+      if (DS=="det" | !redo ) {
         if (file.exists( fn) ) load( fn)
         return ( det )
       }
@@ -703,7 +705,7 @@
       # all species caught
       cat = NULL # biologicals
       fn = file.path( surveydir, "cat.rdata"  )
-      if (DS=="cat") {
+      if (DS=="cat" | !redo ) {
         if (file.exists( fn) ) load( fn)
         return ( cat )
       }
@@ -808,7 +810,7 @@
       # survet sets
       set = NULL # trip/set loc information
       fn = file.path( surveydir, "set.rdata"  )
-      if (DS=="set") {
+      if (DS=="set" | !redo ) {
         if (file.exists( fn) ) load( fn)
         return ( set )
       }

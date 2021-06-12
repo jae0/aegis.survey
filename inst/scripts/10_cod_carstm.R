@@ -18,17 +18,32 @@
 # construct basic parameter list defining the main characteristics of the study
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 # NOTE: the data selection is the same as in (01_cod_comparisons_basic_stranal.R)
+
+require(aegis.polygons)
+
 p = carstm::carstm_parameters(
+  project_name="atlantic_cod",
   id ="Atlantic cod summer standardtow",
   speciesname = "Atlantic_cod",
   groundfish_species_code = 10,   #  10= cod
   yrs = 1970:2017,
+  areal_units_overlay="groundfish_strata",
   areal_units_resolution_km = 25,
+  areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia"),  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
+  sa_threshold_km2 = 1,
   trawlable_units = "towdistance"  # <<<<<<<<<<<<<<<<<<
   # trawlable_units = "standardtow"
   # trawlable_units = "sweptarea"
 )
 
+#   areal_units_type="lattice",
+#   areal_units_resolution_km=p$areal_units_resolution_km,
+#   areal_units_overlay="groundfish_strata",
+#   xydata=survey_db(p=p, DS="areal_units_input"),
+#   inputdata_spatial_discretization_planar_km =p$pres,
+#   sa_threshold_km2 = 1,
+#   spatial_domain=p$spatial_domain,
+#   areal_units_proj4string_planar_km=projection_proj4string("utm20")  # projection to compute areas
 
 
 # --------------------------------
@@ -59,16 +74,8 @@ p = aegis.survey::survey_parameters(
 # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
 # This adds some variabilty relative to "statanal" (which uses sa in sq nautical miles, btw)
 
-sppoly = areal_units(
-  areal_units_type="lattice",
-  areal_units_resolution_km=p$areal_units_resolution_km,
-  areal_units_overlay="groundfish_strata",
-  xydata=survey_db(p=p, DS="areal_units_input"),
-  inputdata_spatial_discretization_planar_km =p$pres,
-  sa_threshold_km2 = 1,
-  spatial_domain=p$spatial_domain,
-  areal_units_proj4string_planar_km=projection_proj4string("utm20")  # projection to compute areas
-)
+sppoly = areal_units( p=p, xydata=survey_db(p=p, DS="areal_units_input") )
+
 # further filtering can be done here .. .strata to use for aggregations
 # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
 sppoly$strata_to_keep = TRUE
@@ -126,7 +133,7 @@ set$tag = "observations"
 ## --------------------------------
 # construct meanweights matrix
 weight_year = meanweights_by_arealunit( set=set, AUID=as.character( sppoly$AUID ), yrs=p$yrs, fillall=TRUE, annual_breakdown=TRUE )
-# weight_year = meanweights_by_arealunit_modelled( p=p, redo=TRUE )  -- note: data passing of M needs to be modularized 
+# weight_year = meanweights_by_arealunit_modelled( p=p, redo=TRUE )  -- note: data passing of M needs to be modularized
 # weight_year = weight_year[, match(as.character(p$yrs), colnames(weight_year) )]
 # weight_year = weight_year[ match(as.character(sppoly$AUID), rownames(weight_year) )]
 
