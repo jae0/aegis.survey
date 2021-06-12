@@ -19,7 +19,6 @@
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 # NOTE: the data selection is the same as in (01_cod_comparisons_basic_stranal.R)
 
-require(aegis.polygons)
 
 p = carstm::carstm_parameters(
   project_name="atlantic_cod",
@@ -74,13 +73,14 @@ p = aegis.survey::survey_parameters(
 # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
 # This adds some variabilty relative to "statanal" (which uses sa in sq nautical miles, btw)
 
-sppoly = areal_units( p=p, xydata=survey_db(p=p, DS="areal_units_input") )
+sppoly = areal_units( p=p, xydata=survey_db(p=p, DS="areal_units_input"), duplications_action="separate" )  # separate ids for each new sub area
 
 # further filtering can be done here .. .strata to use for aggregations
 # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
 sppoly$strata_to_keep = TRUE
 
-sppoly = neighbourhood_structure( sppoly=sppoly )  ##--- still needed ?
+
+
 
 
 # --------------------------------
@@ -88,25 +88,8 @@ sppoly = neighbourhood_structure( sppoly=sppoly )  ##--- still needed ?
 p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
 
 set = survey_db( p=p, DS="filter" )
-
-# categorize Strata
- # AUID reset to be consistent in both data and prediction areal units
-crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
-sppoly = st_transform(sppoly, crs=crs_lonlat )
-
-set$AUID = st_points_in_polygons(
-  pts = st_as_sf( set, coords=c("lon","lat"), crs=crs_lonlat ),
-  polys = sppoly[, "AUID"],
-  varname="AUID"
-)
-
-
-set = set[ which(!is.na(set$AUID)),]
-
 set$totno[which(!is.finite(set$totno))] = NA
 
-
-# --------------------------------
 # ensure we have some estimate of sweptarea and choose the appropriate
 # one based upon which trawlable units we are using
 ft2m = 0.3048
@@ -120,14 +103,7 @@ set$data_offset = switch( p$trawlable_units,
   sweptarea = set$sa  # swept area based upon stand tow width and variable lenths based upon start-end locations wherever possible
 )
 set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
-
-
-# ------------------------------------------------
-# update set with AUID factor variables and a few other repeatedly used variables
-set$AUID = factor(set$AUID, levels=levels(sppoly$AUID))
-set$yr_factor = factor(set$yr)
-set$iid_error = 1:nrow(set) # for inla indexing
-set$tag = "observations"
+set = set[ which(  is.finite(set$data_offset)   ),  ]
 
 
 ## --------------------------------
@@ -178,134 +154,93 @@ covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substra
 
 
 # extract covariates and supplent survey data via lookups
-set = aegis_db_lookup(
-  X=set,
-  lookupvars=covars,
-  xy_vars=c("lon", "lat"),
-  time_var="timestamp"
-)
 
+  varstokeep = c( "totno", "AUID", "yr", "t", "tsd", "tmin", "tmax", "degreedays", "z", "dZ", "ddZ", "substrate.grainsize", "data_offset", "tag" )
 
-
-  extraction_method = "grid"
-
-  if (extraction_method=="grid") {
-    # collapse PS vars with time into APS (and regrid via raster)
-    APS = aegis_db_extract(
-      vars=covars,
-      yrs=p$yrs,
-      spatial_domain=p$spatial_domain,
-      dyear=p$prediction_dyear,
-      returntype="data.frame",
-      areal_units_resolution_km=p$areal_units_resolution_km,
-      aegis_proj4string_planar_km=p$aegis_proj4string_planar_km
-    )
-  }
-
-  if (extraction_method=="polygon") {
-    res = aegis_db_extract_by_polygon(
-      sppoly=sppoly,
-      vars=covars,
-      spatial_domain=p$spatial_domain,
-      yrs=p$yrs,
-      dyear=0.6 # 0.6*12 months = 7.2 = early July
-    )
-    APS = aegis_prediction_surface( aegis_data=res$means  ) # merge data into prediction surface and add tags
-  }
-
-
-  APS$totno = NA
-  APS$yr = as.numeric( APS$year)
-  APS$data_offset = 1  # force to be density n/km^2
-  APS$tag = "predictions"
-
-  # APS = planar2lonlat(APS, p$aegis_proj4string_planar_km )
-
-  # AUID reset to be consistent in both data and prediction areal units
-  APS$AUID = st_points_in_polygons(
-    pts = st_as_sf( APS, coords=c("lon","lat"), crs=crs_lonlat ),
-    polys = sppoly[, "AUID"],
-    varname="AUID"
-  )
-
-  APS = APS[ which(!is.na(APS$AUID)),]
-
-
-  #  good data
-  ok = which(
-    is.finite(set[,"totno"]) &   # INLA can impute Y-data
-    is.finite(set$data_offset) &
-    !is.na(set$AUID)
+  M = carstm_prepare_inputdata( p=p, M=set[,varstokeep], sppoly=sppoly,
+    lookup = c("bathymetry", "substrate", "temperature", "speciescomposition"),
+    varstoretain =varstokeep,
+    APS_data_offset=1
   )
 
 
+ if (0) {
 
-
-
-varstokeep = c( "totno", "AUID", "yr", "t", "tsd", "tmin", "tmax", "degreedays", "z", "dZ", "ddZ", "substrate.grainsize", "data_offset", "tag" )
-
-M = rbind( set[ok, varstokeep], APS[,varstokeep] )
-
-M = M[ which(
-      is.finite(M$data_offset) &
-      !is.na(M$AUID)
-    ) , ]
-
-
-
-
-M$t[!is.finite(M$t)] = median(M$t, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$tsd[!is.finite(M$tsd)] = median(M$tsd, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$tmin[!is.finite(M$tmin)] = median(M$tmin, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$tmax[!is.finite(M$tmax)] = median(M$tmax, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$degreedays[!is.finite(M$degreedays)] = median(M$degreedays, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$z[!is.finite(M$z)] = median(M$z, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$dZ[!is.finite(M$dZ)] = median(M$dZ, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$ddZ[!is.finite(M$ddZ)] = median(M$ddZ, na.rm=TRUE )  # missing data .. quick fix .. do something better
-M$substrate.grainsize[!is.finite(M$substrate.grainsize)] = median(M$substrate.grainsize, na.rm=TRUE )  # missing data .. quick fix .. do something better
-
-
-
-
-M$ti = discretize_data( M$t, p$discretization$t )
-M$tisd = discretize_data( M$tsd, p$discretization$tsd )
-M$timin = discretize_data( M$tmin, p$discretization$tmin )
-M$timax = discretize_data( M$tmax, p$discretization$tmax )
-M$di = discretize_data( M$t, p$discretization$degreedays )
-M$zi = discretize_data( M$t, p$discretization$z )
-M$zid = discretize_data( M$t, p$discretization$dZ )
-M$zidd = discretize_data( M$t, p$discretization$ddZ )
-M$si = discretize_data( M$t, p$discretization$substrate.grainsize )
-
-
-
-M = M[ which(
-      is.finite(M$ti) &
-      is.finite(M$zi)
-    ) , ]
-M$yr_factor = factor( as.character(M$yr) )
-# M$AUID  = factor( as.character(M$AUID), levels=levels( sppoly$AUID ) )
-
-region.id = slot( slot(sppoly, "nb"), "region.id" )
-M$space = M$space_time = match( M$AUID, region.id )
+    M$ti = discretize_data( M$t, p$discretization$t )
+    M$tisd = discretize_data( M$tsd, p$discretization$tsd )
+    M$timin = discretize_data( M$tmin, p$discretization$tmin )
+    M$timax = discretize_data( M$tmax, p$discretization$tmax )
+    M$di = discretize_data( M$t, p$discretization$degreedays )
+    M$zi = discretize_data( M$t, p$discretization$z )
+    M$zid = discretize_data( M$t, p$discretization$dZ )
+    M$zidd = discretize_data( M$t, p$discretization$ddZ )
+    M$si = discretize_data( M$t, p$discretization$substrate.grainsize )
+ }
 
 M$strata  = as.numeric( M$AUID)
 
-M$year  = as.numeric( M$yr_factor)
-M$iid_error = 1:nrow(M) # for inla indexing for set level variation
-
-M$time = M$time_space = M$year
-
 M$pa = presence.absence( X={M$totno / M$data_offset}, px=0.05 )$pa  # determine presence absence and weighting
 
+fit = carstm_model( p=p, M=M ) # 151 configs and long optim .. 19 hrs
+# fit = carstm_model( p=p, DS="carstm_modelled_fit")
 
-# ---------------------
-# generic PC priors
-m = log( {set$totno / set$data_offset}[ok] )
-m[!is.finite(m)] = min(m[is.finite(m)])
+        # extract results
+        if (0) {
+          # very large files .. slow
+          fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
+          plot(fit)
+          plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
 
-H = carstm_hyperparameters( sd(m, na.rm=TRUE), alpha=0.5, median(m, na.rm=TRUE) )
-# H$prec$prec.intercept = 1e-9
+        }
+
+
+      res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
+      res$summary$dic$dic
+      res$summary$dic$p.eff
+      res$dyear
+
+
+      plot_crs = p$aegis_proj4string_planar_km
+      coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
+      isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to=plot_crs )
+      managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
+
+      time_match = list( year=as.character(2020)  )
+      carstm_map(  res=res,
+          vn=paste(p$variabletomodel, "predicted", sep="."),
+          time_match=time_match,
+          coastline=coastline,
+          managementlines=managementlines,
+          isobaths=isobaths,
+          main=paste("Predicted numerical abundance", paste0(time_match, collapse="-") )
+      )
+
+
+      # map all :
+      vn = paste(p$variabletomodel, "predicted", sep=".")
+
+      outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted.numerical.densitites" )
+
+      if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+
+      brks = pretty(  quantile(res[[vn]], probs=c(0,0.975))  )
+
+      for (y in res$year ){
+
+          time_match = list( year=as.character(y)  )
+          fn_root = paste("Predicted_numerical_abundance", paste0(time_match, collapse="-"), sep="_")
+          fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
+
+            carstm_map(  res=res, vn=vn, time_match=time_match,
+              breaks =brks,
+              coastline=coastline,
+              isobaths=isobaths,
+              managementlines=managementlines,
+              main=paste("Predicted numerial abundance", paste0(time_match, collapse="-") ),
+              outfilename=fn
+            )
+
+      }
 
 
 
@@ -320,7 +255,7 @@ fit = inla(
     totno ~ 1 + offset( log( data_offset) )
       + f(strata, model="iid", group=year, hyper=H$iid)
       + f(year, model="iid", hyper=H$iid )
-      + f(iid_error, model="iid", hyper=H$iid)
+      + f(uid, model="iid", hyper=H$iid)
       + f(ti, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
       + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2),
   family = "poisson", # "zeroinflatedpoisson0",
@@ -354,7 +289,7 @@ s$dic$p.eff # 6011
 #   Name	  Model
 #     strata IID model
 #    year IID model
-#    iid_error IID model
+#    uid IID model
 #    ti RW2 model
 #    zi RW2 model
 
@@ -363,7 +298,7 @@ s$dic$p.eff # 6011
 # Precision for strata     0.511   0.047      0.428    0.508      0.614  0.500
 # GroupRho for strata      0.831   0.033      0.750    0.837      0.878  0.854
 # Precision for year       1.519   0.284      1.021    1.501      2.129  1.468
-# Precision for iid_error  0.384   0.011      0.367    0.383      0.410  0.377
+# Precision for uid  0.384   0.011      0.367    0.383      0.410  0.377
 # Precision for ti        73.936 177.837      7.600   31.052    403.217 12.648
 # Precision for zi         3.862   2.582      0.586    3.319     10.214  1.764
 
@@ -413,7 +348,7 @@ fit = inla(
     totno ~ 1 + offset( log( data_offset) )
       + f(strata, model="iid", group=year, hyper=H$iid)
       + f(year, model="ar1", hyper=H$ar1 )
-      + f(iid_error, model="iid", hyper=H$iid)
+      + f(uid, model="iid", hyper=H$iid)
       + f(ti, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
       + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2),
   family = "poisson", # "zeroinflatedpoisson0",
@@ -447,7 +382,7 @@ s$dic$p.eff # 5963
 #   Name	  Model
 #     strata IID model
 #    year AR1 model
-#    iid_error IID model
+#    uid IID model
 #    ti RW2 model
 #    zi RW2 model
 
@@ -457,7 +392,7 @@ s$dic$p.eff # 5963
 # GroupRho for strata      0.699  0.037      0.618    0.702      0.763  0.711
 # Precision for year       2.619  0.775      1.410    2.516      4.429  2.322
 # Rho for year             0.930  0.030      0.856    0.935      0.973  0.945
-# Precision for iid_error  0.486  0.018      0.453    0.485      0.524  0.483
+# Precision for uid  0.486  0.018      0.453    0.485      0.524  0.483
 # Precision for ti        16.711 10.509      4.592   14.128     44.203 10.158
 # Precision for zi         4.299  2.803      1.183    3.581     11.659  2.549
 
@@ -504,7 +439,7 @@ spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coast
 fit = inla(
   formula = totno ~ 1
     + offset( log(data_offset) )
-    + f(iid_error, model="iid", hyper=H$iid)
+    + f(uid, model="iid", hyper=H$iid)
     + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(year, model="iid", hyper=H$iid)
@@ -537,7 +472,7 @@ if (0) {
 
 # Random effects:
 #   Name	  Model
-#     iid_error IID model
+#     uid IID model
 #    ti RW2 model
 #    zi RW2 model
 #    year IID model
@@ -545,7 +480,7 @@ if (0) {
 
 # Model hyperparameters:
 #                          mean    sd 0.025quant 0.5quant 0.975quant  mode
-# Precision for iid_error 0.377 0.009      0.360    0.377      0.394 0.377
+# Precision for uid 0.377 0.009      0.360    0.377      0.394 0.377
 # Precision for ti        8.477 5.883      2.082    6.950     23.877 4.727
 # Precision for zi        0.957 1.054      0.116    0.643      3.721 0.300
 # Precision for year      1.280 0.275      0.780    1.271      1.851 1.261
@@ -593,7 +528,7 @@ spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coast
 fit = inla(
   formula = totno ~ 1
     + offset( log(data_offset) )
-    + f(iid_error, model="iid", hyper=H$iid)
+    + f(uid, model="iid", hyper=H$iid)
     + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
     + f(year, model="ar1", hyper=H$ar1)
@@ -625,7 +560,7 @@ s$dic$p.eff #  5883
 
 # Random effects:
 #   Name	  Model
-#     iid_error IID model
+#     uid IID model
 #    ti RW2 model
 #    zi RW2 model
 #    year AR1 model
@@ -633,7 +568,7 @@ s$dic$p.eff #  5883
 
 # Model hyperparameters:
 #                           mean     sd 0.025quant 0.5quant 0.975quant  mode
-# Precision for iid_error  0.457  0.016      0.427    0.457      0.491 0.455
+# Precision for uid  0.457  0.016      0.427    0.457      0.491 0.455
 # Precision for ti        20.494 27.129      3.755   12.438     86.279 6.599
 # Precision for zi         1.109  2.131      0.068    0.525      5.776 0.168
 # Precision for year       1.195  1.065      0.078    0.894      3.930 0.209
@@ -698,7 +633,7 @@ H = carstm_hyperparameters( sd(M$pa, na.rm=TRUE) )
 # 3.25hrs; 45 configs
 fit = inla(
   formula = pa ~ 1
-  + f(iid_error, model="iid", hyper=H$iid)
+  + f(uid, model="iid", hyper=H$iid)
   + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(year, model="iid", hyper=H$iid)
@@ -732,7 +667,7 @@ s$dic$p.eff # 301.5
 
 # Random effects:
 #   Name	  Model
-#     iid_error IID model
+#     uid IID model
 #    ti RW2 model
 #    zi RW2 model
 #    year IID model
@@ -740,7 +675,7 @@ s$dic$p.eff # 301.5
 
 # Model hyperparameters:
 #                            mean       sd 0.025quant 0.5quant 0.975quant   mode
-# Precision for iid_error 321.732 1171.499      7.291   92.214   2026.074 16.637
+# Precision for uid 321.732 1171.499      7.291   92.214   2026.074 16.637
 # Precision for ti          8.700    8.321      1.387    6.275     30.555  3.409
 # Precision for zi          2.215    2.537      0.281    1.456      8.738  0.697
 # Precision for year        1.818    0.405      1.141    1.779      2.725  1.705
@@ -783,7 +718,7 @@ spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coast
 # 100 hrs; 79 configs
 fit = inla(
   formula = pa ~ 1
-  + f(iid_error, model="iid", hyper=H$iid)
+  + f(uid, model="iid", hyper=H$iid)
   + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
   + f(year, model="iid", hyper=H$iid)
