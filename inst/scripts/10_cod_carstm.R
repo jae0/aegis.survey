@@ -106,14 +106,6 @@ set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na
 set = set[ which(  is.finite(set$data_offset)   ),  ]
 
 
-## --------------------------------
-# construct meanweights matrix
-weight_year = meanweights_by_arealunit( set=set, AUID=as.character( sppoly$AUID ), yrs=p$yrs, fillall=TRUE, annual_breakdown=TRUE )
-# weight_year = meanweights_by_arealunit_modelled( p=p, redo=TRUE )  -- note: data passing of M needs to be modularized
-# weight_year = weight_year[, match(as.character(p$yrs), colnames(weight_year) )]
-# weight_year = weight_year[ match(as.character(sppoly$AUID), rownames(weight_year) )]
-
-
 
 
 
@@ -155,9 +147,9 @@ covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substra
 
 # extract covariates and supplent survey data via lookups
 
-  varstokeep = c( "totno", "AUID", "yr", "t", "tsd", "tmin", "tmax", "degreedays", "z", "dZ", "ddZ", "substrate.grainsize", "data_offset", "tag" )
+  varstokeep = c( "totno",   "yr", "t", "tsd", "tmin", "tmax", "degreedays", "z", "dZ", "ddZ", "substrate.grainsize", "data_offset", "tag" )
 
-  M = carstm_prepare_inputdata( p=p, M=set[,varstokeep], sppoly=sppoly,
+  M = carstm_prepare_inputdata( p=p, M=set, sppoly=sppoly,
     lookup = c("bathymetry", "substrate", "temperature", "speciescomposition"),
     varstoretain =varstokeep,
     APS_data_offset=1
@@ -242,6 +234,14 @@ fit = carstm_model( p=p, M=M ) # 151 configs and long optim .. 19 hrs
 
       }
 
+
+
+## --------------------------------
+# construct meanweights matrix
+weight_year = meanweights_by_arealunit( set=M[M$tag=="observations",], AUID=as.character( sppoly$AUID ), yrs=p$yrs, fillall=TRUE, annual_breakdown=TRUE )
+# weight_year = meanweights_by_arealunit_modelled( p=p, redo=TRUE )  -- note: data passing of M needs to be modularized
+# weight_year = weight_year[, match(as.character(p$yrs), colnames(weight_year) )]
+# weight_year = weight_year[ match(as.character(sppoly$AUID), rownames(weight_year) )]
 
 
 
