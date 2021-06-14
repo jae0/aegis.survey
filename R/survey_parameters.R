@@ -83,7 +83,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       nAU_min = 5,
       carstm_modelengine = "inla",  # {model engine}.{label to use to store}
       carstm_model_label = "default",
-      carstm_inputs_prefilter = FALSE
+      carstm_inputs_prefilter = "sampled",
+      carstm_inputs_prefilter_n = 10
     )
 
 
