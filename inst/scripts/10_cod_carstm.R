@@ -149,10 +149,18 @@ covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substra
 
   varstokeep = c( "totno",   "yr", "t", "tsd", "tmin", "tmax", "degreedays", "z", "dZ", "ddZ", "substrate.grainsize", "data_offset", "tag" )
 
-  M = carstm_prepare_inputdata( p=p, M=set, sppoly=sppoly,
-    lookup = c("bathymetry", "substrate", "temperature", "speciescomposition"),
-    varstoretain =varstokeep,
-    APS_data_offset=1
+  require("aegis.speciescomposition")
+
+  if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
+  p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
+    bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
+    substrate = "stmv",  # "stmv", "hybrid", "carstm"
+    temperature = "carstm",  # "stmv", "hybrid", "carstm"
+    speciescomposition = "carstm" # "stmv", "hybrid", "carstm"
+  )
+
+  M = carstm_prepare_inputdata( p=p, M=set, sppoly=sppoly, APS_data_offset=1,
+    lookup = c("bathymetry", "substrate", "temperature", "speciescomposition") 
   )
 
 
