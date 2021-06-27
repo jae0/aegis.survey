@@ -105,19 +105,17 @@ set$data_offset = switch( p$trawlable_units,
 set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
 set = set[ which(  is.finite(set$data_offset)   ),  ]
 
-
-
-
-
-# adjust based upon RAM requirements and ncores
-ncores = floor( ram_local( "ncores", ram_main=4, ram_process=6 ) / 2 )
-inla.setOption(num.threads=ncores)
-inla.setOption(blas.num.threads=ncores)
-
-
+ 
 
 # RES = data.frame(yr=p$selection$survey[["yr"]]) # collect model comparisons
 if (0) {
+
+  # adjust based upon RAM requirements and ncores
+  ncores = floor( ram_local( "ncores", ram_main=4, ram_process=6 ) / 2 )
+  inla.setOption(num.threads=ncores)
+  inla.setOption(blas.num.threads=ncores)
+
+
   fn = file.path( project.datadirectory( "carstm" ), "RES.rdata" )
   # save(RES, file=fn)
   # load(fn)
@@ -126,7 +124,7 @@ if (0) {
 
 ## ----------------------------------
 # covariates of interest
-covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substrate.grainsize" )
+# covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substrate.grainsize" )
 
   # currently supported:
   # z = depth (m)
@@ -144,11 +142,7 @@ covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substra
   # degreedays = number of degree days in a given year – annual
 
 
-
-# extract covariates and supplent survey data via lookups
-
-  varstokeep = c( "totno",   "yr", "t", "tsd", "tmin", "tmax", "degreedays", "z", "dZ", "ddZ", "substrate.grainsize", "data_offset", "tag" )
-
+ 
   require("aegis.speciescomposition")
 
   if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
@@ -162,20 +156,7 @@ covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substra
   M = carstm_prepare_inputdata( p=p, M=set, sppoly=sppoly, APS_data_offset=1,
     lookup = c("bathymetry", "substrate", "temperature", "speciescomposition") 
   )
-
-
- if (0) {
-
-    M$ti = discretize_data( M$t, p$discretization$t )
-    M$tisd = discretize_data( M$tsd, p$discretization$tsd )
-    M$timin = discretize_data( M$tmin, p$discretization$tmin )
-    M$timax = discretize_data( M$tmax, p$discretization$tmax )
-    M$di = discretize_data( M$t, p$discretization$degreedays )
-    M$zi = discretize_data( M$t, p$discretization$z )
-    M$zid = discretize_data( M$t, p$discretization$dZ )
-    M$zidd = discretize_data( M$t, p$discretization$ddZ )
-    M$si = discretize_data( M$t, p$discretization$substrate.grainsize )
- }
+ 
 
 M$strata  = as.numeric( M$AUID)
 
