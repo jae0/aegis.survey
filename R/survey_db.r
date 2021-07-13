@@ -360,7 +360,7 @@
       # merge depth
       iM = which( !is.finite(set$z) )
       if (length(iM > 0)) {
-        set$z[iM] = aegis_lookup( data_class="bathymetry", LOCS=set[ iM, c("lon", "lat")], lookup_from="core", lookup_to="points", lookup_from_class="aggregated_data", variable_name="z.mean"  ) # core==unmodelled
+        set$z[iM] = aegis_lookup( data_class="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", variable_name="z.mean"  ) # core==unmodelled
         }
 
       # substrate lookup
@@ -368,7 +368,7 @@
       if (!(exists(pS$variabletomodel, set ))) set[,pS$variabletomodel] = NA
       iM = which(!is.finite( set[, pS$variabletomodel] ))
       if (length(iM > 0)) {
-        set[iM, pS$variabletomodel] = aegis_lookup( data_class="substrate", LOCS=set[iM, c("lon", "lat")], lookup_from="core", lookup_to="points" , lookup_from_class="aggregated_data", variable_name="substrate.grainsize.mean"  )  
+        set[iM, pS$variabletomodel] = aegis_lookup( data_class="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", variable_name="substrate.grainsize.mean"  )  
       }
 
       # merge temperature
@@ -376,7 +376,7 @@
       if (!(exists(pT$variabletomodel, set ))) set[,pT$variabletomodel] = NA
       iM = which(!is.finite( set[, pT$variabletomodel] ))
       if (length(iM > 0)) {
-        set[iM, pT$variabletomodel] = aegis_lookup( data_class="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], lookup_from="core", lookup_to="points", lookup_from_class="aggregated_data", variable_name="t.mean" ,
+        set[iM, pT$variabletomodel] = aegis_lookup( data_class="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean" ,
             tz="America/Halifax", year.assessment=p$year.assessment
           )
       }
