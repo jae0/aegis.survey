@@ -104,7 +104,6 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       if ( !exists("carstm_model_formula", p)  ) {
         p$carstm_model_formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',
-            ' + f( uid, model="iid" ) ',
             ' + f( season, model="rw2", hyper=H$rw2, cyclic=TRUE ) ',
             ' + f( time, model="ar1",  hyper=H$ar1 ) ',
             ' + f( inla.group( t, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
@@ -113,7 +112,6 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
             ' + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE ) ',
             ' + f( space_time, model="bym2", graph=slot(sppoly, "nb"), group=time_space, scale.model=TRUE, constr=TRUE, hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) '
         ))
-
       }
 
       if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "gaussian"
