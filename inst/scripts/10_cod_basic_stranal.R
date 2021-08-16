@@ -24,7 +24,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
 
     # construct basic parameter list defining the main characteristics of the study and some plotting params
-    p = carstm::carstm_parameters(
+    p = list (
       project_name="atlantic_cod",
       label ="Atlantic cod summer standardtow",
       speciesname = "Atlantic_cod",

@@ -20,7 +20,7 @@
 # NOTE: the data selection is the same as in (01_cod_comparisons_basic_stranal.R)
 
 
-p = carstm::carstm_parameters(
+p = list(
   project_name="atlantic_cod",
   id ="Atlantic cod summer standardtow",
   speciesname = "Atlantic_cod",

@@ -137,8 +137,6 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "gaussian"
     }
 
-    p = carstm_parameters( p=p )  #generics
-
     if ( p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km ) {
       warning( "p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km " )
     }
