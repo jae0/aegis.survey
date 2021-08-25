@@ -143,7 +143,7 @@ set$uid = paste(set$AUID, set$year, set$dyear_discret, sep=".")
     APS = NULL
 
 
-fit = carstm_model( p=pB, M=M, DS="redo", carstm_model_label="test"  ) # run model and obtain predictions
+fit = carstm_model( p=pB, data=M, DS="redo", carstm_model_label="test"  ) # run model and obtain predictions
 
 
 

@@ -121,8 +121,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
     if ( grepl("inla", p$carstm_modelengine) ) {
       if ( !exists("carstm_model_label", p))  p$carstm_model_label = "production"
-      if ( !exists("carstm_model_formula", p)  ) {
-        p$carstm_model_formula = as.formula( paste(
+      if ( !exists("formula", p)  ) {
+        p$formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',
             ' + f( season, model="rw2", hyper=H$rw2, cyclic=TRUE ) ',
             ' + f( time, model="ar1",  hyper=H$ar1 ) ',
@@ -134,7 +134,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
         ))
       }
 
-      if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "gaussian"
+      if ( !exists("family", p)  )  p$family = "gaussian"
     }
 
     if ( p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km ) {

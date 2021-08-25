@@ -162,7 +162,7 @@ M$strata  = as.numeric( M$AUID)
 
 M$pa = presence.absence( X={M$totno / M$data_offset}, px=0.05 )$pa  # determine presence absence and weighting
 
-fit = carstm_model( p=p, M=M ) # 151 configs and long optim .. 19 hrs
+fit = carstm_model( p=p, data=M ) # 151 configs and long optim .. 19 hrs
 # fit = carstm_model( p=p, DS="carstm_modelled_fit")
 
         # extract results
@@ -616,7 +616,7 @@ plot( fit$marginals.hyperpar$"Precision for setno", type="l")
 
 
 
-H = carstm_hyperparameters( sd(M$pa, na.rm=TRUE) )
+H = hyperparameters( sd(M$pa, na.rm=TRUE) )
 
 # single car
 # 3.25hrs; 45 configs

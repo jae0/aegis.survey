@@ -184,7 +184,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
       M$plon = M$plat = M$lon = M$lat = NULL
 
-      if (any( grepl("offset", as.character(p$carstm_model_formula)))){
+      if (any( grepl("offset", as.character(p$formula)))){
           if (!exists("data_offset", M)) {
             if (exists("data_offset", sppoly)) {
               message("data_offset not defined, using data_offset from sppoly")
@@ -224,7 +224,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     APS$AUID = as.character( APS$AUID )
     APS$tag ="predictions"
 
-    if (any( grepl("offset", as.character(p$carstm_model_formula)))) {
+    if (any( grepl("offset", as.character(p$formula)))) {
       if (!is.null(APS_data_offset)) {
         APS$data_offset =  APS_data_offset   
       } else {
