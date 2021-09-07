@@ -267,8 +267,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         raster_resolution=min(p$gridparams$res) /2,
         returntype = "vector"
       ) 
- 
     }
+
     iM = which(!is.finite( APS[[pB$variabletomodel]] )) 
     if (length(iM) > 0 ) {
       # depth is very important
@@ -283,7 +283,6 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         raster_resolution=min(p$gridparams$res) /2,
         returntype = "vector"
       ) 
- 
     }
 
   }
@@ -408,19 +407,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(ii) > 0) M$dyear[ii] = 0.99 # cap it .. some surveys go into the next year
 
     M$dyri = discretize_data( M[["dyear"]], p$discretization[["dyear"]] )
-
-
-    M$season = as.character( M$dyri )  # copy for INLA
+    M$cyclic = as.character( M$dyri )  # copy for INLA
   }
-
-
-  if ( "substrate" %in% lookup ) {
-    iM = which(!is.finite( APS[[pS$variabletomodel]] )) 
-    if (length(iM) > 0 ) {
-      
-    }
-
-  }
-
+  
+ 
   return(M)
 }
