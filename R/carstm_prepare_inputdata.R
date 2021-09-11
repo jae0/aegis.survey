@@ -335,6 +335,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   # ---------------------
   if ( "temperature" %in% lookup ) {
+  
     require("aegis.temperature")
     pT = temperature_parameters( p=parameters_reset(p), project_class="carstm", year.assessment=p$year.assessment  )
     APS[[ pT$variabletomodel ]] = aegis_lookup( 
@@ -406,8 +407,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     ii = which( M$dyear > 1) 
     if (length(ii) > 0) M$dyear[ii] = 0.99 # cap it .. some surveys go into the next year
 
-    M$dyri = discretize_data( M[["dyear"]], p$discretization[["dyear"]] )
-    M$cyclic = as.character( M$dyri )  # copy for INLA
+    M$dyri = discretize_data( M[["dyear"]], discretizations()[["dyear"]] )
+    M$cyclic = as.character( M$dyri )  # copy for carstm/INLA
   }
   
  

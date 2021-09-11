@@ -7,7 +7,7 @@
 # .. show other sources here as they become available
 
 # 02.surveys.*.r assimilates and models these data
-   year.assessment = 2020
+   year.assessment = 2021
 
 
   # prepare groundfish data -- requires DFO oracle database connectivity

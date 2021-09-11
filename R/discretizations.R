@@ -7,6 +7,10 @@ discretizations = function( x=NULL, p=NULL) {
   substrate.grainsize = c( 0, 1, 2, 4, 8, 12, 16, 20, 32 )
   pca1 = seq( -1, 1, by=0.1  )
   pca2 = seq( -1, 1, by=0.1  )
+  pca3 = seq( -1, 1, by=0.1  )
+  ca1 = seq( -1, 1, by=0.1  )
+  ca2 = seq( -1, 1, by=0.1  )
+  ca3 = seq( -1, 1, by=0.1  )
   t = seq( -4, 25, by=1  )
   tsd = seq( 0, 25, by=1  )
   tmin = seq( -4, 25, by=1  )
@@ -21,6 +25,10 @@ discretizations = function( x=NULL, p=NULL) {
         substrate.grainsize=substrate.grainsize,
         pca1=pca1,
         pca2=pca2,
+        pca3=pca3,
+        ca1=ca1,
+        ca2=ca2,
+        ca3=ca3,
         t=t,
         tsd=tsd,
         tmin=tmin,
