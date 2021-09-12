@@ -1,13 +1,16 @@
 
 carstm_prepare_inputdata = function( p, M, sppoly,
     lookup = c("bathymetry", "substrate", "temperature", "speciescomposition"),
-    APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL
+    APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL
 ) {
  
   setDT(M)
 
-  vv = setdiff(  vars_to_retain, names(M) ) 
-  if (length(vv) > 0) stop( "Variables to retain not found:", vv )
+  if (!is.null(vars_to_retain)) {
+    vv = setdiff(  vars_to_retain, names(M) ) 
+    if (length(vv) > 0) stop( "Variables to retain not found:", vv )
+  }
+
 
   M$tag = "observations"
  
@@ -391,11 +394,19 @@ carstm_prepare_inputdata = function( p, M, sppoly,
  }
 
   if (exists("timestamp", APS)) APS$timestamp = NULL  # time-based matching finished (if any)
-
-  for (vn in vars_to_retain ) {
-    if (!exists(vn, APS)) APS[[vn]] = NA
+ 
+  if (!is.null(vars_to_retain)) {
+    for (vn in vars_to_retain ) {
+      if (!exists(vn, APS)) APS[[vn]] = NA
+    }
   }
-  
+
+  if (!is.null(vars_to_drop)) {
+    for (vn in vars_to_drop ) {
+      if (exists(vn, APS)) APS[[vn]] = NULL
+    }
+  }
+
   M = rbind( M[, names(APS), with=FALSE ], APS )
 
   APS = NULL; gc()
