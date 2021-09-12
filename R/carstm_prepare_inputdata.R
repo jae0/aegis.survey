@@ -6,7 +6,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
  
   setDT(M)
 
-  vv = intersect(  vars_to_retain, names(M) ) 
+  vv = setdiff(  vars_to_retain, names(M) ) 
   if (length(vv) > 0) stop( "Variables to retain not found:", vv )
 
   M$tag = "observations"
