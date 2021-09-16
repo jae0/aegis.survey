@@ -188,7 +188,7 @@ fit = carstm_model( p=p, data=M ) # 151 configs and long optim .. 19 hrs
 
       time_match = list( year=as.character(2020)  )
       carstm_map(  res=res,
-          vn=paste(p$variabletomodel, "predicted", sep="."),
+          vn="predictions",
           time_match=time_match,
           coastline=coastline,
           managementlines=managementlines,
@@ -198,7 +198,7 @@ fit = carstm_model( p=p, data=M ) # 151 configs and long optim .. 19 hrs
 
 
       # map all :
-      vn = paste(p$variabletomodel, "predicted", sep=".")
+      vn = "predictions"
 
       outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted.numerical.densitites" )
 
