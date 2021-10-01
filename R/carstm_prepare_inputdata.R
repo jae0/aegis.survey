@@ -242,7 +242,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       APS = APS[ , c( "AUID", "tag" ) ]
     }
 
-    APS[,p$variabletomodel] = NA
+    APS[, p$variabletomodel] = NA
   }
 
   if ( "bathymetry" %in% lookup ) {
