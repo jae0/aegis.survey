@@ -935,7 +935,7 @@
       if (add_groundfish_strata) {
         areal_units_timeperiod = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod )
-        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
+        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km )
       }
 
       # filter non-biologicals ... i.e, set characteristics
@@ -1104,7 +1104,7 @@
       if (add_groundfish_strata) {
         areal_units_timeperiod = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod )
-        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
+        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km  )
       }
 
       # filter non-biologicals ... i.e, set characteristics
@@ -1233,7 +1233,7 @@
       if (add_groundfish_strata) {
         areal_units_timeperiod = "pre2014"  # "pre2014" for older
         sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod )
-        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km, plotdata=TRUE )
+        set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km )
       }
 
       # filter non-biologicals ... i.e, set characteristics

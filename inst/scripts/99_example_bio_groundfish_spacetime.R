@@ -166,7 +166,7 @@ fit = carstm_model( p=pB, data=M, DS="redo", carstm_model_label="test"  ) # run 
   W = spdep::nb2mat(W.nb, style="B", zero.policy=TRUE) # adjacency matrix ; B = binary ; W=row standardized etc
 
   library(rgeos)
-  # sset = maritimes_groundfish_strata_identify( Y=sset, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$areal_units_proj4string_planar_km, plotdata=TRUE )
+  # sset = maritimes_groundfish_strata_identify( Y=sset, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$areal_units_proj4string_planar_km  )
   sset = sset[ which(!is.na(sset$AUID)), ]
 
   sdat = sset[ sset$yr %in% c(2010, 2011, 2012) ,]
