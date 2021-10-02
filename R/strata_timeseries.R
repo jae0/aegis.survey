@@ -3,14 +3,19 @@ strata_timeseries = function( set, ... ) {
   params = list(...)
 
   res = data.frame()
+ 
+  for (yr in params[["yrs"]]){
+    print(yr)
+      i = which(set$yr == yr)
 
-  for (yr in params[["yr"]]){
-    i = which(set$yr == yr)
-    yhi = split(set[ i, params[["variable"]] ], set[i,"strat"] ) #split the variable by strata
-    nh = as.vector(sapply(yhi, length)) #numer of tows per strata
-    nhws = sapply(yhi, function(x) length(x [x > 0])) #calculate the number of samples > 1 in each strata
-    Nh = sapply( split(set[ i, "nh" ], set[i,"strat"] ), mean, na.rm=TRUE) #split the variable by strata to get trawalable units in each strata
-    Wh = Nh / sum(Nh) #strata percent of the total area in trawlable units
+      if (length(i) < 3) next()
+
+      yhi = split(set[ i, params[["variable"]] ], set[i,"strat"] ) #split the variable by strata
+
+      nh = as.vector(sapply(yhi, length)) #numer of tows per strata
+      nhws = sapply(yhi, function(x) length(x [x > 0])) #calculate the number of samples > 1 in each strata
+      Nh = sapply( split(set[ i, "nh" ], set[i,"strat"] ), mean, na.rm=TRUE) #split the variable by strata to get trawalable units in each strata
+      Wh = Nh / sum(Nh) #strata percent of the total area in trawlable units
 
     #Calculate Stratified Estimates and Confidence intervals
     #-------------------------------------------------------------------------------------

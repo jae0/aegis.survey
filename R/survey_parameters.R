@@ -70,6 +70,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
 
     # defaults in case not provided ...
+    
     p = parameters_add_without_overwriting( p,
       areal_units_xydata = "survey_db(p=p, DS='areal_units_input')",
       areal_units_type = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same

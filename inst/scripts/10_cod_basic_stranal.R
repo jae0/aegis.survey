@@ -9,23 +9,24 @@
 # load data environment
 
 require(aegis.polygons)
+require(aegis.survey)
 
 
-RES = data.frame(yr=1970:2017)  # collect model comparisons in this data frame
+RES = data.frame(yr=1970:2021)  # collect model comparisons in this data frame
 if (0) {
   fn = file.path( getwd(), "RES.rdata" )
   # save(RES, file=fn)
   # load(fn)
 }
 
-yrs =2000:2018
+yrs =1970:2021
 
 for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
 
     # construct basic parameter list defining the main characteristics of the study and some plotting params
     p = list (
-      project_name="atlantic_cod",
+      project_name="atlantic_cod",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
       label ="Atlantic cod summer standardtow",
       speciesname = "Atlantic_cod",
       groundfish_species_code = 10,   #  10= cod
@@ -91,7 +92,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
       # the above merges based upon AUID's designated in groundfish tables.  Alternatively one can use positions directly:
       set = survey_db( p=p, DS="filter" )
       # categorize Strata
-      sppoly = areal_units( areal_units_type="stratanal_polygons_pre2014",  areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km  )
+      sppoly = areal_units( p=p, areal_units_type="stratanal_polygons_pre2014",  areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km  )
       sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
 
       crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
@@ -151,9 +152,11 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
     (results_basic)
 
-    RES[,paste("stratanal", tu, sep="_")] = results_basic$pop.total[ match(RES$yr, results_basic$year)]
-    # plot( stratanal ~ yr, data=RES, lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
-    # lines ( stratanal ~ yr, data=RES, lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
+    vn = paste("stratanal", tu, sep="_")
+    RES[, vn] = results_basic$pop.total[ match(RES$yr, results_basic$year)]
+
+    plot( RES[, vn] ~ RES[, "yr"], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
+    lines ( RES[, vn] ~ RES[, "yr"], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
 
 }
 
