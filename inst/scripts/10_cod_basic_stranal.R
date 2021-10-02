@@ -41,6 +41,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     # specific selection params required for survey_db(DS="filter") data selection mechanism
     p = aegis.survey::survey_parameters(
       p=p,
+      project_class = "carstm",
       selection=list(
         biologicals=list(
           spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=p$groundfish_species_code )
@@ -84,7 +85,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     # Using this approach is better in that there is more filter control
     # Results for the basic test cases are essentially identical to "stratanal" (via "strata_dataformat", above)
     # but faster and more QA/QC done on the input data
-    set = aegis.survey::survey_db( p=p, DS="filter", add_groundfish_strata=TRUE )   # return values in kg or no per set
+    set =  survey_db( p=p, DS="filter", add_groundfish_strata=TRUE )   # return values in kg or no per set
 
     if (0) {
       # the above merges based upon AUID's designated in groundfish tables.  Alternatively one can use positions directly:
