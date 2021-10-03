@@ -141,13 +141,13 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     # Random stratified estimates from a faster variation of Michelle's code
     results_basic = strata_timeseries(
       set = set,
-      speciesname = p[["label"]],
-      yr = p$yrs,
       variable ="totwgt",
-      alpha.t = 0.05, # confidence interval eg. 0.05 = 95%, 0.1 = 90%
-      alpha.b = 0.05,
-      nresamp = 1000,
-      prints=TRUE
+      speciesname = p[["label"]],
+      yrs = p$yrs
+      # alpha.t = 0.05, # confidence interval eg. 0.05 = 95%, 0.1 = 90%
+      # alpha.b = 0.05,
+      # nresamp = 1000,
+      # prints=TRUE
     )
 
     (results_basic)
@@ -155,7 +155,7 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     vn = paste("stratanal", tu, sep="_")
     RES[, vn] = results_basic$pop.total[ match(RES$yr, results_basic$year)]
 
-    plot( RES[, vn] ~ RES[, "yr"], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
+    plot( RES[, vn] ~ RES[, "yr"], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8), )
     lines ( RES[, vn] ~ RES[, "yr"], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
 
 }

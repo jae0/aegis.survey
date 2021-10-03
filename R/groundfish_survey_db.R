@@ -1,6 +1,6 @@
 
 
-groundfish_survey_db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL, netmensuration.do=FALSE, ...  ) {
+groundfish_survey_db = function( DS="refresh.all.data.tables", yrs=NULL, netmensuration.do=FALSE, ...  ) {
 
   # mostly for storage ... not too much processing
   if (is.null(p)) {
@@ -339,9 +339,14 @@ groundfish_survey_db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL
 		out = NULL
     if ( is.null(DS) | DS=="gsinf.rawdata" ) {
       fl = list.files( path=fn.root, pattern="*.rdata", full.names=T  )
-				for ( fny in fl ) {
+      for ( fny in fl ) {
         load (fny)
-        out = rbind( out, gsinf )
+        if ( is.null(out) ) {
+          out = gsinf
+        } else {
+          vns = intersect( names(gsinf), names(out) )
+          out = rbind( out[,vns], gsinf[,vns] )
+        }
 			}
 			return (out)
     }
@@ -414,10 +419,12 @@ groundfish_survey_db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL
       }
     }
     uu = which( gsinf$timediff.gsinf < 0 ) # when tow end is before start
-    gsinf$edate[uu]  = NA  # set these to NA until they can be corrected manually
-    gsinf$timediff.gsinf[uu] =NA
-    print( "Time stamps sdate and etime (renamed as edate) are severely off: edate is before sdate:" )
-    print( gsinf[uu,] )
+    if (length(uu) > 0 ) {
+      gsinf$edate[uu]  = NA  # set these to NA until they can be corrected manually
+      gsinf$timediff.gsinf[uu] =NA
+      print( "Time stamps sdate and etime (renamed as edate) are severely off: edate is before sdate:" )
+      print( gsinf[uu,] )
+    }
 
     if (FALSE)  hist( as.numeric(  gsinf$timediff.gsinf), breaks=200 )
 
@@ -428,16 +435,19 @@ groundfish_survey_db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL
         hist( as.numeric(  gsinf$timediff.gsinf[-oo]), breaks=200 )
       }
     }
+
     gsinf$timediff.gsinf = gsinf$edate - gsinf$sdate
     uu = which( gsinf$timediff.gsinf > dminutes(50) ) # assuming 50 min is a max tow length
-    gsinf$edate[uu]  = NA  # set these to NA untile they can be corrected manually
-    gsinf$timediff.gsinf[uu] =NA
-      if (FALSE) {
-        hist( as.numeric(  gsinf$timediff.gsinf), breaks=200 )
-        abline (v=30*60, col="red")  # expected value of 30 min
-        abline (v=90*60, col="red")  # after 90 min
-        abline (v=150*60, col="red")  # after 150 min
-      }
+    if (length(uu) > 0) {
+      gsinf$edate[uu]  = NA  # set these to NA untile they can be corrected manually
+      gsinf$timediff.gsinf[uu] =NA
+        if (FALSE) {
+          hist( as.numeric(  gsinf$timediff.gsinf), breaks=200 )
+          abline (v=30*60, col="red")  # expected value of 30 min
+          abline (v=90*60, col="red")  # after 90 min
+          abline (v=150*60, col="red")  # after 150 min
+        }
+    }
 
     gsinf$yr = lubridate::year( gsinf$sdate)
 
@@ -484,16 +494,29 @@ groundfish_survey_db = function(  p=NULL, DS="refresh.all.data.tables", yrs=NULL
     nmi2mi = 1.1507794
     mi2ft = 5280
     gsinf$sakm2 = (41 * ft2m * m2km ) * ( gsinf$dist * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled in km^2
-			oo = which( !is.finite(gsinf$sakm2 ))
-				gsinf$sakm2[oo] = median (gsinf$sakm2, na.rm=T)
-			pp = which( gsinf$sakm2 > 0.09 )
-				gsinf$sakm2[pp] = median (gsinf$sakm2, na.rm=T)
+    oo = which( !is.finite(gsinf$sakm2 ))
+		if (length(oo) > 0 ) {
+      gsinf$sakm2[oo] = median (gsinf$sakm2, na.rm=T)
+    }
+
+    pp = which( gsinf$sakm2 > 0.09 )
+		if (length(pp) > 0) {
+      gsinf$sakm2[pp] = median (gsinf$sakm2, na.rm=T)
+    }
+
     gsinf$bottom_depth = rowMeans( gsinf[, c("dmax", "depth" )], na.rm = TRUE )  * 1.8288  # convert from fathoms to meters
+    
     ii = which( gsinf$bottom_depth < 10 | !is.finite(gsinf$bottom_depth)  )  # error
-    gsinf$bottom_depth[ii] = NA
-		gsinf = gsinf[, c("id", "yr", "sdate", "edate", "time", "strat", "area", "speed", "dist_km", "dist_pos",
-                      "sakm2", "settype", "gear", "geardesc", "lon", "lat", "lon.end", "lat.end",
-                      "surface_temperature","bottom_temperature","bottom_salinity", "bottom_depth")]
+    if (length(ii) > 0 ) {
+      gsinf$bottom_depth[ii] = NA
+    }
+    
+    tokeep = c("id", "yr", "sdate", "edate", "time", "strat", "area", "speed", 
+    "dist_km", "dist_pos", "sakm2", "settype", "gear", "geardesc", "lon", "lat", 
+    "lon.end", "lat.end", "surface_temperature","bottom_temperature","bottom_salinity", "bottom_depth")
+
+    tokeep = intersect( names(gsinf), tokeep )
+    gsinf = gsinf[, tokeep ]
 
     save(gsinf, file=fn, compress=T)
     return(fn)
