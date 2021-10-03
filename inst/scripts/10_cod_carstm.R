@@ -19,13 +19,14 @@
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 # NOTE: the data selection is the same as in (01_cod_comparisons_basic_stranal.R)
 
+yrs = 1970:2021 
 
 p = list(
   project_name="atlantic_cod",
-  id ="Atlantic cod summer standardtow",
+  label ="Atlantic cod summer standardtow",
   speciesname = "Atlantic_cod",
   groundfish_species_code = 10,   #  10= cod
-  yrs = 1970:2017,
+  yrs = yrs,
   areal_units_overlay="groundfish_strata",
   areal_units_resolution_km = 25,
   areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia"),  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
@@ -50,6 +51,7 @@ p = list(
 # unlike stratanl, we do not need to remove strata until the last /aggregation step
 p = aegis.survey::survey_parameters(
   p=p,
+  project_class = "carstm",
   selection=list(
     biologicals=list(
       spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=p$groundfish_species_code )
@@ -61,6 +63,7 @@ p = aegis.survey::survey_parameters(
       # dyear = c(150,250)/365, # alternate way of specifying season: summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       settype = 1, # same as geartype in groundfish_survey_db
       gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
+      strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
       polygon_enforce=TRUE,  # make sure mis-classified stations or incorrectly entered positions get filtered out
       ranged_data = c("dyear")  # not used .. just to show how to use range_data
     )
@@ -73,7 +76,7 @@ p = aegis.survey::survey_parameters(
 # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
 # This adds some variabilty relative to "statanal" (which uses sa in sq nautical miles, btw)
 
-sppoly = areal_units( p=p, xydata=survey_db(p=p, DS="areal_units_input"), duplications_action="separate" )  # separate ids for each new sub area
+sppoly = areal_units( p=p, duplications_action="separate" )  # separate ids for each new sub area
 
 # further filtering can be done here .. .strata to use for aggregations
 # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )

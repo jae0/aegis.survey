@@ -179,7 +179,7 @@ dev.new(width=6, height=4)
 hist( RES$stratanal_sweptarea / RES$stratanal_standardtow, breaks=20 )
 
 
-cor( RES[, c("stratanal_standardtow", "stratanal_towdistance", "stratanal_sweptarea")])
+cor( RES[, c("stratanal_standardtow", "stratanal_towdistance", "stratanal_sweptarea")], use="pairwise.complete.obs" )
 
 plot( RES[, c("stratanal_standardtow", "stratanal_towdistance", "stratanal_sweptarea")])
 
@@ -240,11 +240,11 @@ plot( RES[, c("stratanal_standardtow", "stratanal_towdistance", "stratanal_swept
 set$strata_year = paste( set$AUID, set$yr, sep=".")
 nn = applySummary( set[, c("strata_year", "totno")]  )
 
-V = expand.grid( AUID=levels(set$AUID), yr=sort( unique(set$yr) ) )
+V = expand.grid( AUID=unique(set$AUID), yr=sort( unique(set$yr) ) )
 V$strata_year = paste( V$AUID, V$yr, sep=".")
 V = merge( V, nn, by="strata_year", all.x=TRUE, all.y=FALSE, suffixes=c("", ".totno") )
 
-dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1)
+dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like a Poisson .. 
 
 
 ### end
