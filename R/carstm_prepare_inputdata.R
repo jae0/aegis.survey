@@ -128,6 +128,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       pT = temperature_parameters( p=parameters_reset(p), project_class="carstm", year.assessment=p$year.assessment  )
       if (!(exists(pT$variabletomodel, M ))) M[[pT$variabletomodel]] = NA
       iM = which(!is.finite( M[[pT$variabletomodel]] ))
+     
       if (length(iM > 0)) {
         M[[pT$variabletomodel]] [iM] = aegis_lookup(  
           data_class="temperature", 
@@ -344,6 +345,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   
     require("aegis.temperature")
     pT = temperature_parameters( p=parameters_reset(p), project_class="carstm", year.assessment=p$year.assessment  )
+   
     APS[[ pT$variabletomodel ]] = aegis_lookup( 
       data_class="temperature", 
       LOCS=APS[ , c("AUID", "timestamp")], 
