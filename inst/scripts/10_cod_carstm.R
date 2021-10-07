@@ -1,41 +1,47 @@
 
 # ------------------------------------------------
 # Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
-# using sweptarea only
-#
-# Now we move to the use of ICAR-BYM type approach and environmental covariates.
+# using sweptarea only on a lattice system with environmental covariates.
 
+  yrs = 1970:2021 
+  groundfish_species_code = 10 # cod
 
-# ---- using alternate strata -----------
-
-
-
-# ------------------------------------------------
-# load data common environment and parameter setting
-# source( system.file( "scripts", "00_cod_comparisons_data_environment.R", package = "carstm") )
 
 # --------------------------------
 # construct basic parameter list defining the main characteristics of the study
-# and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
-# NOTE: the data selection is the same as in (01_cod_comparisons_basic_stranal.R)
+# parameter setting used to filter data via 'survey_db( DS="filter")'
+# NOTE: the data selection is the same as in (01_cod_comparisons_basic_stranal.R) for purposes of comparison
+# NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
 
-yrs = 1970:2021 
 
-p = list(
+# variations examined here:
+# 0. standard GF strata-based solution -- no covar, no space, spacetime RF -- equivalent to "stratanl" 
+    # areal_units_type="stratanal_polygons_pre2014"
+
+# 1. standard GF strata-based solution   
+    # areal_units_type="stratanal_polygons_pre2014"
+
+# 2. lattice solution  
+    # areal_units_type="lattice" &  areal_units_overlay="groundfish_strata" duplications_action="union"
+
+# 3. lattice and GF-strata solution combined   
+    # areal_units_type="lattice" &  areal_units_overlay="groundfish_strata" duplications_action="separate"
+
+# 4. data-based areal-units solution  
+    # areal_units_type="tesselation"
+
+
+# variation 3: lattice and GF-strata solution combined
+p = aegis.survey::survey_parameters(
+  project_class = "carstm",
   project_name="atlantic_cod",
   label ="Atlantic cod summer standardtow",
   speciesname = "Atlantic_cod",
-  groundfish_species_code = 10,   #  10= cod
+  groundfish_species_code = groundfish_species_code,   #  10= cod  ?? drop ?? .. not required
   yrs = yrs,
   areal_units_overlay="groundfish_strata",
   areal_units_resolution_km = 25,
   areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia"),  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
-  sa_threshold_km2 = 1,
-  trawlable_units = "towdistance"  # <<<<<<<<<<<<<<<<<<
-  # trawlable_units = "standardtow"
-  # trawlable_units = "sweptarea"
-)
-
 #   areal_units_type="lattice",
 #   areal_units_resolution_km=p$areal_units_resolution_km,
 #   areal_units_overlay="groundfish_strata",
@@ -44,26 +50,22 @@ p = list(
 #   sa_threshold_km2 = 1,
 #   spatial_domain=p$spatial_domain,
 #   areal_units_proj4string_planar_km=projection_proj4string("utm20")  # projection to compute areas
-
-
-# --------------------------------
-# parameter setting used to filter data via 'survey_db( DS="filter")'
-# unlike stratanl, we do not need to remove strata until the last /aggregation step
-p = aegis.survey::survey_parameters(
-  p=p,
-  project_class = "carstm",
+  sa_threshold_km2 = 1,
+  trawlable_units = "towdistance",  # <<<<<<<<<<<<<<<<<<
+  # trawlable_units = "standardtow",
+  # trawlable_units = "sweptarea",
   selection=list(
     biologicals=list(
-      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=p$groundfish_species_code )
+      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_species_code )
     ),
     survey=list(
       data.source="groundfish",
-      yr = p$yrs,  # time frame for comparison specified above
+      yr = yrs,  # time frame for comparison specified above
       months=6:8,  # "summer"
       # dyear = c(150,250)/365, # alternate way of specifying season: summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       settype = 1, # same as geartype in groundfish_survey_db
       gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
-      strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
+      # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis .. not needed here .. in fact, better to retain as it provides additional info (degrees of freedom)  on space and time aC and covariate relations
       polygon_enforce=TRUE,  # make sure mis-classified stations or incorrectly entered positions get filtered out
       ranged_data = c("dyear")  # not used .. just to show how to use range_data
     )
@@ -77,8 +79,11 @@ p = aegis.survey::survey_parameters(
 # This adds some variabilty relative to "statanal" (which uses sa in sq nautical miles, btw)
 
 sppoly = areal_units( p=p, duplications_action="separate" )  # separate ids for each new sub area
-
+plot(sppoly["AUID"])
+carstm_map( sppoly=sppoly, vn="au_sa_km2" , map_mode="view" )  # interactive
+  
 # further filtering can be done here .. .strata to use for aggregations
+
 # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
 sppoly$strata_to_keep = TRUE
 
@@ -144,22 +149,19 @@ if (0) {
   # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
   # degreedays = number of degree days in a given year – annual
 
-
  
-  require("aegis.speciescomposition")
+if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
+p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
+  bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
+  substrate = "stmv",  # "stmv", "hybrid", "carstm"
+  temperature = "carstm",  # "stmv", "hybrid", "carstm"
+  speciescomposition = "carstm" # "stmv", "hybrid", "carstm"
+)
 
-  if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
-  p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
-    bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
-    substrate = "stmv",  # "stmv", "hybrid", "carstm"
-    temperature = "carstm",  # "stmv", "hybrid", "carstm"
-    speciescomposition = "carstm" # "stmv", "hybrid", "carstm"
-  )
+M = carstm_prepare_inputdata( p=p, M=set, sppoly=sppoly, APS_data_offset=1,
+  lookup = c("bathymetry", "substrate", "temperature", "speciescomposition") 
+)
 
-  M = carstm_prepare_inputdata( p=p, M=set, sppoly=sppoly, APS_data_offset=1,
-    lookup = c("bathymetry", "substrate", "temperature", "speciescomposition") 
-  )
- 
 
 M$strata  = as.numeric( M$AUID)
 
@@ -168,63 +170,63 @@ M$pa = presence.absence( X={M$totno / M$data_offset}, px=0.05 )$pa  # determine 
 fit = carstm_model( p=p, data=M ) # 151 configs and long optim .. 19 hrs
 # fit = carstm_model( p=p, DS="carstm_modelled_fit")
 
-        # extract results
-        if (0) {
-          # very large files .. slow
-          fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
-          plot(fit)
-          plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
+  # extract results
+  if (0) {
+    # very large files .. slow
+    fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
+    plot(fit)
+    plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
 
-        }
-
-
-      res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
-      res$summary$dic$dic
-      res$summary$dic$p.eff
-      res$dyear
+  }
 
 
-      plot_crs = p$aegis_proj4string_planar_km
-      coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
-      isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to=plot_crs )
-      managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
-
-      time_match = list( year=as.character(2020)  )
-      carstm_map(  res=res,
-          vn="predictions",
-          time_match=time_match,
-          coastline=coastline,
-          managementlines=managementlines,
-          isobaths=isobaths,
-          main=paste("Predicted numerical abundance", paste0(time_match, collapse="-") )
-      )
+res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
+res$summary$dic$dic
+res$summary$dic$p.eff
+res$dyear
 
 
-      # map all :
-      vn = "predictions"
+plot_crs = p$aegis_proj4string_planar_km
+coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
+isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to=plot_crs )
+managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
 
-      outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted.numerical.densitites" )
+time_match = list( year=as.character(2020)  )
+carstm_map(  res=res,
+  vn="predictions",
+  time_match=time_match,
+  coastline=coastline,
+  managementlines=managementlines,
+  isobaths=isobaths,
+  main=paste("Predicted numerical abundance", paste0(time_match, collapse="-") )
+)
 
-      if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
-      brks = pretty(  quantile(res[[vn]], probs=c(0,0.975))  )
+# map all :
+vn = "predictions"
 
-      for (y in res$year ){
+outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted.numerical.densitites" )
 
-          time_match = list( year=as.character(y)  )
-          fn_root = paste("Predicted_numerical_abundance", paste0(time_match, collapse="-"), sep="_")
-          fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
+if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
-            carstm_map(  res=res, vn=vn, time_match=time_match,
-              breaks =brks,
-              coastline=coastline,
-              isobaths=isobaths,
-              managementlines=managementlines,
-              main=paste("Predicted numerial abundance", paste0(time_match, collapse="-") ),
-              outfilename=fn
-            )
+brks = pretty(  quantile(res[[vn]], probs=c(0,0.975))  )
 
-      }
+for (y in res$year ){
+
+  time_match = list( year=as.character(y)  )
+  fn_root = paste("Predicted_numerical_abundance", paste0(time_match, collapse="-"), sep="_")
+  fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
+
+  carstm_map(  res=res, vn=vn, time_match=time_match,
+    breaks =brks,
+    coastline=coastline,
+    isobaths=isobaths,
+    managementlines=managementlines,
+    main=paste("Predicted numerial abundance", paste0(time_match, collapse="-") ),
+    outfilename=fn
+  )
+
+}
 
 
 

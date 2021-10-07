@@ -56,7 +56,7 @@
         y$setquality[ which( y$towquality == 1 ) ] = "good"  # 1=good
         y$sal = NA  # dummy
         y$oxyml = NA # dummy var
-        y$cf_tow = 1/y$sa
+         y$cf_tow = 1/y$sa
         # y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
         y$sa_towdistance = NA  # TODO
         set = rbind( set, y[ , set.names ] )  # sa is in km^2

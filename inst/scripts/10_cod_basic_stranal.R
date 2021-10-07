@@ -1,31 +1,35 @@
 
 # ------------------------------------------------
 # Atlantic cod comparison of naive strata-based averages
-# This replicates standard groundfish strata-based estimation of means and totals
+
+# NOTE: This replicates standard groundfish strata-based estimation of means and totals
 # "standard" random-stratified estimation functions (based on stratanal and bootstrap estimation techniques )
-# derived from numerous authors .. this code has been optimized a bit more for clarity and speed by JSC
-
-# ------------------------------------------------
-# load data environment
-
-require(aegis.polygons)
-require(aegis.survey)
 
 
-RES = data.frame(yr=1970:2021)  # collect model comparisons in this data frame
-if (0) {
-  fn = file.path( getwd(), "RES.rdata" )
-  # save(RES, file=fn)
-  # load(fn)
-}
+  yrs = 1970:2021 
+  groundfish_species_code = 10 # cod
 
-yrs =1970:2021
+  # store some of the aggregate timeseries in this list
+
+  RES = data.frame(yr=yrs)  # collect model comparisons in this data frame
+  if (0) {
+    fn = file.path( getwd(), "RES.rdata" )
+    # save(RES, file=fn)
+    # load(fn)
+  }
+
+
+# --------------------------------
+# do stratanl for each of the following swept-area assumptions:
 
 for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
 
+    # construct basic parameter list defining the main characteristics of the study
+    # parameter setting used to filter data via 'survey_db( DS="filter")'
+    # specific selection params required for survey_db(DS="filter") data selection mechanism
 
-    # construct basic parameter list defining the main characteristics of the study and some plotting params
-    p = list (
+    p = aegis.survey::survey_parameters(
+      project_class = "carstm",
       project_name="atlantic_cod",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
       label ="Atlantic cod summer standardtow",
       speciesname = "Atlantic_cod",
@@ -34,22 +38,14 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
       areal_units_timeperiod = "pre2014",   # "pre2014" for older
       areal_units_resolution_km = 25,
       areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia"),  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
-      trawlable_units = tu
-    )
-
-
-
-    # specific selection params required for survey_db(DS="filter") data selection mechanism
-    p = aegis.survey::survey_parameters(
-      p=p,
-      project_class = "carstm",
+      trawlable_units = tu, 
       selection=list(
         biologicals=list(
-          spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=p$groundfish_species_code )
+          spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_species_code )
         ),
         survey=list(
           data.source="groundfish",
-          yr = p$yrs,      # time frame for comparison specified above
+          yr = yrs,      # time frame for comparison specified above
           months=6:8,
           # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
           settype = 1,
@@ -94,19 +90,15 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
       # categorize Strata
       sppoly = areal_units( p=p, areal_units_type="stratanal_polygons_pre2014",  areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km  )
       sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
-
       crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
       sppoly = st_transform(sppoly, crs=crs_lonlat )
-
       set$AUID = st_points_in_polygons(
         pts = st_as_sf( set, coords=c("lon","lat"), crs=crs_lonlat ),
         polys = sppoly[, "AUID"],
         varname="AUID"
       )
-
       set = set[ which(!is.na(set$AUID)),]
     }
-
 
     #  dim(set) # [1] 1684   39
     #  sum(set$totwgt) # [1] 9691
@@ -136,7 +128,6 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     set$nh[i] = as.numeric(set$au_sa_km2[i]) / standardtow_sakm2  # override missing with "standard set" .. also if no trawlable_units set
 
 
-
     # ------------------------------------------------
     # Random stratified estimates from a faster variation of Michelle's code
     results_basic = strata_timeseries(
@@ -159,6 +150,10 @@ for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     lines ( RES[, vn] ~ RES[, "yr"], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
 
 }
+
+
+# ------------------------------------------------
+# comparative plots:
 
 dev.new(width=11, height=7)
 col = c("slategray", "turquoise", "darkorange" )
