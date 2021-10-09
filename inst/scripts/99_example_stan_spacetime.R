@@ -213,7 +213,7 @@ stcode = stan_model_code( "bym_scaled_heirarchical_ar1_nonseparable" )  # derive
       iter_sampling = 1000,
       chains=4,               # number of Markov chains
       cores = 4,               # number of cores (using 2 just for the vignette)
-      adapt_delta = 0.975, 
+      adapt_delta = 0.975,
       max_treedepth=14,
       verbose=TRUE ); # ~ 1 min per chain
 

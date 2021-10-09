@@ -368,7 +368,7 @@
       if (!(exists(pS$variabletomodel, set ))) set[,pS$variabletomodel] = NA
       iM = which(!is.finite( set[, pS$variabletomodel] ))
       if (length(iM > 0)) {
-        set[iM, pS$variabletomodel] = aegis_lookup( data_class="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", variable_name="substrate.grainsize.mean"  )  
+        set[iM, pS$variabletomodel] = aegis_lookup( data_class="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", variable_name="substrate.grainsize.mean"  )
       }
 
       # merge temperature
@@ -1392,6 +1392,114 @@
       }
 
       return (set)
+    }
+
+
+
+# ----------------------------------
+
+
+    if (DS == "carstm_inputs" ) {
+
+      # format data, lookup variables where required and then create prediction surface
+
+      if (is.null(sppoly)) sppoly = areal_units( p=p  )
+
+      crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
+      sppoly = st_transform(sppoly, crs=crs_lonlat )
+      sppoly$data_offset = sppoly$sa
+
+      areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
+
+      fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
+
+      # inputs are shared across various secneario using the same polys
+      #.. store at the modeldir level as default
+      outputdir = dirname( fn )
+      if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+
+      M = NULL
+      if ( !redo ) {
+        if (file.exists( fn) ) {
+          message( "Loading previously saved carstm_inputs ... ", fn)
+          load( fn)
+          return ( M )
+        }
+      }
+      message( "Generating carstm_inputs ... ", fn)
+
+
+      p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
+      set = survey_db( p=p, DS="filter" )
+      set$totno[which(!is.finite(set$totno))] = NA
+
+      # ensure we have some estimate of sweptarea and choose the appropriate
+      # one based upon which trawlable units we are using
+      ft2m = 0.3048
+      m2km = 1/1000
+      nmi2mi = 1.1507794
+      mi2ft = 5280
+      standardtow_sakm2 = (41 * ft2m * m2km ) * ( 1.75 * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled by a standard tow in km^2  1.75 nm
+      set$data_offset = switch( p$trawlable_units,
+        standardtow =  rep(standardtow_sakm2, nrow(set)) , # "standard tow"
+        towdistance = set$sa_towdistance,  # "sa"=computed from tow distance and standard width, 0.011801==),
+        sweptarea = set$sa  # swept area based upon stand tow width and variable lenths based upon start-end locations wherever possible
+      )
+      set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
+      set = set[ which(  is.finite(set$data_offset)   ),  ]
+
+      # covariates only with stmv
+      # covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substrate.grainsize" ) ;;
+
+      # currently supported:
+      # z = depth (m)
+      # dZ = bottom slope (m/km)
+      # ddZ = bottom curvature (m/km^2)
+      # substrate.grainsize = mean grain size of bottom substrate (mm)
+      # t = temperature (C) – subannual
+      # tlb = temperature lower 95% bound (C) –subannual
+      # tub = temperature upper 95% bound (C) –subannual
+      # tmean = mean annual temperature
+      # tsd = standard deviation of the mean annual temperature
+      # tmin = minimum value of temperature in a given year – annual
+      # tmax= maximum value of temperature in a given year – annual
+      # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
+      # degreedays = number of degree days in a given year – annual
+
+      if ( !exists("carstm_inputdata_model_source", p))  {
+        p$carstm_inputdata_model_source = list()
+
+        p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
+          bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
+          substrate = "stmv",  # "stmv", "hybrid", "carstm"
+          temperature = "carstm",  # "stmv", "hybrid", "carstm"
+          speciescomposition = "carstm" # "stmv", "hybrid", "carstm"
+        )
+      }
+
+      M = carstm_prepare_inputdata(
+        p=p,
+        M=set,
+        sppoly=sppoly,
+        APS_data_offset=1,
+        lookup=names(p$carstm_inputdata_model_source)
+      )
+
+      M$strata  = as.numeric( M$AUID)
+
+      M$meansize  = M$totwgt / M$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
+
+      M$pa = presence.absence( X={M$totno / M$data_offset}, px=0.05 )$pa  # determine presence absence and weighting
+
+      M$yr = M$year  # req for meanweights
+
+      # IMPERATIVE:
+      M = M[ which(is.finite(M$t)), ]
+
+      save( M, file=fn, compress=TRUE )
+
+      return(M)
+
     }
 
   }
