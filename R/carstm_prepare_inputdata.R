@@ -421,7 +421,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     M$tiyr  = aegis_floor( M$tiyr / p$tres )*p$tres    # discretize for inla .. midpoints
     M$yr = aegis_floor( M$tiyr)
     M$time = as.character( M$yr )  # copy for INLA
-    M$yr_factor = factor(M$yr)
+#     M$yr_factor = factor(M$yr)
   
     # do not sepraate out as season can be used even if not predicted upon
     ii = which( M$dyear > 1) 
