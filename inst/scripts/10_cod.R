@@ -10,7 +10,7 @@
 
   # store some of the aggregate timeseries in this list
 
-  RES= list( yr = pN$yrs )
+  RES= list( yr = yrs )
   if (0) {
     fn = file.path( getwd(), "RES.rdata" )
     # save(RES, file=fn)
@@ -58,8 +58,9 @@
 
   # do stratanl for each of the following swept-area assumptions:
   for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
+    sppoly =  areal_units( p=p  )
     bi = strata_timeseries(
-      set=stratanal_data( p=p, toget="stratanal", trawlable_units=tu ),
+      set=stratanal_data( p=p, toget="stratanal", trawlable_units=tu, sppoly=sppoly ),
       variable="totwgt",
       speciesname=p[["label"]],
       yrs=p$yrs
@@ -72,7 +73,7 @@
     RES[[runtype]] = bi[ match(RES[["yr"]], bi$year), ]
     RES[[runtype]]$label = runtype
 
-    plot( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8), )
+    plot( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8) )
     lines ( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
   }
 
@@ -182,6 +183,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 # ------------------------------------------------
 # Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
 # using sweptarea only on a lattice system with environmental covariates.
+# Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
+# This adds some differences relative to "statanal" (which uses sa in sq nautical miles, btw)
 
 # NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
 
@@ -191,6 +194,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 keep these separate: habitat, habitat overdispersed, habitat leroux
 
+
 # ----------------------------------------------
 # 1. standard GF strata-based solution -- no covar, no space, spacetime RF -- equivalent to "stratanl"
     # areal_units_type="stratanal_polygons_pre2014"
@@ -198,6 +202,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     RES[[runtype]]$label = ""
     RES[[runtype]]$pN = p
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
+    RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
         + f(strata, model="iid", group=year, hyper=H$iid)
         + f(year, model="iid", hyper=H$iid )
@@ -216,14 +221,8 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     )
     RES[[runtype]]$pW$family =  "gaussian"
 
-    ## using the "standard" polygon definitions  .. see https://cran.r-project.org/web/packages/spdep/vignettes/nb.pdf
-    # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
-    # This adds some variabilty relative to "statanal" (which uses sa in sq nautical miles, btw)
-    RES[[runtype]]$sppoly = areal_units( p=pN, duplications_action="separate" )  # separate ids for each new sub area
-    # plot(sppoly["AUID"])
-    # carstm_map( sppoly=sppoly, vn="au_sa_km2" , map_mode="view" )  # interactive
-    # further filtering can be done here .. .strata to use for aggregations
-    # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
+    RES[[runtype]]$sppoly = areal_units( p=RES[[runtype]]$pN, duplications_action="separate" )  # separate ids for each new sub area
+    # RES[[runtype]]$sppoly$strata_to_keep = ifelse( as.character(RES[[runtype]]$sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
     RES[[runtype]]$sppoly$strata_to_keep = TRUE
 
 
@@ -235,6 +234,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     RES[[runtype]]$label = ""
     RES[[runtype]]$pN = p
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
+    RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
         + f(strata, model="iid", group=year, hyper=H$iid)
         + f(year, model="iid", hyper=H$iid )
@@ -261,6 +261,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     RES[[runtype]]$label = ""
     RES[[runtype]]$pN = p
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
+    RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
         + f(strata, model="iid", group=year, hyper=H$iid)
         + f(year, model="iid", hyper=H$iid )
@@ -288,6 +289,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     runtype = "abundance.space_bym2.year_ar1.envir"
     RES[[runtype]]$pN = p
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
+    RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
         + f(strata, model="iid", group=year, hyper=H$iid)
         + f(year, model="iid", hyper=H$iid )
@@ -315,6 +317,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     RES[[runtype]]$label = ""
     RES[[runtype]]$pN = p
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
+    RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
         + f(strata, model="iid", group=year, hyper=H$iid)
         + f(year, model="iid", hyper=H$iid )
@@ -405,6 +408,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     RES[[runtype]]$label = ""
     RES[[runtype]]$pH = p
     RES[[runtype]]$pH$areal_units_type="stratanal_polygons_pre2014"
+    RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pH$formula = formula( pa ~ 1
         + f(strata, model="iid", group=year, hyper=H$iid)
         + f(year, model="iid", hyper=H$iid )
@@ -421,6 +425,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     RES[[runtype]]$label = ""
     RES[[runtype]]$pH = p
     RES[[runtype]]$pH$areal_units_type="stratanal_polygons_pre2014"
+    RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pH$formula = formula( pa ~ 1
         + f(strata, model="iid", group=year, hyper=H$iid)
         + f(year, model="iid", hyper=H$iid )

@@ -1,5 +1,5 @@
 
-  survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE ) {
+  survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL ) {
     #\\ assimilation of all survey data into a coherent form
     surveydir = project.datadirectory( "aegis", "survey" )
 
@@ -360,7 +360,7 @@
       # merge depth
       iM = which( !is.finite(set$z) )
       if (length(iM > 0)) {
-        set$z[iM] = aegis_lookup( data_class="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", variable_name="z.mean"  ) # core==unmodelled
+        set$z[iM] = aegis_lookup( parameters="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", variable_name="z.mean"  ) # core==unmodelled
         }
 
       # substrate lookup
@@ -368,7 +368,7 @@
       if (!(exists(pS$variabletomodel, set ))) set[,pS$variabletomodel] = NA
       iM = which(!is.finite( set[, pS$variabletomodel] ))
       if (length(iM > 0)) {
-        set[iM, pS$variabletomodel] = aegis_lookup( data_class="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", variable_name="substrate.grainsize.mean"  )
+        set[iM, pS$variabletomodel] = aegis_lookup( parameters="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", variable_name="substrate.grainsize.mean"  )
       }
 
       # merge temperature
@@ -376,7 +376,7 @@
       if (!(exists(pT$variabletomodel, set ))) set[,pT$variabletomodel] = NA
       iM = which(!is.finite( set[, pT$variabletomodel] ))
       if (length(iM > 0)) {
-        set[iM, pT$variabletomodel] = aegis_lookup( data_class="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean" ,
+        set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean" ,
             tz="America/Halifax", year.assessment=p$year.assessment
           )
       }
@@ -1412,7 +1412,6 @@
       areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
       fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
-
       # inputs are shared across various secneario using the same polys
       #.. store at the modeldir level as default
       outputdir = dirname( fn )
@@ -1431,6 +1430,7 @@
 
       p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
       set = survey_db( p=p, DS="filter" )
+ 
       set$totno[which(!is.finite(set$totno))] = NA
 
       # ensure we have some estimate of sweptarea and choose the appropriate
@@ -1466,14 +1466,18 @@
       # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
       # degreedays = number of degree days in a given year – annual
 
-      if ( !exists("carstm_inputdata_model_source", p))  {
-        p$carstm_inputdata_model_source = list()
+    # 
 
-        p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
-          bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
-          substrate = "stmv",  # "stmv", "hybrid", "carstm"
-          temperature = "carstm",  # "stmv", "hybrid", "carstm"
-          speciescomposition = "carstm" # "stmv", "hybrid", "carstm"
+    # TO check ... already set in survey paraeters ... not sure if they need to be here again
+      if ( !exists("carstm_lookup_parameters", p))  {
+        # generics using "default" carstm models and stmv solutions for spatial effects
+        p$carstm_lookup_parameters = list()
+        p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
+          bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
+          substrate = substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
+          temperature = temperature_parameters( project_class="carstm", carstm_model_label="default",  year.assessment=year.assessment ),
+          speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", year.assessment=year.assessment  ),
+          speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", year.assessment=year.assessment  )
         )
       }
 
@@ -1482,7 +1486,7 @@
         M=set,
         sppoly=sppoly,
         APS_data_offset=1,
-        lookup=names(p$carstm_inputdata_model_source)
+        lookup_parameters= p$carstm_lookup_parameters
       )
 
       M$strata  = as.numeric( M$AUID)

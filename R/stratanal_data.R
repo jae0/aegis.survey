@@ -1,6 +1,6 @@
 
 
-stratanal_data = function( p,  toget="", ... ) {
+stratanal_data = function( p,  toget="", sppoly=NULL, trawlable_units=NULL, ... ) {
 
   p = parameters_add(p, list(...)) # add passed args to parameter list, priority to args
 
@@ -33,9 +33,9 @@ stratanal_data = function( p,  toget="", ... ) {
 
     if (!exists("strata_to_keep", sppoly) ) sppoly$strata_to_keep = TRUE
 
-    if (exists( selection, p)) {
-      if (exists( survey, p$selection )) {
-        if(exists( strata_toremove, p$selection$survey )) {
+    if (exists( "selection", p)) {
+      if (exists( "survey", p$selection )) {
+        if(exists( "strata_toremove", p$selection$survey )) {
           i = which( as.character(sppoly$AUID) %in%  strata_definitions( p$selection$survey$strata_toremove ) )
           if (length(i) > 0 ) sppoly$strata_to_keep[i] = FALSE
         }
@@ -61,6 +61,10 @@ stratanal_data = function( p,  toget="", ... ) {
 
   }
 
+  spp = st_drop_geometry( sppoly )
+  attributes(spp$au_sa_km2) = NULL
+  set = merge( set, spp, by="AUID", all.x=TRUE, all.y=FALSE)
+
   # compute no of trawlable units for each stratum
   # "strat" and "nh" are used by "stratanal"
   set$strat = set$AUID
@@ -72,11 +76,14 @@ stratanal_data = function( p,  toget="", ... ) {
   standardtow_sakm2 = (41 * ft2m * m2km ) * ( 1.75 * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled by a standard tow in km^2  1.75 nm
   # = 0.0405 and NOT 0.011801 .. where did this come from?
   # set up trawlable units used in stratanal
-  set$nh = switch( p$trawlable_units,
+   
+  
+  set$nh = switch( trawlable_units,
     sweptarea = as.numeric(set$au_sa_km2) * set$cf_cat, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by sweptarea
     standardtow = as.numeric(set$au_sa_km2) / standardtow_sakm2, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by 0.011801
     towdistance = as.numeric(set$au_sa_km2) / set$sa_towdistance # convert strata area to trawlable units 41ft by 1.75 nm, divide area by 0.011801
   )
+  
   i = which(!is.finite(set$nh))
   set$nh[i] = as.numeric(set$au_sa_km2[i]) / standardtow_sakm2  # override missing with "standard set" .. also if no trawlable_units set
 

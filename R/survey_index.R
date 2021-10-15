@@ -2,12 +2,13 @@
 survey_index = function( type="abundance", params, extrapolation_limit=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo=FALSE ) {
 
     # see snowcrab methods for more variations/details
+   
+     if (type=="abundance") {
 
-    if (type=="abundance") {
 
-      pN = parms[[runtype]]$pN
-      pW = parms[[runtype]]$pW
-      sppoly = parms[[runtype]]$sppoly
+      pN = params$pN
+      pW = params$pW
+      sppoly = params$sppoly
 
       M = survey_db( p=pN, DS="carstm_inputs", sppoly=sppoly, redo=redo )
 
@@ -47,21 +48,21 @@ survey_index = function( type="abundance", params, extrapolation_limit=NULL, ext
       # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
       sims = colSums( biom * sppoly[, au_sa], na.rm=TRUE )
 
-      parms[[runtype]]["biomass_mean"] = apply( simplify2array(sims), 1, mean )
-      parms[[runtype]]["biomass_sd"] = apply( simplify2array(sims), 1, sd )
-      parms[[runtype]]["biomass_median"] = apply( simplify2array(sims), 1, median )
-      parms[[runtype]]["biomass_lb"] = apply( simplify2array(sims), 1, quantile, probs=0.025 )
-      parms[[runtype]]["biomass_ub"] = apply( simplify2array(sims), 1, quantile, probs=0.975 )
-      attr( parms, "units") = "kt / km^2"
+      params["biomass_mean"] = apply( simplify2array(sims), 1, mean )
+      params["biomass_sd"] = apply( simplify2array(sims), 1, sd )
+      params["biomass_median"] = apply( simplify2array(sims), 1, median )
+      params["biomass_lb"] = apply( simplify2array(sims), 1, quantile, probs=0.025 )
+      params["biomass_ub"] = apply( simplify2array(sims), 1, quantile, probs=0.975 )
+      attr( params, "units") = "kt / km^2"
 
-      return(parms[[runtype]])
+      return(params)
 
     }
 
     if (type=="habitat") {
 
-      pH = parms[[runtype]]$pH
-      sppoly = parms[[runtype]]$sppoly
+      pH = params$pH
+      sppoly = params$sppoly
 
       M = survey_db( p=pH, DS="carstm_inputs", sppoly=sppoly, redo=redo )
 
@@ -82,14 +83,14 @@ survey_index = function( type="abundance", params, extrapolation_limit=NULL, ext
 
       sims = colSums( pa *  sppoly[, au_sa]/ sum( sppoly[, au_sa]), na.rm=TRUE )
 
-      parms[[runtype]]["habitat_mean"] = apply( simplify2array(sims), 1, mean )
-      parms[[runtype]]["habitat_sd"] = apply( simplify2array(sims), 1, sd )
-      parms[[runtype]]["habitat_median"] = apply( simplify2array(sims), 1, median )
-      parms[[runtype]]["habitat_lb"] = apply( simplify2array(sims), 1, quantile, probs=0.025 )
-      parms[[runtype]]["habitat_ub"] = apply( simplify2array(sims), 1, quantile, probs=0.975 )
-      attr( parms, "units") = "probability"
+      params["habitat_mean"] = apply( simplify2array(sims), 1, mean )
+      params["habitat_sd"] = apply( simplify2array(sims), 1, sd )
+      params["habitat_median"] = apply( simplify2array(sims), 1, median )
+      params["habitat_lb"] = apply( simplify2array(sims), 1, quantile, probs=0.025 )
+      params["habitat_ub"] = apply( simplify2array(sims), 1, quantile, probs=0.975 )
+      attr( params, "units") = "probability"
 
-      return(parms[[runtype]])
+      return(params)
     }
 
 }

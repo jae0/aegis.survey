@@ -64,7 +64,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
 
   if (project_class %in% c("carstm") ) {
-        p$project_class = "carstm"
+
+    p$project_class = "carstm"
 
     if (!exists("variabletomodel", p)) stop( "The dependent variable, p$variabletomodel needs to be defined")
 
@@ -91,15 +92,17 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     )
 
 
-
-    if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
-    p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
-      bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
-      substrate = "stmv",  # "stmv", "hybrid", "carstm"
-      temperature = "carstm",  # "stmv", "hybrid", "carstm"
-      speciescomposition = "carstm" # "stmv", "hybrid", "carstm"
-    )
-
+    if ( !exists("carstm_lookup_parameters", p))  {
+        # generics using "default" carstm models and stmv solutions for spatial effects
+        p$carstm_lookup_parameters = list()
+        p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
+          bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
+          substrate = substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
+          temperature = temperature_parameters( project_class="carstm", carstm_model_label="default",  year.assessment=year.assessment ),
+          speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", year.assessment=year.assessment  ),
+          speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", year.assessment=year.assessment  )
+        )
+    }
 
 
     if ( grepl("inla", p$carstm_modelengine) ) {
