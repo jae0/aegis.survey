@@ -3,7 +3,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   lookup_parameters = NULL, APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL
 ) {
 
- 
+# lookup_parameters  are for observation data (not prediction surface)
+   
+
   if (!is.null(lookup_parameters)) {
     
     if ( !is.list(lookup_parameters)) {
@@ -30,17 +32,18 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
 
   if ( is.null(lookup_parameters)) {
+    # these params are for observation data
     lookup_parameters = list(
-      bathymetry = bathymetry_parameters( spatial_domain=p$spatial_domain, carstm_model_label="default", project_class="carstm" ),  # full default
-      substrate = substrate_parameters(  spatial_domain=p$spatial_domain, carstm_model_label="default", project_class="carstm" ), 
-      temperature =  temperature_parameters(  carstm_model_label="default", project_class="carstm", year.assessment=year.assessment ),
-      speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", year.assessment=year.assessment  ),
-      speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", year.assessment=year.assessment  )
+      bathymetry = bathymetry_parameters( project_class="carstm" ),  # full default
+      substrate = substrate_parameters(  project_class="carstm" ), 
+      temperature =  temperature_parameters(  project_class="carstm", yrs=p$yrs ),
+      speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  ),
+      speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
       # ,
-      # speciescomposition_pca3 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca3", year.assessment=year.assessment  ),
-      # speciescomposition_ca1 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="ca1", year.assessment=year.assessment  ),
-      # speciescomposition_ca2 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="ca2", year.assessment=year.assessment  ),
-      # speciescomposition_ca3 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="ca3", year.assessment=year.assessment  )
+      # speciescomposition_pca3 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  ),
+      # speciescomposition_ca1 = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  ),
+      # speciescomposition_ca2 = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  ),
+      # speciescomposition_ca3 = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
     )
  
   }
@@ -191,7 +194,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       if (NA_remove) M = M[ is.finite(M[[ vn]]  ) , ]
       M = M[ which( M[[ vn]]  < 14 ) , ]  #
 
-      # to to:  add st,v/hybrid 
+      # to to:  add stmv/hybrid 
     }
 
 
@@ -397,9 +400,10 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: bathymetry predictions")
 
     vn = lookup_parameters[["bathymetry"]]$variabletomodel
-  browser()
+
+
     APS[[vn]] = aegis_lookup( 
-      parameters=lookup_parameters["bathymetry"], 
+      parameters="bathymetry", 
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -414,7 +418,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM) > 0 ) {
       # depth is very important
       APS[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters["bathymetry"], 
+        parameters="bathymetry", 
         LOCS=APS$AUID,
         LOCS_AU=sppoly,
         project_class = "stmv", # lookup from modelled predictions from carstm
@@ -429,7 +433,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM) > 0 ) {
       # depth is very important
       APS[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters["bathymetry"], 
+        parameters="bathymetry", 
         LOCS=APS$AUID,
         LOCS_AU=sppoly,
         project_class = "core", # lookup from modelled predictions from carstm
@@ -448,7 +452,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["substrate"]]$variabletomodel
 
     APS[[vn]]  = aegis_lookup( 
-      parameters=lookup_parameters["substrate"], 
+      parameters="substrate", 
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -464,7 +468,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM) > 0 ) {
 
       APS[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters["substrate"], 
+        parameters="substrate", 
         LOCS=APS$AUID,
         LOCS_AU=sppoly,
         project_class = "stmv", # lookup from modelled predictions from carstm
@@ -497,7 +501,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["temperature"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["temperature"], 
+      parameters="temperature", 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -517,7 +521,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_pca1"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition"], 
+      parameters="speciescomposition", 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
       project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -537,7 +541,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_pca2"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition"], 
+      parameters="speciescomposition", 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -556,7 +560,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_pca3"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition"], 
+      parameters="speciescomposition", 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -577,7 +581,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_ca1"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition"], 
+      parameters="speciescomposition", 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
       project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -597,7 +601,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_ca2"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition"], 
+      parameters="speciescomposition", 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -616,7 +620,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_ca3"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition"], 
+      parameters="speciescomposition", 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
