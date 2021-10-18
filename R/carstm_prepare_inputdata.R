@@ -2,20 +2,34 @@
 carstm_prepare_inputdata = function( p, M, sppoly, 
   lookup_parameters = NULL, APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL
 ) {
+
  
-  
   if (!is.null(lookup_parameters)) {
-  
-    lookup_project = names(lookup_parameters)
-    if ("bathymetry"  %in% lookup_parameters) require(aegis.bathymetry)
-    if ("substrate"   %in% lookup_parameters) require(aegis.substrate)
-    if ("temperature" %in% lookup_parameters) require(aegis.temperature)
-    if (any( grepl("speciescomposition", lookup_parameters)) ) require(aegis.speciescomposition)
-  
+    
+    if ( !is.list(lookup_parameters)) {
+      # character vector
+      lookup_projects = lookup_parameters
+      lookup_parameters = NULL ## forces defaults below
+    } else  {
+      # full param list
+      lookup_projects = names(lookup_parameters)
+    }
+
   } else {
-  
+
     # generic defaults:
-    lookup_project = c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" )
+    lookup_projects = c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" )
+    # lookup_parameters = NULL ## forces defaults below .. already null
+  }
+
+  # load libs
+  if ("bathymetry"  %in% lookup_projects) require(aegis.bathymetry)
+  if ("substrate"   %in% lookup_projects) require(aegis.substrate)
+  if ("temperature" %in% lookup_projects) require(aegis.temperature)
+  if (any( grepl("speciescomposition", lookup_projects)) ) require(aegis.speciescomposition)
+
+
+  if ( is.null(lookup_parameters)) {
     lookup_parameters = list(
       bathymetry = bathymetry_parameters( spatial_domain=p$spatial_domain, carstm_model_label="default", project_class="carstm" ),  # full default
       substrate = substrate_parameters(  spatial_domain=p$spatial_domain, carstm_model_label="default", project_class="carstm" ), 
@@ -54,7 +68,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   M$AUID = as.character( M$AUID )  # match each datum to an area
 
       
-  if ("bathymetry" %in% lookup_project) {
+  if ("bathymetry" %in% lookup_projects) {
     message( "lookup: bathymetry observations")
     vn = lookup_parameters[["bathymetry"]]$variabletomodel
 
@@ -62,7 +76,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters[["bathymetry"]], 
+        parameters=lookup_parameters["bathymetry"], 
         LOCS=M[ iM, c("lon", "lat")],  
         project_class="core", 
         output_format="points" , 
@@ -101,7 +115,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     # --------------------------
 
 
-    if ("substrate" %in% lookup_project) {
+    if ("substrate" %in% lookup_projects) {
       message( "lookup: substrate observations")
 
       vn = lookup_parameters[["substrate"]]$variabletomodel
@@ -110,7 +124,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
         M[[vn]] [iM]  = aegis_lookup( 
-          parameters=lookup_parameters[["substrate"]], 
+          parameters=lookup_parameters["substrate"], 
           LOCS=M[iM, c("lon", "lat")], 
           project_class="core", 
           output_format="points", 
@@ -154,7 +168,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     # --------------------------
 
 
-    if ("temperature" %in% lookup_project) {
+    if ("temperature" %in% lookup_projects) {
       message( "lookup: temperature observations")
 
       vn = lookup_parameters[["temperature"]]$variabletomodel
@@ -164,7 +178,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
      
       if (length(iM > 0)) {
         M[[vn]] [iM] = aegis_lookup(  
-          parameters=lookup_parameters[["temperature"]], 
+          parameters=lookup_parameters["temperature"], 
           LOCS=M[ iM, c("lon", "lat", "timestamp")],
           project_class="core", 
           DS="aggregated_data", 
@@ -184,7 +198,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     # --------------------------
 
 
-    if ("speciescomposition_pca1" %in% lookup_project) {
+    if ("speciescomposition_pca1" %in% lookup_projects) {
       message( "lookup: speciescomposition pca1 observations")
  
       vn = lookup_parameters[["speciescomposition_pca1"]]$variabletomodel
@@ -193,7 +207,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
         M[[vn]][iM] = aegis_lookup(  
-          parameters=lookup_parameters[["speciescomposition"]], 
+          parameters=lookup_parameters["speciescomposition"], 
           LOCS=M[ iM, c("lon", "lat", "timestamp")],
           project_class="core", 
           DS="speciescomposition", 
@@ -206,7 +220,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
     }
 
-    if ("speciescomposition_pca2" %in% lookup_project) {
+    if ("speciescomposition_pca2" %in% lookup_projects) {
       message( "lookup: speciescomposition pca2 observations")
 
       vn = lookup_parameters[["speciescomposition_pca2"]]$variabletomodel
@@ -215,7 +229,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters[["speciescomposition"]], 
+           parameters=lookup_parameters["speciescomposition"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 
@@ -229,7 +243,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     }
 
-    if ("speciescomposition_pca3" %in% lookup_project) {
+    if ("speciescomposition_pca3" %in% lookup_projects) {
       message( "lookup: speciescomposition pca3 observations")
 
       vn = lookup_parameters[["speciescomposition_pca3"]]$variabletomodel
@@ -238,7 +252,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters[["speciescomposition"]], 
+           parameters=lookup_parameters["speciescomposition"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 
@@ -252,7 +266,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     }
 
-    if ("speciescomposition_ca1" %in% lookup_project) {
+    if ("speciescomposition_ca1" %in% lookup_projects) {
       message( "lookup: speciescomposition ca1 observations")
  
       vn = lookup_parameters[["speciescomposition_ca1"]]$variabletomodel
@@ -261,7 +275,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
         M[[vn]][iM] = aegis_lookup(  
-          parameters=lookup_parameters[["speciescomposition"]], 
+          parameters=lookup_parameters["speciescomposition"], 
           LOCS=M[ iM, c("lon", "lat", "timestamp")],
           project_class="core", 
           DS="speciescomposition", 
@@ -274,7 +288,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
     }
 
-    if ("speciescomposition_ca2" %in% lookup_project) {
+    if ("speciescomposition_ca2" %in% lookup_projects) {
       message( "lookup: speciescomposition ca2 observations")
 
       vn = lookup_parameters[["speciescomposition_ca2"]]$variabletomodel
@@ -283,7 +297,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters[["speciescomposition"]], 
+           parameters=lookup_parameters["speciescomposition"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 
@@ -297,7 +311,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     }
 
-    if ("speciescomposition_ca3" %in% lookup_project) {
+    if ("speciescomposition_ca3" %in% lookup_projects) {
       message( "lookup: speciescomposition ca3 observations")
 
       vn = lookup_parameters[["speciescomposition_ca3"]]$variabletomodel
@@ -306,7 +320,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters[["speciescomposition"]], 
+           parameters=lookup_parameters["speciescomposition"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 
@@ -379,13 +393,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
    
   }
 
-  if ( "bathymetry" %in% lookup_project ) {
+  if ( "bathymetry" %in% lookup_projects ) {
     message( "lookup: bathymetry predictions")
 
     vn = lookup_parameters[["bathymetry"]]$variabletomodel
   
     APS[[vn]] = aegis_lookup( 
-      parameters=lookup_parameters[["bathymetry"]], 
+      parameters=lookup_parameters["bathymetry"], 
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -400,7 +414,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM) > 0 ) {
       # depth is very important
       APS[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters[["bathymetry"]], 
+        parameters=lookup_parameters["bathymetry"], 
         LOCS=APS$AUID,
         LOCS_AU=sppoly,
         project_class = "stmv", # lookup from modelled predictions from carstm
@@ -415,7 +429,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM) > 0 ) {
       # depth is very important
       APS[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters[["bathymetry"]], 
+        parameters=lookup_parameters["bathymetry"], 
         LOCS=APS$AUID,
         LOCS_AU=sppoly,
         project_class = "core", # lookup from modelled predictions from carstm
@@ -428,13 +442,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     }
   }
 
-  if ( "substrate" %in% lookup_project ) {
+  if ( "substrate" %in% lookup_projects ) {
     message( "lookup: substrate predictions")
 
     vn = lookup_parameters[["substrate"]]$variabletomodel
 
     APS[[vn]]  = aegis_lookup( 
-      parameters=lookup_parameters[["substrate"]], 
+      parameters=lookup_parameters["substrate"], 
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -450,7 +464,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM) > 0 ) {
 
       APS[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters[["substrate"]], 
+        parameters=lookup_parameters["substrate"], 
         LOCS=APS$AUID,
         LOCS_AU=sppoly,
         project_class = "stmv", # lookup from modelled predictions from carstm
@@ -477,13 +491,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
 
   # ---------------------
-  if ( "temperature" %in% lookup_project ) {
+  if ( "temperature" %in% lookup_projects ) {
     message( "lookup: temperature predictions")
 
     vn = lookup_parameters[["temperature"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters[["temperature"]], 
+      parameters=lookup_parameters["temperature"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -497,13 +511,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-  if ( "speciescomposition_pca1" %in% lookup_project ) {
+  if ( "speciescomposition_pca1" %in% lookup_projects ) {
     message( "lookup: speciescomposition pca1 predictions")
 
     vn = lookup_parameters[["speciescomposition_pca1"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters[["speciescomposition"]], 
+      parameters=lookup_parameters["speciescomposition"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
       project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -518,12 +532,12 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-  if ( "speciescomposition_pca2" %in% lookup_project ) {
+  if ( "speciescomposition_pca2" %in% lookup_projects ) {
     message( "lookup: speciescomposition pca2 predictions")
     vn = lookup_parameters[["speciescomposition_pca2"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters[["speciescomposition"]], 
+      parameters=lookup_parameters["speciescomposition"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -537,12 +551,12 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     ) 
  }
 
-  if ( "speciescomposition_pca3" %in% lookup_project ) {
+  if ( "speciescomposition_pca3" %in% lookup_projects ) {
     message( "lookup: speciescomposition pca3 predictions")
     vn = lookup_parameters[["speciescomposition_pca3"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters[["speciescomposition"]], 
+      parameters=lookup_parameters["speciescomposition"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -557,13 +571,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
  }
 
 
-  if ( "speciescomposition_ca1" %in% lookup_project ) {
+  if ( "speciescomposition_ca1" %in% lookup_projects ) {
     message( "lookup: speciescomposition ca1 predictions")
 
     vn = lookup_parameters[["speciescomposition_ca1"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters[["speciescomposition"]], 
+      parameters=lookup_parameters["speciescomposition"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
       project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -578,12 +592,12 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-  if ( "speciescomposition_ca2" %in% lookup_project ) {
+  if ( "speciescomposition_ca2" %in% lookup_projects ) {
     message( "lookup: speciescomposition ca2 predictions")
     vn = lookup_parameters[["speciescomposition_ca2"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters[["speciescomposition"]], 
+      parameters=lookup_parameters["speciescomposition"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -597,12 +611,12 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     ) 
  }
 
-  if ( "speciescomposition_ca3" %in% lookup_project ) {
+  if ( "speciescomposition_ca3" %in% lookup_projects ) {
     message( "lookup: speciescomposition ca3 predictions")
     vn = lookup_parameters[["speciescomposition_ca3"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters[["speciescomposition"]], 
+      parameters=lookup_parameters["speciescomposition"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm

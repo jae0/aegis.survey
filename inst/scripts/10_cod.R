@@ -52,7 +52,14 @@
     areal_units_resolution_km = 25,
     areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia"),  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
     trawlable_units = "",  # to be filled in below in call to aegis_survey_index
-    selection = selection
+    selection = selection,
+    carstm_lookup_parameters = list( 
+      bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
+      substrate = substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
+      temperature = temperature_parameters( project_class="carstm", carstm_model_label="default", yrs=1970:year.assessment ),
+      speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", yrs=1970:year.assessment ),
+      speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", yrs=1970:year.assessment )
+    )
   )
 
 
@@ -348,7 +355,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
 
   for ( runtype in runtypes ) {
 
-    RES[[runtype]] = survey_index( type="abundance", params=RES[[runtype]], redo=FALSE )
+    RES[[runtype]] = survey_index( type="abundance", params=RES[[runtype]], redo=redo )
     str( RES[[runtype]] )
     plot( biomass_mean ~ yr, data=RES[[runtype]], lty=1, lwd=2.5, col="blue", type="b")
 
