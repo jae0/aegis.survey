@@ -96,11 +96,11 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
         # generics using "default" carstm models and stmv solutions for spatial effects
         p$carstm_lookup_parameters = list()
         p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
-          bathymetry = bathymetry_parameters( project_class="stmv"  ),
-          substrate = substrate_parameters(   project_class="stmv"  ),
-          temperature = temperature_parameters( project_class="carstm", yrs=p$yrs ),
-          speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  ),
-          speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
+          bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv"  ),
+          substrate = aegis.substrate::substrate_parameters(   project_class="stmv"  ),
+          temperature = aegis.temperature::temperature_parameters( project_class="carstm", yrs=p$yrs ),
+          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  ),
+          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
         )
     }
 
