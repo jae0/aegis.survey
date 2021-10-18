@@ -397,7 +397,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: bathymetry predictions")
 
     vn = lookup_parameters[["bathymetry"]]$variabletomodel
-  
+  browser()
     APS[[vn]] = aegis_lookup( 
       parameters=lookup_parameters["bathymetry"], 
       LOCS=sppoly$AUID,
