@@ -3,7 +3,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   lookup_parameters = NULL, APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL
 ) {
 
-# lookup_parameters  are for observation data (not prediction surface)
+  # lookup_parameters  are for observation data (not prediction surface)
    
 
   if (!is.null(lookup_parameters)) {
@@ -210,7 +210,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
         M[[vn]][iM] = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition"], 
+          parameters=lookup_parameters["speciescomposition_pca1"], 
           LOCS=M[ iM, c("lon", "lat", "timestamp")],
           project_class="core", 
           DS="speciescomposition", 
@@ -232,7 +232,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition"], 
+           parameters=lookup_parameters["speciescomposition_pca2"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 
@@ -255,7 +255,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition"], 
+           parameters=lookup_parameters["speciescomposition_pca3"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 
@@ -278,7 +278,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
         M[[vn]][iM] = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition"], 
+          parameters=lookup_parameters["speciescomposition_ca1"], 
           LOCS=M[ iM, c("lon", "lat", "timestamp")],
           project_class="core", 
           DS="speciescomposition", 
@@ -300,7 +300,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition"], 
+           parameters=lookup_parameters["speciescomposition_ca2"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 
@@ -323,7 +323,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       iM = which(!is.finite( M[[vn]] ))
       if (length(iM > 0)) {
          M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition"], 
+           parameters=lookup_parameters["speciescomposition_ca3"], 
            LOCS=M[ iM, c("lon", "lat", "timestamp")], 
            project_class="core", 
            DS="speciescomposition", 

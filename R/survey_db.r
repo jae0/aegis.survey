@@ -377,7 +377,7 @@
       iM = which(!is.finite( set[, pT$variabletomodel] ))
       if (length(iM > 0)) {
         set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean" ,
-            tz="America/Halifax", year.assessment=p$year.assessment
+            tz="America/Halifax", yrs=p$yrs
           )
       }
 
@@ -1475,9 +1475,9 @@
         p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
           bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain="canada.east.superhighres", stmv_model_label="default"  ),
           substrate = substrate_parameters(   project_class="stmv", spatial_domain="canada.east.highres", stmv_model_label="default"  ),
-          temperature = temperature_parameters( project_class="carstm", spatial_domain="canada.east",carstm_model_label="1999_present", yrs=1999:year.assessment ),
-          speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca1", yrs=1999:year.assessment ),
-          speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca2", yrs=1999:year.assessment )
+          temperature = temperature_parameters( project_class="carstm", spatial_domain="canada.east",carstm_model_label="1999_present", yrs=1999:p$year.assessment ),
+          speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca1", yrs=1999:p$year.assessment ),
+          speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca2", yrs=1999:p$year.assessment )
         )
       }
 
