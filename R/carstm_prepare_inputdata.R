@@ -188,7 +188,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           output_format="points", 
           variable_name="t.mean", 
           tz="America/Halifax",
-          year.assessment=p$year.assessment
+          yrs=p$yrs
         )
       }
       if (NA_remove) M = M[ is.finite(M[[ vn]]  ) , ]
@@ -217,7 +217,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           output_format="points", 
           variable_name="pca1", 
           tz="America/Halifax" ,
-          year.assessment=p$year.assessment
+          yrs=p$yrs
         )
       }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
@@ -239,7 +239,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            output_format="points", 
            variable_name="pca2", 
            tz="America/Halifax" ,
-           year.assessment=p$year.assessment
+           yrs=p$yrs
          )
       }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
@@ -262,7 +262,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            output_format="points", 
            variable_name="pca2", 
            tz="America/Halifax" ,
-           year.assessment=p$year.assessment
+           yrs=p$yrs
          )
       }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
@@ -285,7 +285,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           output_format="points", 
           variable_name="pca1", 
           tz="America/Halifax" ,
-          year.assessment=p$year.assessment
+          yrs=p$yrs
         )
       }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
@@ -307,7 +307,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            output_format="points", 
            variable_name="pca2", 
            tz="America/Halifax" ,
-           year.assessment=p$year.assessment
+           yrs=p$yrs
          )
       }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
@@ -330,7 +330,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            output_format="points", 
            variable_name="pca2", 
            tz="America/Halifax" ,
-           year.assessment=p$year.assessment
+           yrs=p$yrs
          )
       }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
@@ -509,7 +509,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variable_name=list("predictions"),
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
-      year.assessment=p$year.assessment,
+      yrs=p$yrs,
       returntype = "vector"
     )
   }
@@ -530,7 +530,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
-      year.assessment=p$year.assessment,
+      yrs=p$yrs,
       returntype = "vector"
     ) 
   }
@@ -550,7 +550,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
-      year.assessment=p$year.assessment,
+      yrs=p$yrs,
       returntype = "vector"
     ) 
  }
@@ -569,7 +569,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
-      year.assessment=p$year.assessment,
+      yrs=p$yrs,
       returntype = "vector"
     ) 
  }
@@ -590,7 +590,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
-      year.assessment=p$year.assessment,
+      yrs=p$yrs,
       returntype = "vector"
     ) 
   }
@@ -610,7 +610,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
-      year.assessment=p$year.assessment,
+      yrs=p$yrs,
       returntype = "vector"
     ) 
  }
@@ -629,7 +629,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
-      year.assessment=p$year.assessment,
+      yrs=p$yrs,
       returntype = "vector"
     ) 
  }
