@@ -5,6 +5,7 @@
 # NOTE: This replicates standard groundfish strata-based estimation of means and totals
 # "standard" random-stratified estimation functions (based on stratanal and bootstrap estimation techniques )
 
+  spatial_domain = "SSE"
   yrs = 1970:2021
   groundfish_species_code = 10 # cod
 
@@ -22,6 +23,8 @@
 # construct basic parameter list defining the main characteristics of the study
 # parameter setting used to filter data via 'survey_db( DS="filter")'
 # specific selection params required for survey_db(DS="filter") data selection mechanism
+
+ 
 
   selection = list(
     biologicals=list(
@@ -54,11 +57,11 @@
     trawlable_units = "",  # to be filled in below in call to aegis_survey_index
     selection = selection,
     carstm_lookup_parameters = list( 
-      bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
-      substrate = substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  ),
-      temperature = temperature_parameters( project_class="carstm", carstm_model_label="default", yrs=1970:year.assessment ),
-      speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", yrs=1970:year.assessment ),
-      speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", yrs=1970:year.assessment )
+      bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv", spatial_domain=spatial_domain, stmv_model_label="default"  ),
+      substrate = aegis.substrate::substrate_parameters(   project_class="stmv", spatial_domain=spatial_domain, stmv_model_label="default"  ),
+      temperature = aegis.temperature::temperature_parameters( project_class="carstm", carstm_model_label="default", yrs=yrs ),
+      speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", yrs=yrs ),
+      speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", yrs=yrs )
     )
   )
 
