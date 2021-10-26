@@ -222,6 +222,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
       RES[[runtype]]$pW$selection$type,
       sep="_"
     )
+    
     RES[[runtype]]$pW$formula =  formula(  meansize ~ 1
       + f(strata, model="iid", group=year, hyper=H$iid)
       + f(time, model="iid", hyper=H$iid )
