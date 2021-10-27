@@ -7,28 +7,12 @@
 
   spatial_domain = "SSE"
   yrs = 1970:2021
-  groundfish_species_code = 10 # cod
+  groundfish_survey_species_code = 10 # cod
 
-  # store some of the aggregate timeseries in this list
-
-  RES= list( yr = yrs )
-  if (0) {
-    fn = file.path( getwd(), "RES.rdata" )
-    # save(RES, file=fn)
-    # load(fn)
-  }
-
-
-# --------------------------------
-# construct basic parameter list defining the main characteristics of the study
-# parameter setting used to filter data via 'survey_db( DS="filter")'
-# specific selection params required for survey_db(DS="filter") data selection mechanism
-
- 
-
+  # basic selection criteria
   selection = list(
     biologicals=list(
-      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_species_code )
+      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
     ),
     survey=list(
       data.source="groundfish",
@@ -43,28 +27,31 @@
     )
   )
 
-  p = aegis.survey::survey_parameters(
-    project_class = "carstm",
+
+  # store some of the aggregate timeseries in this list
+  RES= list( yr = yrs )
+  if (0) {
+    fn = file.path( getwd(), "RES.rdata" )
+    # save(RES, file=fn)
+    # load(fn)
+  }
+
+
+# --------------------------------
+# construct basic parameter list defining the main characteristics of the study
+# parameter setting used to filter data via 'survey_db( DS="filter")'
+# specific selection params required for survey_db(DS="filter") data selection mechanism
+
+  p = survey_parameters(
+    project_class = "stratanal",
     project_name="atlantic_cod",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
     label ="Atlantic cod summer standardtow",
     speciesname = "Atlantic_cod",
-    groundfish_species_code = 10,   #  10= cod
-    yrs = yrs,
-    areal_units_timeperiod = "pre2014",   # "pre2014" for older
-    areal_units_type="stratanal_polygons_pre2014",
-    areal_units_resolution_km = 25,
-    areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia"),  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
-    trawlable_units = "",  # to be filled in below in call to aegis_survey_index
-    selection = selection,
-    carstm_lookup_parameters = list( 
-      bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv", spatial_domain=spatial_domain, stmv_model_label="default"  ),
-      substrate = aegis.substrate::substrate_parameters(   project_class="stmv", spatial_domain=spatial_domain, stmv_model_label="default"  ),
-      temperature = aegis.temperature::temperature_parameters( project_class="carstm", carstm_model_label="default", yrs=yrs ),
-      speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", yrs=yrs ),
-      speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", yrs=yrs )
-    )
+    trawlable_units = "__to_be_filled_later__",  # to be filled in below in call to aegis_survey_index
+    selection = selection
   )
 
+    
 
   # do stratanl for each of the following swept-area assumptions:
   for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
@@ -202,37 +189,71 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 , "Basic IID", "Envir", "Envir AR1", "Envir CAR", "Envir AR1 CAR", "Envir AR1 CAR|year", "Envir AR1|strata CAR", "Envir AR1|strata CAR|year", "Envir CAR|year", leroux, besag, overdispered,
 
-keep these separate: habitat, habitat overdispersed, habitat leroux
 
+
+
+  spatial_domain = "SSE"
+  yrs = 1970:2021
+  groundfish_survey_species_code = 10 # cod
+
+  # basic selection criteria
+  selection = list(
+    biologicals=list(
+      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
+    ),
+    survey=list(
+      data.source="groundfish",
+      yr = yrs,      # time frame for comparison specified above
+      months=6:8,
+      # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
+      settype = 1,
+      gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
+      #  strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
+      polygon_enforce=TRUE,
+      ranged_data="dyear"
+    )
+  )
+
+     
 
 # ----------------------------------------------
 # 1. standard GF strata-based solution -- no covar, no space, spacetime RF -- equivalent to "stratanl"
     # areal_units_type="stratanal_polygons_pre2014"
     runtype = "abundance.space_iid.year_iid"
-    RES[[runtype]]$label = ""
-    RES[[runtype]]$pN = p
-    RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
-    RES[[runtype]]$pN$trawlable_units="sweptarea"
-    RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
-        + f(strata, model="iid", group=year, hyper=H$iid)
-        + f(year, model="iid", hyper=H$iid )
+    RES[[runtype]]$label = runtype
+    RES[[runtype]]$pN = aegis.survey::survey_parameters(
+      project_class = "carstm",
+      project_name="atlantic_cod",  
+      label ="Atlantic cod summer standardtow totno",
+      yrs = yrs,
+      selection = selection,
+      variabletomodel = "totno",  
+      areal_units_type="stratanal_polygons_pre2014",
+      trawlable_units="sweptarea",
+      family = "poisson",
+      formula = formula( totno ~ 1 + offset( log( data_offset) )
+            + f(strata, model="iid", group=year, hyper=H$iid)
+            + f(year, model="iid", hyper=H$iid )
+      )
     )
-
-    RES[[runtype]]$pW$variabletomodel = "meansize"
-    RES[[runtype]]$pW$carstm_model_label = paste(
-      RES[[runtype]]$pW$variabletomodel,
-      RES[[runtype]]$pW$areal_units_type,
-      RES[[runtype]]$pW$selection$type,
-      sep="_"
+    RES[[runtype]]$pW = aegis.survey::survey_parameters(
+      project_class = "carstm",
+      project_name="atlantic_cod",  
+      label ="Atlantic cod summer standardtow weight",
+      yrs = yrs,
+      selection = selection,
+      variabletomodel = "meansize", 
+      areal_units_type="stratanal_polygons_pre2014",
+      trawlable_units="sweptarea",
+      family = "gaussian",
+      formula = formula( meansize ~ 1  
+            + f(strata, model="iid", group=year, hyper=H$iid)
+            + f(year, model="iid", hyper=H$iid )
+      )
     )
-    
-    RES[[runtype]]$pW$formula =  formula(  meansize ~ 1
-      + f(strata, model="iid", group=year, hyper=H$iid)
-      + f(time, model="iid", hyper=H$iid )
-    )
-    RES[[runtype]]$pW$family =  "gaussian"
 
     RES[[runtype]]$sppoly = areal_units( p=RES[[runtype]]$pN, duplications_action="separate" )  # separate ids for each new sub area
+    # plot(  RES[[runtype]]$sppoly["AUID"])
     # RES[[runtype]]$sppoly$strata_to_keep = ifelse( as.character(RES[[runtype]]$sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
     RES[[runtype]]$sppoly$strata_to_keep = TRUE
 
@@ -244,6 +265,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     runtype = "abundance.space_iid.year_iid.envir"
     RES[[runtype]]$label = ""
     RES[[runtype]]$pN = p
+    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
     RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
@@ -271,6 +293,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     runtype = "abundance.space_iid.year_ar1.envir"
     RES[[runtype]]$label = ""
     RES[[runtype]]$pN = p
+    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
     RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
@@ -299,6 +322,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     RES[[runtype]]$label = ""
     runtype = "abundance.space_bym2.year_ar1.envir"
     RES[[runtype]]$pN = p
+    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
     RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
@@ -327,6 +351,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     runtype = "abundance.space_bym2.year_ar1.spacetime.envir"
     RES[[runtype]]$label = ""
     RES[[runtype]]$pN = p
+    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
     RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
     RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
@@ -418,6 +443,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     runtype = "habitat.space_bym2.year_ar1.spacetime.envir"
     RES[[runtype]]$label = ""
     RES[[runtype]]$pH = p
+    RES[[runtype]]$pH$variabletomodel = "pa"  # could be picked up later from formula but better to specify explicitly
     RES[[runtype]]$pH$areal_units_type="stratanal_polygons_pre2014"
     RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pH$formula = formula( pa ~ 1
@@ -435,6 +461,7 @@ keep these separate: habitat, habitat overdispersed, habitat leroux
     runtype = "habitat.space_bym2.year_ar1.spacetime.envir"
     RES[[runtype]]$label = ""
     RES[[runtype]]$pH = p
+    RES[[runtype]]$pH$variabletomodel = "pa"  # could be picked up later from formula but better to specify explicitly
     RES[[runtype]]$pH$areal_units_type="stratanal_polygons_pre2014"
     RES[[runtype]]$pN$trawlable_units="sweptarea"
     RES[[runtype]]$pH$formula = formula( pa ~ 1

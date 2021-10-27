@@ -25,8 +25,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   if ( !exists("scanmar.dir", p) )  p$scanmar.dir = file.path( p$datadir, "nets", "Scanmar" )
   if ( !exists("marport.dir", p) )  p$marport.dir = file.path( p$datadir, "nets", "Marport" )
 
+ 
   p = parameters_add_without_overwriting( p,
-    variabletomodel = "none",
     spatial_domain = "SSE",
     spatial_domain_subareas = c( "SSE.mpa" , "snowcrab"),  # this is for bathymetry_db, not stmv
     aegis_dimensionality="space-year"
@@ -35,13 +35,18 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   p = spatial_parameters( p=p )  # default grid and resolution
 
   # define focal years for modelling and interpolation
+
   if (!exists("year.assessment", p )) {
-    message("need probably want to assign current year.assessment, using current year for now")
-    p$year.assessment = lubridate::year(lubridate::now())
+    if (exists("yrs", p)) {
+      p$year.assessment = max(p$yrs) 
+    } else {
+      p$year.assessment = lubridate::year(lubridate::now())
+    }
   }
 
-  yrs_default = 1970:p$year.assessment
-  p = parameters_add_without_overwriting( p, yrs = yrs_default, timezone="America/Halifax" )  # default unless already provided
+  if (!exists("yrs", p ))  p$yrs = 1970:p$year.assessment
+  
+  p = parameters_add_without_overwriting( p, timezone="America/Halifax" )  # default unless already provided
   p = temporal_parameters(p=p)
 
   if ( !exists("netmensuration.years", p) ) p$netmensuration.years = c(1990:1992, 2004:lubridate::year(lubridate::now())) # 2009 is the first year with set logs from scanmar available .. if more are found, alter this date
@@ -55,12 +60,32 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     season = "summer"
   )
 
-  p$discretization = discretizations(p=p$discretization)  # key for discretization levels
+#  p$discretization = discretizations(p=p$discretization)  # key for discretization levels
   
 
   if (project_class=="core") {
     return(p)
   }
+
+
+  if (project_class=="stratanal") {
+    # needs additional information for polygons .. defaults
+    p = parameters_add_without_overwriting( p, 
+      
+      areal_units_xydata = "survey_db(p=p, DS='areal_units_input')",
+      areal_units_type = "stratanal_polygons_pre2014", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
+      areal_units_resolution_km = 25, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
+      areal_units_proj4string_planar_km =  p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm
+      # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
+      areal_units_overlay = "none",
+      areal_units_timeperiod = "pre2014"    # "pre2014" for older
+    )
+
+     # projection_proj4string("omerc_nova_scotia") ) # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
+    return(p)
+  }
+
+  
 
 
   if (project_class %in% c("carstm") ) {
@@ -96,11 +121,11 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
         # generics using "default" carstm models and stmv solutions for spatial effects
         p$carstm_lookup_parameters = list()
         p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
-          bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv"  ),
-          substrate = aegis.substrate::substrate_parameters(   project_class="stmv"  ),
-          temperature = aegis.temperature::temperature_parameters( project_class="carstm", yrs=p$yrs ),
-          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  ),
-          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
+          bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
+          substrate = aegis.substrate::substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
+          temperature = aegis.temperature::temperature_parameters( project_class="carstm",  carstm_model_label="default", yrs=p$yrs ),
+          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", yrs=p$yrs  ),
+          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", yrs=p$yrs  )
         )
     }
 

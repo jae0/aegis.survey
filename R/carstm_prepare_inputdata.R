@@ -1,6 +1,6 @@
 
 carstm_prepare_inputdata = function( p, M, sppoly, 
-  lookup_parameters = NULL, APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL
+  lookup_parameters = NULL, APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=FALSE
 ) {
 
   # lookup_parameters  are for observation data (not prediction surface)
@@ -372,6 +372,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   # generate prediction surface locations (APS) 
   # .. use carstm predictions (project_class)
   
+  message( "Creating prediction surface ... ")
+
   if (grepl("space", p$aegis_dimensionality)) {
 
     region.id = slot( slot(sppoly, "nb"), "region.id" )
@@ -415,36 +417,42 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       returntype = "vector"
     ) 
 
-    iM = which(!is.finite( APS[[vn]] )) 
-    if (length(iM) > 0 ) {
-      # depth is very important
-      APS[[vn]][iM] = aegis_lookup(  
-        parameters="bathymetry", 
-        LOCS=APS$AUID,
-        LOCS_AU=sppoly,
-        project_class = "stmv", # lookup from modelled predictions from carstm
-        output_format = "areal_units",
-        variable_name="z", 
-        raster_resolution=min(p$gridparams$res) /2,
-        returntype = "vector"
-      ) 
+    if (lookup_exhaustive) {
+
+        iM = which(!is.finite( APS[[vn]] )) 
+        if (length(iM) > 0 ) {
+          # depth is very important
+          APS[[vn]][iM] = aegis_lookup(  
+            parameters="bathymetry", 
+            LOCS=APS$AUID,
+            LOCS_AU=sppoly,
+            project_class = "stmv", # lookup from modelled predictions from stmv
+            output_format = "areal_units",
+            variable_name="z", 
+            raster_resolution=min(p$gridparams$res) /2,
+            returntype = "vector"
+          ) 
+        }
+
+
+        iM = which(!is.finite( APS[[vn]] )) 
+        if (length(iM) > 0 ) {
+          # depth is very important
+          APS[[vn]][iM] = aegis_lookup(  
+            parameters="bathymetry", 
+            LOCS=APS$AUID,
+            LOCS_AU=sppoly,
+            project_class = "core", # lookup from aggregated data
+            output_format = "areal_units",
+            DS = "aggregated_data",  # needed for core 
+            variable_name = "z.mean", 
+            raster_resolution=min(p$gridparams$res) /2,
+            returntype = "vector"
+          ) 
+        }
+    
     }
 
-    iM = which(!is.finite( APS[[vn]] )) 
-    if (length(iM) > 0 ) {
-      # depth is very important
-      APS[[vn]][iM] = aegis_lookup(  
-        parameters="bathymetry", 
-        LOCS=APS$AUID,
-        LOCS_AU=sppoly,
-        project_class = "core", # lookup from modelled predictions from carstm
-        output_format = "areal_units",
-        DS = "aggregated_data",  # needed for core 
-        variable_name = "z.mean", 
-        raster_resolution=min(p$gridparams$res) /2,
-        returntype = "vector"
-      ) 
-    }
   }
 
   if ( "substrate" %in% lookup_projects ) {
@@ -464,20 +472,22 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       returntype = "vector"
     )  
 
-    
-    iM = which(!is.finite( APS[[vn]] )) 
-    if (length(iM) > 0 ) {
+    if (lookup_exhaustive) {
 
-      APS[[vn]][iM] = aegis_lookup(  
-        parameters="substrate", 
-        LOCS=APS$AUID,
-        LOCS_AU=sppoly,
-        project_class = "stmv", # lookup from modelled predictions from carstm
-        output_format = "areal_units",
-        variable_name = "substrate.grainsize", 
-        raster_resolution=min(p$gridparams$res) /2,
-        returntype = "vector"
-      ) 
+      iM = which(!is.finite( APS[[vn]] )) 
+      if (length(iM) > 0 ) {
+
+        APS[[vn]][iM] = aegis_lookup(  
+          parameters="substrate", 
+          LOCS=APS$AUID,
+          LOCS_AU=sppoly,
+          project_class = "stmv", # lookup from modelled predictions from stmv
+          output_format = "areal_units",
+          variable_name = "substrate.grainsize", 
+          raster_resolution=min(p$gridparams$res) /2,
+          returntype = "vector"
+        ) 
+      }
 
     }
   }
@@ -492,7 +502,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     APS$year = aegis_floor( APS$tiyr)
     APS$dyear = APS$tiyr - APS$year
   }
-  vn  = names(APS) #update
+
 
 
   # ---------------------
@@ -555,7 +565,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       yrs=p$yrs,
       returntype = "vector"
     ) 
- }
+  }
 
   if ( "speciescomposition_pca3" %in% lookup_projects ) {
     message( "lookup: speciescomposition pca3 predictions")
@@ -574,7 +584,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       yrs=p$yrs,
       returntype = "vector"
     ) 
- }
+  }
 
 
   if ( "speciescomposition_ca1" %in% lookup_projects ) {
@@ -636,7 +646,6 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     ) 
  }
 
-  if (exists("timestamp", APS)) APS$timestamp = NULL  # time-based matching finished (if any)
  
   if (!is.null(vars_to_retain)) {
     for (vn in vars_to_retain ) {
@@ -649,6 +658,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       if (exists(vn, APS)) APS[[vn]] = NULL
     }
   }
+
+  if ( exists("timestamp", APS) ) APS$timestamp = NULL  # time-based matching finished (if any)
+  if ( exists("tiyr", APS) ) APS$tiyr = NULL 
 
   M = rbind( M[, names(APS), with=FALSE ], APS )
 
