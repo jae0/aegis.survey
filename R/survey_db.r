@@ -1403,7 +1403,15 @@
 
       # format data, lookup variables where required and then create prediction surface
 
-      if (is.null(sppoly)) sppoly = areal_units( p=p  )
+      # parameter list can be varied: either pW (meansize) and pN (numbes) or pB (biomass) or pH (habitat) 
+      pci = NULL
+      if (p$type=="abundance") pci = p$pN
+      if (p$type=="meansize")  pci = p$pW
+      if (p$type=="biomass")   pci = p$pB
+      if (p$type=="habitat")   pci = p$pH
+      if (is.null(pci)) stop("parameter list is not correct ...")
+
+      if (is.null(sppoly)) sppoly = areal_units( p=pci  )
 
       crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
       sppoly = st_transform(sppoly, crs=crs_lonlat )
@@ -1411,7 +1419,7 @@
 
       areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
-      fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
+      fn = carstm_filenames( p=pci, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
       # inputs are shared across various secneario using the same polys
       #.. store at the modeldir level as default
       outputdir = dirname( fn )
@@ -1428,8 +1436,8 @@
       message( "Generating carstm_inputs ... ", fn)
 
 
-      p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
-      set = survey_db( p=p, DS="filter" )
+      pci$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
+      set = survey_db( p=pci, DS="filter" )
  
       set$totno[which(!is.finite(set$totno))] = NA
 
@@ -1440,7 +1448,7 @@
       nmi2mi = 1.1507794
       mi2ft = 5280
       standardtow_sakm2 = (41 * ft2m * m2km ) * ( 1.75 * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled by a standard tow in km^2  1.75 nm
-      set$data_offset = switch( p$trawlable_units,
+      set$data_offset = switch( pci$trawlable_units,
         standardtow =  rep(standardtow_sakm2, nrow(set)) , # "standard tow"
         towdistance = set$sa_towdistance,  # "sa"=computed from tow distance and standard width, 0.011801==),
         sweptarea = set$sa  # swept area based upon stand tow width and variable lenths based upon start-end locations wherever possible
@@ -1469,24 +1477,25 @@
     # 
 
     # # TO check ... already set in survey paraeters ... not sure if they need to be here again
-    #   if ( !exists("carstm_lookup_parameters", p))  {
+    #   if ( !exists("carstm_lookup_parameters", pci))  {
     #     # generics using "default" carstm models and stmv solutions for spatial effects
-    #     p$carstm_lookup_parameters = list()
-    #     p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
+    #     pci$carstm_lookup_parameters = list()
+    #     pci$carstm_lookup_parameters = parameters_add_without_overwriting( pci$carstm_lookup_parameters,
     #       bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain="canada.east.superhighres", stmv_model_label="default"  ),
     #       substrate = substrate_parameters(   project_class="stmv", spatial_domain="canada.east.highres", stmv_model_label="default"  ),
-    #       temperature = temperature_parameters( project_class="carstm", spatial_domain="canada.east",carstm_model_label="1999_present", yrs=p$yrs ),
-    #       speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca1", yrs=p$yrs ),
-    #       speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca2", yrs=p$yrs )
+    #       temperature = temperature_parameters( project_class="carstm", spatial_domain="canada.east",carstm_model_label="1999_present", yrs=pci$yrs ),
+    #       speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca1", yrs=pci$yrs ),
+    #       speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca2", yrs=pci$yrs )
     #     )
     #   }
-
+ 
       M = carstm_prepare_inputdata(
-        p=p,
+        p=pci,
         M=set,
         sppoly=sppoly,
         APS_data_offset=1,
-        lookup_parameters= p$carstm_lookup_parameters
+        vars_to_retain= pci$vars_to_retain,
+        lookup_parameters= pci$carstm_lookup_parameters
       )
 
       M$strata  = as.numeric( M$AUID)

@@ -659,8 +659,10 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     }
   }
 
+  if ( !exists("tiyr", APS) ) APS$tiyr = APS$timestamp
+
   if ( exists("timestamp", APS) ) APS$timestamp = NULL  # time-based matching finished (if any)
-  if ( exists("tiyr", APS) ) APS$tiyr = NULL 
+
 
   M = rbind( M[, names(APS), with=FALSE ], APS )
 
@@ -683,6 +685,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     M$cyclic = as.character( M$dyri )  # copy for carstm/INLA
   }
   
+  APS$tiyr = NULL
  
   return(M)
 }

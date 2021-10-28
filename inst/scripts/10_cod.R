@@ -217,176 +217,29 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
      
 
 # ----------------------------------------------
-# 1. standard GF strata-based solution -- no covar, no space, spacetime RF -- equivalent to "stratanl"
-    # areal_units_type="stratanal_polygons_pre2014"
-    runtype = "abundance.space_iid.year_iid"
-    RES[[runtype]]$label = runtype
-    RES[[runtype]]$pN = aegis.survey::survey_parameters(
-      project_class = "carstm",
-      project_name="atlantic_cod",  
-      label ="Atlantic cod summer standardtow totno",
-      yrs = yrs,
-      selection = selection,
-      variabletomodel = "totno",  
-      areal_units_type="stratanal_polygons_pre2014",
-      trawlable_units="sweptarea",
-      family = "poisson",
-      formula = formula( totno ~ 1 + offset( log( data_offset) )
-            + f(strata, model="iid", group=year, hyper=H$iid)
-            + f(year, model="iid", hyper=H$iid )
-      )
-    )
-    RES[[runtype]]$pW = aegis.survey::survey_parameters(
-      project_class = "carstm",
-      project_name="atlantic_cod",  
-      label ="Atlantic cod summer standardtow weight",
-      yrs = yrs,
-      selection = selection,
-      variabletomodel = "meansize", 
-      areal_units_type="stratanal_polygons_pre2014",
-      trawlable_units="sweptarea",
-      family = "gaussian",
-      formula = formula( meansize ~ 1  
-            + f(strata, model="iid", group=year, hyper=H$iid)
-            + f(year, model="iid", hyper=H$iid )
-      )
-    )
+# define runtypes: params are stored in  survey_parameter_list()
 
-    RES[[runtype]]$sppoly = areal_units( p=RES[[runtype]]$pN, duplications_action="separate" )  # separate ids for each new sub area
-    # plot(  RES[[runtype]]$sppoly["AUID"])
-    # RES[[runtype]]$sppoly$strata_to_keep = ifelse( as.character(RES[[runtype]]$sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
-    RES[[runtype]]$sppoly$strata_to_keep = TRUE
-
-
-# ----------------------------------------------
-# 2. standard GF strata-based solution
-    # areal_units_type="stratanal_polygons_pre2014"
-
-    runtype = "abundance.space_iid.year_iid.envir"
-    RES[[runtype]]$label = ""
-    RES[[runtype]]$pN = p
-    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
-    RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
-    RES[[runtype]]$pN$trawlable_units="sweptarea"
-    RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
-        + f(strata, model="iid", group=year, hyper=H$iid)
-        + f(year, model="iid", hyper=H$iid )
-    )
-
-    RES[[runtype]]$pW$variabletomodel = "meansize"
-    RES[[runtype]]$pW$carstm_model_label = paste(
-      RES[[runtype]]$pW$variabletomodel,
-      RES[[runtype]]$pW$areal_units_type,
-      RES[[runtype]]$pW$selection$type,
-      sep="_"
-    )
-    RES[[runtype]]$pW$formula =  formula(  meansize ~ 1
-      + f(strata, model="iid", group=year, hyper=H$iid)
-      + f(time, model="iid", hyper=H$iid )
-    )
-    RES[[runtype]]$pW$family =  "gaussian"
-    RES[[runtype]]$sppoly = areal_units( p=pN  )
-
-# ----------------------------------------------
-# 3. lattice solution
-    # areal_units_type="lattice" &  areal_units_overlay="groundfish_strata" duplications_action="union"
-    runtype = "abundance.space_iid.year_ar1.envir"
-    RES[[runtype]]$label = ""
-    RES[[runtype]]$pN = p
-    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
-    RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
-    RES[[runtype]]$pN$trawlable_units="sweptarea"
-    RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
-        + f(strata, model="iid", group=year, hyper=H$iid)
-        + f(year, model="iid", hyper=H$iid )
-    )
-
-    RES[[runtype]]$pW$variabletomodel = "meansize"
-    RES[[runtype]]$pW$carstm_model_label = paste(
-      RES[[runtype]]$pW$variabletomodel,
-      RES[[runtype]]$pW$areal_units_type,
-      RES[[runtype]]$pW$selection$type,
-      sep="_"
-    )
-    RES[[runtype]]$pW$formula =  formula(  meansize ~ 1
-      + f(strata, model="iid", group=year, hyper=H$iid)
-      + f(time, model="iid", hyper=H$iid )
-    )
-    RES[[runtype]]$pW$family =  "gaussian"
-    RES[[runtype]]$sppoly = areal_units( p=pN  )
-
-
-# ----------------------------------------------
-# 4. lattice and GF-strata solution combined
-    # areal_units_type="lattice" &  areal_units_overlay="groundfish_strata" duplications_action="separate"
-    RES[[runtype]]$label = ""
-    runtype = "abundance.space_bym2.year_ar1.envir"
-    RES[[runtype]]$pN = p
-    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
-    RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
-    RES[[runtype]]$pN$trawlable_units="sweptarea"
-    RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
-        + f(strata, model="iid", group=year, hyper=H$iid)
-        + f(year, model="iid", hyper=H$iid )
-    )
-
-    RES[[runtype]]$pW$variabletomodel = "meansize"
-    RES[[runtype]]$pW$carstm_model_label = paste(
-      RES[[runtype]]$pW$variabletomodel,
-      RES[[runtype]]$pW$areal_units_type,
-      RES[[runtype]]$pW$selection$type,
-      sep="_"
-    )
-    RES[[runtype]]$pW$formula =  formula(  meansize ~ 1
-      + f(strata, model="iid", group=year, hyper=H$iid)
-      + f(time, model="iid", hyper=H$iid )
-    )
-    RES[[runtype]]$pW$family =  "gaussian"
-    RES[[runtype]]$sppoly = areal_units( p=pN  )
-
-
-# ----------------------------------------------
-# 5. data-based areal-units solution
-    # areal_units_type="tesselation"
-    runtype = "abundance.space_bym2.year_ar1.spacetime.envir"
-    RES[[runtype]]$label = ""
-    RES[[runtype]]$pN = p
-    RES[[runtype]]$pN$variabletomodel = "totno"  # could be picked up later from formula but better to specify explicitly
-    RES[[runtype]]$pN$areal_units_type="stratanal_polygons_pre2014"
-    RES[[runtype]]$pN$trawlable_units="sweptarea"
-    RES[[runtype]]$pN$formula = formula( totno ~ 1 + offset( log( data_offset) )
-        + f(strata, model="iid", group=year, hyper=H$iid)
-        + f(year, model="iid", hyper=H$iid )
-    )
-
-    RES[[runtype]]$pW$variabletomodel = "meansize"
-    RES[[runtype]]$pW$carstm_model_label = paste(
-      RES[[runtype]]$pW$variabletomodel,
-      RES[[runtype]]$pW$areal_units_type,
-      RES[[runtype]]$pW$selection$type,
-      sep="_"
-    )
-    RES[[runtype]]$pW$formula =  formula(  meansize ~ 1
-      + f(strata, model="iid", group=year, hyper=H$iid)
-      + f(time, model="iid", hyper=H$iid )
-    )
-    RES[[runtype]]$pW$family =  "gaussian"
-    RES[[runtype]]$sppoly = areal_units( p=pN  )
-
-
-
-#------------------------------------------------
-
-  runtypes = names(RES) [ grep("abundance.*", names(RES) ) ]
+  runtypes = c(
+    "abundance.space_iid.year_iid",  # standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014 
+    "abundance.space_iid.year_iid.envir",
+    "abundance.space_iid.year_ar1.envir", 
+    "abundance.space_bym2.year_ar1.envir", 
+    "abundance.space_bym2.year_ar1.spacetime.envir"
+  )
+ 
 
   redo = FALSE
   # redo = TRUE  # if new year/ new data
 
   for ( runtype in runtypes ) {
 
-    RES[[runtype]] = survey_index( type="abundance", params=RES[[runtype]], redo=redo )
+    RES[[runtype]] = survey_parameter_list( runtype=runtype, yrs=yrs, selection=selection, project_name="atlantic_cod" )
+
+    RES[[runtype]] = survey_index( params=RES[[runtype]], M=M, redo=redo )
+
     str( RES[[runtype]] )
-    plot( biomass_mean ~ yr, data=RES[[runtype]], lty=1, lwd=2.5, col="blue", type="b")
+
+    plot( biomass_mean ~ yr, data=RES[[runtype]], lty=1, lwd=2.5, col="blue", type="b" )
 
     if (0) {
       # map it
@@ -483,6 +336,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   # redo = TRUE  # if new year/ new data
 
   for ( runtype in runtypes ) {
+
+    params$M = survey_db( p=RES[[runtype]]$pH, DS="carstm_inputs", sppoly=params$sppoly, redo=redo )
 
     RES[[runtype]] = survey_index( type="habitat", params=RES[[runtype]], redo=FALSE )
     str( RES[[runtype]] )
