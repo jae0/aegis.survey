@@ -187,11 +187,12 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 # the variations examined here:
 
-, "Basic IID", "Envir", "Envir AR1", "Envir CAR", "Envir AR1 CAR", "Envir AR1 CAR|year", "Envir AR1|strata CAR", "Envir AR1|strata CAR|year", "Envir CAR|year", leroux, besag, overdispered,
+if (0) {
 
+  # copied from above for convenience .. to be deleted
 
-
-
+, # "Basic IID", "Envir", "Envir AR1", "Envir CAR", "Envir AR1 CAR", "Envir AR1 CAR|year", "Envir AR1|strata CAR", "Envir AR1|strata CAR|year", "Envir CAR|year", leroux, besag, overdispered,
+  
   spatial_domain = "SSE"
   yrs = 1970:2021
   groundfish_survey_species_code = 10 # cod
@@ -213,6 +214,9 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
       ranged_data="dyear"
     )
   )
+ RES= list( yr = yrs )
+
+}
 
      
 
@@ -236,10 +240,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   for ( runtype in runtypes ) {
 
     RES[[runtype]] = survey_parameter_list( runtype=runtype, yrs=yrs, selection=selection, project_name="atlantic_cod" )
-
-    RES[[runtype]] = survey_index( params=RES[[runtype]], redo=redo )
-
-    str( RES[[runtype]] )
+    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=FALSE  )
+    # names( RES[[runtype]] )
 
     plot( biomass_mean ~ yr, data=RES[[runtype]], lty=1, lwd=2.5, col="blue", type="b" )
 

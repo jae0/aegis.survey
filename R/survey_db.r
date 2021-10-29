@@ -1459,8 +1459,7 @@
       
       set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
       set$yr = NULL
-      set$year = NULL
-
+     
       # covariates only with stmv
       # covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substrate.grainsize" ) ;;
 

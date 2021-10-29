@@ -1,9 +1,9 @@
 
-survey_index = function( type="abundance", params, M, extrapolation_limit=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=FALSE ) {
+survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=FALSE ) {
 
     # see snowcrab methods for more variations/details
     if (0) {
-      type="abundance"
+      params$type="abundance"
       extrapolation_limit=NULL
       extrapolation_replacement="extrapolation_limit"
       au_sa="au_sa_km2"
@@ -30,18 +30,18 @@ survey_index = function( type="abundance", params, M, extrapolation_limit=NULL, 
   M = survey_db( p=params, DS="carstm_inputs", sppoly=sppoly, redo=redo_surveydata )
 
 
-  if (type=="biomass") {
+  if (params$type=="biomass") {
   # operating directly upon biomass (as a lognormal)
   
   }
 
-  if (type=="meansize") {
+  if (params$type=="meansize") {
   # operating on measnize as a gaussian
   
   }
 
 
-  if (type=="abundance") {
+  if (params$type=="abundance") {
   # operate upon numbers as a poisson and meansize as a gaussian
 
     #size model
@@ -94,7 +94,7 @@ survey_index = function( type="abundance", params, M, extrapolation_limit=NULL, 
 
   }
 
-  if (type=="habitat") {
+  if (params$type=="habitat") {
 
     # numerical model
     if (redo_model) {
