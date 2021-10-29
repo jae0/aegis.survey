@@ -659,11 +659,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     }
   }
 
-  if ( !exists("tiyr", APS) ) APS$tiyr = APS$timestamp
+  # just in case missing in input data, generate and clean up
+  if ( !exists("tiyr", M) ) M$tiyr = lubridate::decimal_date ( M$timestamp )
+  if ( exists("timestamp", M) ) M$timestamp = NULL  # time-based matching finished (if any)
 
+  if ( !exists("tiyr", APS) ) APS$tiyr = lubridate::decimal_date ( APS$timestamp )
   if ( exists("timestamp", APS) ) APS$timestamp = NULL  # time-based matching finished (if any)
 
 
+  # combined observations with prediction surface (for inla)
   M = rbind( M[, names(APS), with=FALSE ], APS )
 
   APS = NULL; gc()
@@ -685,7 +689,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     M$cyclic = as.character( M$dyri )  # copy for carstm/INLA
   }
   
-  APS$tiyr = NULL
+  M$tiyr = NULL
  
   return(M)
 }

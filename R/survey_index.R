@@ -20,15 +20,13 @@ survey_index = function( type="abundance", params, M, extrapolation_limit=NULL, 
   if (params$type=="habitat")   pci = params$pH
   if (is.null(pci)) stop("parameter list is not correct ...")
 
-  if (redo_sppoly) {    
-    sppoly = areal_units( p=pci, duplications_action="separate" )  # separate ids for each new sub area
-    sppoly$strata_to_keep = TRUE
-    # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
+ 
+  sppoly = areal_units( p=pci, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
+  sppoly$strata_to_keep = TRUE
+  # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
-  } else {
-    sppoly = areal_units( p=pci )
-  }
-
+ 
+ 
   M = survey_db( p=params, DS="carstm_inputs", sppoly=sppoly, redo=redo_surveydata )
 
 

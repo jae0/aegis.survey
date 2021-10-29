@@ -219,6 +219,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 # ----------------------------------------------
 # define runtypes: params are stored in  survey_parameter_list()
 
+  require(aegis.survey)
+
   runtypes = c(
     "abundance.space_iid.year_iid",  # standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014 
     "abundance.space_iid.year_iid.envir",
@@ -235,7 +237,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
     RES[[runtype]] = survey_parameter_list( runtype=runtype, yrs=yrs, selection=selection, project_name="atlantic_cod" )
 
-    RES[[runtype]] = survey_index( params=RES[[runtype]], M=M, redo=redo )
+    RES[[runtype]] = survey_index( params=RES[[runtype]], redo=redo )
 
     str( RES[[runtype]] )
 
