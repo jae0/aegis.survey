@@ -168,7 +168,7 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
 
     sims = colSums( pa * sppoly[[au_sa]]/ sum(  sppoly[[au_sa]] ), na.rm=TRUE )
 
-    params[["habitat"]] = = data.frame( cbind(
+    params[["habitat"]] = data.frame( cbind(
       mean = apply( simplify2array(sims), 1, mean ), 
       sd   = apply( simplify2array(sims), 1, sd ), 
       median = apply( simplify2array(sims), 1, median ), 
