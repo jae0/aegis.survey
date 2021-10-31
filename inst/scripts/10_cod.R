@@ -5,6 +5,11 @@
 # NOTE: This replicates standard groundfish strata-based estimation of means and totals
 # "standard" random-stratified estimation functions (based on stratanal and bootstrap estimation techniques )
 
+
+
+# set up the run parameters
+require(aegis.survey)
+
   spatial_domain = "SSE"
   yrs = 1970:2021
   groundfish_survey_species_code = 10 # cod
@@ -35,6 +40,11 @@
     # save(RES, file=fn)
     # load(fn)
   }
+
+
+
+
+
 
 
 # --------------------------------
@@ -108,54 +118,54 @@
 
 
 
-# ------------------------------------------------
-# these are Michelle's results: (base access of gcat without correction factors for boat, species, etc)
-        speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length
-2.5%   COD ATLANTIC 2017  14593959 totwgt_sd    3.4420    3.4258       3.61840   3.3099   3.5451 0.235210 21313 0.81003
-2.5%34 COD ATLANTIC 2016  27531380 totwgt_sd    6.4932    6.3838      23.36500   6.0890   6.6869 0.597900 20779 0.89443
-2.5%33 COD ATLANTIC 2015   8915342 totwgt_sd    2.1027    2.0970       0.17429   2.0716   2.1232 0.051683 24031 0.71914
-2.5%32 COD ATLANTIC 2014  28570078 totwgt_sd    6.7382    6.8005      13.48700   6.5766   7.0328 0.456180 20416 0.88363
-2.5%31 COD ATLANTIC 2013  12550459 totwgt_sd    2.9600    2.9837       1.13150   2.9189   3.0504 0.131470 24549 0.76574
-2.5%30 COD ATLANTIC 2012   9538831 totwgt_sd    2.2497    2.2245       0.37251   2.1873   2.2630 0.075729 22789 0.76290
-2.5%29 COD ATLANTIC 2011  35724538 totwgt_sd    8.4256    8.4033      20.51000   8.1265   8.6906 0.564150 24609 0.79815
-2.5%28 COD ATLANTIC 2010  44532221 totwgt_sd   10.5030   10.3040      43.71900   9.9038  10.7220 0.817780 28273 0.83744
+# # ------------------------------------------------
+# # these are Michelle's results: (base access of gcat without correction factors for boat, species, etc)
+#         speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length
+# 2.5%   COD ATLANTIC 2017  14593959 totwgt_sd    3.4420    3.4258       3.61840   3.3099   3.5451 0.235210 21313 0.81003
+# 2.5%34 COD ATLANTIC 2016  27531380 totwgt_sd    6.4932    6.3838      23.36500   6.0890   6.6869 0.597900 20779 0.89443
+# 2.5%33 COD ATLANTIC 2015   8915342 totwgt_sd    2.1027    2.0970       0.17429   2.0716   2.1232 0.051683 24031 0.71914
+# 2.5%32 COD ATLANTIC 2014  28570078 totwgt_sd    6.7382    6.8005      13.48700   6.5766   7.0328 0.456180 20416 0.88363
+# 2.5%31 COD ATLANTIC 2013  12550459 totwgt_sd    2.9600    2.9837       1.13150   2.9189   3.0504 0.131470 24549 0.76574
+# 2.5%30 COD ATLANTIC 2012   9538831 totwgt_sd    2.2497    2.2245       0.37251   2.1873   2.2630 0.075729 22789 0.76290
+# 2.5%29 COD ATLANTIC 2011  35724538 totwgt_sd    8.4256    8.4033      20.51000   8.1265   8.6906 0.564150 24609 0.79815
+# 2.5%28 COD ATLANTIC 2010  44532221 totwgt_sd   10.5030   10.3040      43.71900   9.9038  10.7220 0.817780 28273 0.83744
 
 
-# ------------------------------------------------
-# these are with "standard tow" assumptions:
-                 speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length  dwao    gini lower.ci.gini upper.ci.gini mean.3.yr median median.50
-2.5%  Cod summer standardtow 2017  14863259   totwgt    3.5136    3.4339       3.80320   3.3145   3.5572 0.242740 21451 0.77906
-2.5%7 Cod summer standardtow 2016  21430734   totwgt    5.0662    5.1501      11.10100   4.9457   5.3587 0.412980 20681 0.84814
-2.5%6 Cod summer standardtow 2015   8723439   totwgt    2.0622    2.0598       0.16459   2.0347   2.0851 0.050439 23705 0.65717
-2.5%5 Cod summer standardtow 2014  27156331   totwgt    6.4197    6.4166      13.37500   6.1928   6.6459 0.453100 20786 0.83574
-2.5%4 Cod summer standardtow 2013  12288438   totwgt    2.9050    2.9377       1.12560   2.8729   3.0045 0.131620 24411 0.73470
-2.5%3 Cod summer standardtow 2012   9105517   totwgt    2.1525    2.1576       0.38184   2.1198   2.1957 0.075942 22465 0.73825
-2.5%2 Cod summer standardtow 2011  34542306   totwgt    8.1657    8.1041      20.12700   7.8330   8.3863 0.553380 24584 0.77513
-2.5%1 Cod summer standardtow 2010  42903020   totwgt   10.1420   10.4090      42.51400  10.0130  10.8180 0.805170 28360 0.82533
+# # ------------------------------------------------
+# # these are with "standard tow" assumptions:
+#                  speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length  dwao    gini lower.ci.gini upper.ci.gini mean.3.yr median median.50
+# 2.5%  Cod summer standardtow 2017  14863259   totwgt    3.5136    3.4339       3.80320   3.3145   3.5572 0.242740 21451 0.77906
+# 2.5%7 Cod summer standardtow 2016  21430734   totwgt    5.0662    5.1501      11.10100   4.9457   5.3587 0.412980 20681 0.84814
+# 2.5%6 Cod summer standardtow 2015   8723439   totwgt    2.0622    2.0598       0.16459   2.0347   2.0851 0.050439 23705 0.65717
+# 2.5%5 Cod summer standardtow 2014  27156331   totwgt    6.4197    6.4166      13.37500   6.1928   6.6459 0.453100 20786 0.83574
+# 2.5%4 Cod summer standardtow 2013  12288438   totwgt    2.9050    2.9377       1.12560   2.8729   3.0045 0.131620 24411 0.73470
+# 2.5%3 Cod summer standardtow 2012   9105517   totwgt    2.1525    2.1576       0.38184   2.1198   2.1957 0.075942 22465 0.73825
+# 2.5%2 Cod summer standardtow 2011  34542306   totwgt    8.1657    8.1041      20.12700   7.8330   8.3863 0.553380 24584 0.77513
+# 2.5%1 Cod summer standardtow 2010  42903020   totwgt   10.1420   10.4090      42.51400  10.0130  10.8180 0.805170 28360 0.82533
 
-# ------------------------------------------------
-# towed distance
-                 speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length  dwao    gini
-2.5%  Cod summer towdistance 2017  15025543   totwgt    3.4420    3.4205       3.76150   3.3030   3.5434 0.240360 22219 0.77524
-2.5%7 Cod summer towdistance 2016  23732430   totwgt    5.5022    5.4666      14.00500   5.2375   5.7001 0.462570 21266 0.84436
-2.5%6 Cod summer towdistance 2015   8798976   totwgt    2.0690    2.0732       0.15893   2.0490   2.0982 0.049255 23901 0.65307
-2.5%5 Cod summer towdistance 2014  28503738   totwgt    6.5806    6.6708      12.70500   6.4516   6.8923 0.440700 21401 0.83786
-2.5%4 Cod summer towdistance 2013  12434510   totwgt    2.8474    2.8555       1.02700   2.7944   2.9199 0.125560 25127 0.73675
-2.5%3 Cod summer towdistance 2012   9340895   totwgt    2.1474    2.1441       0.37216   2.1066   2.1824 0.075768 23436 0.73386
-2.5%2 Cod summer towdistance 2011  35721843   totwgt    8.1870    8.0592      21.59400   7.7759   8.3539 0.578040 25474 0.77066
-2.5%1 Cod summer towdistance 2010  43790809   totwgt    9.9849    9.8188      43.78700   9.4161  10.2420 0.825920 29684 0.81764
+# # ------------------------------------------------
+# # towed distance
+#                  speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length  dwao    gini
+# 2.5%  Cod summer towdistance 2017  15025543   totwgt    3.4420    3.4205       3.76150   3.3030   3.5434 0.240360 22219 0.77524
+# 2.5%7 Cod summer towdistance 2016  23732430   totwgt    5.5022    5.4666      14.00500   5.2375   5.7001 0.462570 21266 0.84436
+# 2.5%6 Cod summer towdistance 2015   8798976   totwgt    2.0690    2.0732       0.15893   2.0490   2.0982 0.049255 23901 0.65307
+# 2.5%5 Cod summer towdistance 2014  28503738   totwgt    6.5806    6.6708      12.70500   6.4516   6.8923 0.440700 21401 0.83786
+# 2.5%4 Cod summer towdistance 2013  12434510   totwgt    2.8474    2.8555       1.02700   2.7944   2.9199 0.125560 25127 0.73675
+# 2.5%3 Cod summer towdistance 2012   9340895   totwgt    2.1474    2.1441       0.37216   2.1066   2.1824 0.075768 23436 0.73386
+# 2.5%2 Cod summer towdistance 2011  35721843   totwgt    8.1870    8.0592      21.59400   7.7759   8.3539 0.578040 25474 0.77066
+# 2.5%1 Cod summer towdistance 2010  43790809   totwgt    9.9849    9.8188      43.78700   9.4161  10.2420 0.825920 29684 0.81764
 
-# ------------------------------------------------
-# sweptarea
-                speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length  dwao
-2.5%  Cod summer sweptarea 2017  14584703   totwgt    3.5108    3.5984       4.12750   3.4741   3.7256 0.251540 20961
-2.5%7 Cod summer sweptarea 2016  20677264   totwgt    5.0506    5.0506      11.32400   4.8465   5.2649 0.418400 19806
-2.5%6 Cod summer sweptarea 2015   7397592   totwgt    1.9220    1.9240       0.13729   1.9011   1.9471 0.045981 20763
-2.5%5 Cod summer sweptarea 2014  25264103   totwgt    6.5155    6.5552      14.94200   6.3205   6.7999 0.479430 18288
-2.5%4 Cod summer sweptarea 2013  10290871   totwgt    2.7651    2.7570       1.12270   2.6915   2.8227 0.131200 20251
-2.5%3 Cod summer sweptarea 2012   8839376   totwgt    2.1085    2.1188       0.36425   2.0816   2.1566 0.074987 22206
-2.5%2 Cod summer sweptarea 2011  34866336   totwgt    8.4871    8.0913      24.96300   7.7888   8.4061 0.617280 23648
-2.5%1 Cod summer sweptarea 2010  45648142   totwgt   10.7420   10.6010      52.95200  10.1560  11.0630 0.906710 28503
+# # ------------------------------------------------
+# # sweptarea
+#                 speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length  dwao
+# 2.5%  Cod summer sweptarea 2017  14584703   totwgt    3.5108    3.5984       4.12750   3.4741   3.7256 0.251540 20961
+# 2.5%7 Cod summer sweptarea 2016  20677264   totwgt    5.0506    5.0506      11.32400   4.8465   5.2649 0.418400 19806
+# 2.5%6 Cod summer sweptarea 2015   7397592   totwgt    1.9220    1.9240       0.13729   1.9011   1.9471 0.045981 20763
+# 2.5%5 Cod summer sweptarea 2014  25264103   totwgt    6.5155    6.5552      14.94200   6.3205   6.7999 0.479430 18288
+# 2.5%4 Cod summer sweptarea 2013  10290871   totwgt    2.7651    2.7570       1.12270   2.6915   2.8227 0.131200 20251
+# 2.5%3 Cod summer sweptarea 2012   8839376   totwgt    2.1085    2.1188       0.36425   2.0816   2.1566 0.074987 22206
+# 2.5%2 Cod summer sweptarea 2011  34866336   totwgt    8.4871    8.0913      24.96300   7.7888   8.4061 0.617280 23648
+# 2.5%1 Cod summer sweptarea 2010  45648142   totwgt   10.7420   10.6010      52.95200  10.1560  11.0630 0.906710 28503
 
 
 # TODO basic corelations and plots, summarizing the above
@@ -177,6 +187,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
 
+
+
 # ------------------------------------------------
 # Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
 # using sweptarea only on a lattice system with environmental covariates.
@@ -186,39 +198,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 # NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
 
 # the variations examined here:
-
-if (0) {
-
-  # copied from above for convenience .. to be deleted
-
-, # "Basic IID", "Envir", "Envir AR1", "Envir CAR", "Envir AR1 CAR", "Envir AR1 CAR|year", "Envir AR1|strata CAR", "Envir AR1|strata CAR|year", "Envir CAR|year", leroux, besag, overdispered,
-  
-  spatial_domain = "SSE"
-  yrs = 1970:2021
-  groundfish_survey_species_code = 10 # cod
-
-  # basic selection criteria
-  selection = list(
-    biologicals=list(
-      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
-    ),
-    survey=list(
-      data.source="groundfish",
-      yr = yrs,      # time frame for comparison specified above
-      months=6:8,
-      # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
-      settype = 1,
-      gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
-      #  strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
-      polygon_enforce=TRUE,
-      ranged_data="dyear"
-    )
-  )
- RES= list( yr = yrs )
-
-}
-
-     
+ 
+    
 
 # ----------------------------------------------
 # define runtypes: params are stored in  survey_parameter_list()
@@ -233,14 +214,18 @@ if (0) {
     "abundance.space_bym2.year_ar1.spacetime.envir"
   )
  
+  if (0) {
+    
+    runtype = "abundance.space_iid.year_iid"
+    
+    params=RES[[runtype]]
 
-  redo = FALSE
-  # redo = TRUE  # if new year/ new data
+  }
 
   for ( runtype in runtypes ) {
 
     RES[[runtype]] = survey_parameter_list( runtype=runtype, yrs=yrs, selection=selection, project_name="atlantic_cod" )
-    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=FALSE  )
+    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=TRUE  )
     # names( RES[[runtype]] )
 
     plot( biomass_mean ~ yr, data=RES[[runtype]], lty=1, lwd=2.5, col="blue", type="b" )
@@ -254,8 +239,8 @@ if (0) {
 
       time_match = list( year=as.character(2020)  )
 
-      res = carstm_model( p=RES[[runtype]]$pW, DS="carstm_modelled_summary" )   # weights (mean)
-      res = carstm_model( p=RES[[runtype]]$pN, DS="carstm_modelled_summary" )   # numbers (density)
+     # res = carstm_model( p=RES[[runtype]]$pW, DS="carstm_modelled_summary" )   # weights (mean)
+     # res = carstm_model( p=RES[[runtype]]$pN, DS="carstm_modelled_summary" )   # numbers (density)
 
       carstm_map(  res=res,
         vn="predictions",

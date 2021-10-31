@@ -1456,43 +1456,10 @@
       set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
       set = set[ which(  is.finite(set$data_offset)   ),  ]
 
-      
-      set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
-      set$yr = NULL
      
-      # covariates only with stmv
-      # covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substrate.grainsize" ) ;;
-
-      # currently supported:
-      # z = depth (m)
-      # dZ = bottom slope (m/km)
-      # ddZ = bottom curvature (m/km^2)
-      # substrate.grainsize = mean grain size of bottom substrate (mm)
-      # t = temperature (C) – subannual
-      # tlb = temperature lower 95% bound (C) –subannual
-      # tub = temperature upper 95% bound (C) –subannual
-      # tmean = mean annual temperature
-      # tsd = standard deviation of the mean annual temperature
-      # tmin = minimum value of temperature in a given year – annual
-      # tmax= maximum value of temperature in a given year – annual
-      # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
-      # degreedays = number of degree days in a given year – annual
-
-    # 
-
-    # # TO check ... already set in survey paraeters ... not sure if they need to be here again
-    #   if ( !exists("carstm_lookup_parameters", pci))  {
-    #     # generics using "default" carstm models and stmv solutions for spatial effects
-    #     pci$carstm_lookup_parameters = list()
-    #     pci$carstm_lookup_parameters = parameters_add_without_overwriting( pci$carstm_lookup_parameters,
-    #       bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain="canada.east.superhighres", stmv_model_label="default"  ),
-    #       substrate = substrate_parameters(   project_class="stmv", spatial_domain="canada.east.highres", stmv_model_label="default"  ),
-    #       temperature = temperature_parameters( project_class="carstm", spatial_domain="canada.east",carstm_model_label="1999_present", yrs=pci$yrs ),
-    #       speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca1", yrs=pci$yrs ),
-    #       speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", spatial_domain="SSE", carstm_model_label="1999_present", variabletomodel="pca2", yrs=pci$yrs )
-    #     )
-    #   }
- 
+      set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
+      
+  
       M = carstm_prepare_inputdata(
         p=pci,
         M=set,
@@ -1502,16 +1469,18 @@
         lookup_parameters= pci$carstm_lookup_parameters
       )
 
-      M$strata  = as.numeric( M$AUID)
+
+#      M$strata  = as.numeric( M$AUID)
 
       M$meansize  = M$totwgt / M$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
 
       M$pa = presence.absence( X={M$totno / M$data_offset}, px=0.05 )$pa  # determine presence absence and weighting
 
-      M$yr = M$year  # req for meanweights
+      if (!exists("yr", M)) M$yr = M$year  # req for meanweights
 
       # IMPERATIVE:
-      M = M[ which(is.finite(M$t)), ]
+      M = M[ which( is.finite(M$t ) ), ]
+      M = M[ which( is.finite(M$t ) ), ]
 
       save( M, file=fn, compress=TRUE )
 

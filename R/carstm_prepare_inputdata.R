@@ -5,6 +5,24 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   # lookup_parameters  are for observation data (not prediction surface)
    
+  # covariates only with stmv
+  # covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substrate.grainsize" ) ;;
+
+  # currently supported:
+  # z = depth (m)
+  # dZ = bottom slope (m/km)
+  # ddZ = bottom curvature (m/km^2)
+  # substrate.grainsize = mean grain size of bottom substrate (mm)
+  # t = temperature (C) – subannual
+  # tlb = temperature lower 95% bound (C) –subannual
+  # tub = temperature upper 95% bound (C) –subannual
+  # tmean = mean annual temperature
+  # tsd = standard deviation of the mean annual temperature
+  # tmin = minimum value of temperature in a given year – annual
+  # tmax= maximum value of temperature in a given year – annual
+  # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
+  # degreedays = number of degree days in a given year – annual
+
 
   if (!is.null(lookup_parameters)) {
     

@@ -22,8 +22,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         carstm_model_label = runtype,
         family = "poisson",
         formula = formula( totno ~ 1 + offset( log( data_offset) )
-              + f(strata, model="iid", group=year, hyper=H$iid)
-              + f(year, model="iid", hyper=H$iid )
+              + f(space, model="iid", group=time_space, hyper=H$iid)
+              + f(time,  model="iid", hyper=H$iid )
         )
       )
 
@@ -40,8 +40,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         carstm_model_label = runtype,
         family = "gaussian",
         formula = formula( meansize ~ 1  
-              + f(strata, model="iid", group=year, hyper=H$iid)
-              + f(year, model="iid", hyper=H$iid )
+              + f(space, model="iid", group=time_space, hyper=H$iid)
+              + f(time,  model="iid", hyper=H$iid )
         )
       )
 
@@ -65,8 +65,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         carstm_model_label = runtype,
         family = "poisson",
         formula = formula( totno ~ 1 + offset( log( data_offset) )
-              + f(strata, model="iid", group=year, hyper=H$iid)
-              + f(year, model="iid", hyper=H$iid )
+              + f(space, model="iid", group=time_space, hyper=H$iid)
+              + f(time,  model="iid", hyper=H$iid )
         )
       )
 
@@ -83,8 +83,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         carstm_model_label = runtype,
         family = "gaussian",
         formula = formula( meansize ~ 1  
-              + f(strata, model="iid", group=year, hyper=H$iid)
-              + f(year, model="iid", hyper=H$iid )
+              + f(space, model="iid", group=time_space, hyper=H$iid)
+              + f(time,  model="iid", hyper=H$iid )
         )
       )
 

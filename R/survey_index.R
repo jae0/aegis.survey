@@ -30,6 +30,59 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
   M = survey_db( p=params, DS="carstm_inputs", sppoly=sppoly, redo=redo_surveydata )
 
 
+  if (is.null(extrapolation_limit)) {
+    if (exists("quantile_bounds", params$pN )) {
+      extrapolation_limit = quantile( M$totno/M$data_offset, probs=params$pN$quantile_bounds[2], na.rm=T) # 10014.881
+    }
+  }
+
+  if (!is.null(extrapolation_limit)) {
+
+    uu = which( nums > extrapolation_limit )
+    if (length(uu) > 0 ) {
+      # about 2.9% have values greateer than reasonable
+      if (is.character(extrapolation_replacement)) if (extrapolation_replacement=="extrapolation_limit" ) extrapolation_replacement = extrapolation_limit
+      nums[ uu] = extrapolation_replacement
+      warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
+    }
+  }
+  
+  # So fiddling is required as extreme events can cause optimizer to fail
+  ql = c(0, 0.999)  # truncate 99.9% bound
+
+  nn = M$totno/M$data_offset
+  qn = quantile( nn, ql, na.rm=TRUE )
+  ni = which( nn > qn[2] )
+
+  ww = M$totwgt/M$data_offset
+  qw = quantile( ww, ql, na.rm=TRUE )
+  wi = which( ww > qw[2] )
+
+  mm = M$totno 
+  qm = quantile( mm, ql, na.rm=TRUE )
+  mi = which( mm > qm[2] )
+
+  vv = M$totwgt 
+  qv = quantile( vv, ql, na.rm=TRUE )
+  vi = which( vv > qv[2] )
+
+  # repeatedly extreme events
+  ii = intersect( ni, wi )
+  ii = intersect( ii, mi )
+  ii = intersect( ii, vi )
+
+  M$totno[ii] = floor( qm[2] )
+  M$totwgt[ii] =   qv[2] 
+
+  # assuming data_offset is not too extreme: 
+  # M[i,]
+  #      AUID          tag  data_offset totno       z substrate.grainsize year       dyear    t          pca1         pca2
+  # 298   444 observations 0.0462881453  2889 35.6616        1.4415774964 1973 0.561596271 5.97 -0.1539538038 0.0580442368
+  # 1017  450 observations 0.0323656969 12850 43.8912        0.3866592625 1982 0.560549848 2.54 -0.1978402951 0.1038139127
+  # 1780  456 observations 0.0367693481  1848 56.6928        1.4131698521 1989 0.565877093 3.13 -0.0519987927 0.0716135259
+  # 2200  444 observations 0.0397392372  3930 40.2336        0.9403246868 1993 0.565053272 4.13 -0.1828536016 0.1527385957
+  # 3595  455 observations 0.0378602602  2069 45.7200        0.0122716563 2006 0.579807839 7.15 -0.1283472829 0.0953725754
+ 
   if (params$type=="biomass") {
   # operating directly upon biomass (as a lognormal)
   
@@ -53,11 +106,13 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     resw = carstm_model( p=params$pW, DS="carstm_modelled_summary" )
     wgts = resw[["predictions_posterior_simulations"]]
     wgts[!is.finite(wgts)] = NA
+    resw = NULL; gc()
 
     # numerical model
     if (redo_model) {
       fit = carstm_model( p=params$pN, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE, 
-        control.inla = list( strategy='adaptive', int.strategy="eb" ), num.threads="4:2", mc.cores=2 )  
+        control.inla = list( strategy='adaptive' ), 
+        num.threads="4:2", mc.cores=2 )  
         #  scale_offsets when using offsets for more stable results
         # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
       fit = NULL; gc()
@@ -66,29 +121,29 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     resn = carstm_model( p=params$pN, DS="carstm_modelled_summary" )
     nums = resn[[ "predictions_posterior_simulations" ]]   # numerical density (per km^2)
     nums[!is.finite(nums)] = NA
+    resn =NULL; gc()
 
-    if (is.na(extrapolation_limit)) extrapolation_limit = quantile( M$totno/M$data_offset, probs=params$pN$quantile_bounds[2], na.rm=T) # 10014.881
-
-    uu = which( nums > extrapolation_limit )
-    if (length(uu) > 0 ) {
-      # about 2.9% have values greateer than reasonable
-      if (is.character(extrapolation_replacement)) if (extrapolation_replacement=="extrapolation_limit" ) extrapolation_replacement = extrapolation_limit
-      nums[ uu] = extrapolation_replacement
-      warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
+    if (!is.null(extrapolation_replacement)) {
+      uu = which( nums > extrapolation_limit )
+      if (length(uu)>0) nums[ uu] = extrapolation_replacement
     }
 
     biom = nums * wgts / 10^6  # kg / km^2 -> kt / km^2
+    biom[!is.finite(biom)] = NA
     nums = wgts = NULL
 
     # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
-    sims = colSums( biom * params$sppoly[, au_sa], na.rm=TRUE )
+    sims = colSums( biom * sppoly[[au_sa]], na.rm=TRUE )
 
-    params["biomass_mean"] = apply( simplify2array(sims), 1, mean )
-    params["biomass_sd"] = apply( simplify2array(sims), 1, sd )
-    params["biomass_median"] = apply( simplify2array(sims), 1, median )
-    params["biomass_lb"] = apply( simplify2array(sims), 1, quantile, probs=0.025 )
-    params["biomass_ub"] = apply( simplify2array(sims), 1, quantile, probs=0.975 )
-    attr( params, "units") = "kt / km^2"
+    params[["biomass"]] = data.frame( cbind(
+      mean = apply( simplify2array(sims), 1, mean ), 
+      sd   = apply( simplify2array(sims), 1, sd ), 
+      median = apply( simplify2array(sims), 1, median ), 
+      q025 = apply( simplify2array(sims), 1, quantile, probs=0.025 ),
+      q975 = apply( simplify2array(sims), 1, quantile, probs=0.975 ) 
+    ))
+    
+    attr( params[["biomass"]], "units") = "kt / km^2"
 
     return(params)
 
@@ -111,14 +166,17 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     #       pa = inverse.logit(pa)
     #       pa[!is.finite(pa)] = NA
 
-    sims = colSums( pa *  params$sppoly[, au_sa]/ sum( params$sppoly[, au_sa]), na.rm=TRUE )
+    sims = colSums( pa * sppoly[[au_sa]]/ sum(  sppoly[[au_sa]] ), na.rm=TRUE )
 
-    params["habitat_mean"] = apply( simplify2array(sims), 1, mean )
-    params["habitat_sd"] = apply( simplify2array(sims), 1, sd )
-    params["habitat_median"] = apply( simplify2array(sims), 1, median )
-    params["habitat_lb"] = apply( simplify2array(sims), 1, quantile, probs=0.025 )
-    params["habitat_ub"] = apply( simplify2array(sims), 1, quantile, probs=0.975 )
-    attr( params, "units") = "probability"
+    params[["habitat"]] = = data.frame( cbind(
+      mean = apply( simplify2array(sims), 1, mean ), 
+      sd   = apply( simplify2array(sims), 1, sd ), 
+      median = apply( simplify2array(sims), 1, median ), 
+      q025 = apply( simplify2array(sims), 1, quantile, probs=0.025 ),
+      q975 = apply( simplify2array(sims), 1, quantile, probs=0.975 ) 
+    ))
+     
+    attr( params[["habitat"]], "units") = "probability"
 
     return(params)
   }
