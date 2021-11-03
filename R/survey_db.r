@@ -1456,7 +1456,6 @@
       set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
       set = set[ which(  is.finite(set$data_offset)   ),  ]
 
-     
       set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
       
   

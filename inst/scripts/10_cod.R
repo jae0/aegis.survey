@@ -35,16 +35,8 @@ require(aegis.survey)
 
   # store some of the aggregate timeseries in this list
   RES= list( yr = yrs )
-  if (0) {
-    fn = file.path( getwd(), "RES.rdata" )
-    # save(RES, file=fn)
-    # load(fn)
-  }
-
-
-
-
-
+  fn = file.path( getwd(), "RES.rdata" )
+  load(fn)
 
 
 # --------------------------------
@@ -82,8 +74,11 @@ require(aegis.survey)
 
     plot( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8) )
     lines ( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
-  }
+  
+    # store some of the aggregate timeseries in this list
+    save(RES, file=fn)   # load(fn)
 
+  }
 
   # comparative plots:
 
@@ -207,177 +202,105 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   require(aegis.survey)
 
   runtypes = c(
-    "abundance.space_iid.year_iid",  # standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014 
-    "abundance.space_iid.year_iid.envir",
-    "abundance.space_iid.year_ar1.envir", 
-    "abundance.space_bym2.year_ar1.envir", 
-    "abundance.space_bym2.year_ar1.spacetime.envir"
+    # "abundance.space_factor.time_factor", # broken: standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014 
+    # "abundance.space_time_factor",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
+    "abundance.space_time_factor_ar1", # working
+    "abundance.space_iid.time_iid",   # working
+    "abundance.space_iid.time_iid.space_time_iid", # working
+    "abundance.space_timeiid.time_iid.envir",
+    "abundance.space_iid.time_ar1.envir", 
+    "abundance.space_bym2.time_ar1.envir", 
+    "abundance.space_bym2.time_ar1.spacetime.envir"
   )
  
+  # choose:
+  i = 3
+  trawlable_units = c( "standardtow", "towdistance", "sweptarea")[i]
+  
+  areal_units_type = p$areal_units_type
+
+
   if (0) {
     
-    runtype = "abundance.space_iid.year_iid"
+    runtype = "abundance.space_iid.time_iid"
     
     params=RES[[runtype]]
 
   }
 
   for ( runtype in runtypes ) {
+    RES[[runtype]] = survey_parameter_list( runtype=runtype, 
+      project_name="atlantic_cod",  # key for lookup
+      yrs=yrs, 
+      selection=selection, 
+      areal_units_type = areal_units_type,
+      trawlable_units = trawlable_units
+    )
+    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=FALSE, redo_sppoly=FALSE, redo_surveydata=FALSE )
 
-    RES[[runtype]] = survey_parameter_list( runtype=runtype, yrs=yrs, selection=selection, project_name="atlantic_cod" )
-    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=TRUE  )
-    # names( RES[[runtype]] )
+    # store some of the aggregate timeseries in this list
+    save(RES, file=fn)   # load(fn)
+    plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+  }
 
-    plot( biomass_mean ~ yr, data=RES[[runtype]], lty=1, lwd=2.5, col="blue", type="b" )
-
+ 
     if (0) {
       # map it
       plot_crs = pN$aegis_proj4string_planar_km
-      coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
-      isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to=plot_crs )
-      managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
+      # managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
+       # time_match = "2020"
+ 
 
-      time_match = list( year=as.character(2020)  )
+      map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
+      map_zoom = 7
 
-     # res = carstm_model( p=RES[[runtype]]$pW, DS="carstm_modelled_summary" )   # weights (mean)
-     # res = carstm_model( p=RES[[runtype]]$pN, DS="carstm_modelled_summary" )   # numbers (density)
-
-      carstm_map(  res=res,
-        vn="predictions",
-        time_match=time_match,
-        coastline=coastline,
-        managementlines=managementlines,
-        isobaths=isobaths,
-        main=paste("Predicted numerical abundance", paste0(time_match, collapse="-") )
-      )
-
+      background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
+  
       # map all :
-      vn = "predictions"
-      outputdir = file.path( RES[[runtype]]$pN$modeldir, RES[[runtype]]$pN$carstm_model_label, "predicted.numerical.densitites" )
-      if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-      brks = pretty(  quantile(res[[vn]], probs=c(0,0.975))  )
 
-      for (y in res$year ){
-        time_match = list( year=as.character(y)  )
-        fn_root = paste("Predicted_numerical_abundance", paste0(time_match, collapse="-"), sep="_")
-        fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
-        carstm_map(  res=res, vn=vn, time_match=time_match,
-          breaks =brks,
-          coastline=coastline,
-          isobaths=isobaths,
-          managementlines=managementlines,
-          main=paste("Predicted numerial abundance", paste0(time_match, collapse="-") ),
-          outfilename=fn
-        )
+      if (RES[[runtype]]$type=="abundance") {
+        fn_root = "Predicted_numerical_abundance"
+        title = "Predicted numerical abundance"
+        pci = RES[[runtype]]$pN
+
+      }
+      if (RES[[runtype]]$type=="habitat") {
+        fn_root = "Predicted_habitat_probability"
+        title = "Predicted habitat probability"
+        pci = RES[[runtype]]$pH
       }
 
-    }
-
-  }
-
-
-
-
-# ----------------------------------------------
-# 6. Habitat data-based areal-units solution
-
-    # areal_units_type="tesselation"
-    runtype = "habitat.space_bym2.year_ar1.spacetime.envir"
-    RES[[runtype]]$label = ""
-    RES[[runtype]]$pH = p
-    RES[[runtype]]$pH$variabletomodel = "pa"  # could be picked up later from formula but better to specify explicitly
-    RES[[runtype]]$pH$areal_units_type="stratanal_polygons_pre2014"
-    RES[[runtype]]$pN$trawlable_units="sweptarea"
-    RES[[runtype]]$pH$formula = formula( pa ~ 1
-        + f(strata, model="iid", group=year, hyper=H$iid)
-        + f(year, model="iid", hyper=H$iid )
-    )
-
-    RES[[runtype]]$pH$family =  "binomial"  # alternates family="zeroinflatedbinomial0", family="zeroinflatedbinomial1",
-
-    RES[[runtype]]$sppoly = areal_units( p=pH  )
-
-# ----------------------------------------------
-# 7. data-based areal-units solution
-    # areal_units_type="tesselation"
-    runtype = "habitat.space_bym2.year_ar1.spacetime.envir"
-    RES[[runtype]]$label = ""
-    RES[[runtype]]$pH = p
-    RES[[runtype]]$pH$variabletomodel = "pa"  # could be picked up later from formula but better to specify explicitly
-    RES[[runtype]]$pH$areal_units_type="stratanal_polygons_pre2014"
-    RES[[runtype]]$pN$trawlable_units="sweptarea"
-    RES[[runtype]]$pH$formula = formula( pa ~ 1
-        + f(strata, model="iid", group=year, hyper=H$iid)
-        + f(year, model="iid", hyper=H$iid )
-    )
-
-    RES[[runtype]]$pH$family =  "binomial"  # alternates family="zeroinflatedbinomial0", family="zeroinflatedbinomial1",
-    RES[[runtype]]$sppoly = areal_units( p=pH  )
-
-... etc
-
-
-# ----------------------------------------------
-
-  runtypes = names(RES) [ grep("habitat.*", names(RES) ) ]
-
-  redo = FALSE
-  # redo = TRUE  # if new year/ new data
-
-  for ( runtype in runtypes ) {
-
-    params$M = survey_db( p=RES[[runtype]]$pH, DS="carstm_inputs", sppoly=params$sppoly, redo=redo )
-
-    RES[[runtype]] = survey_index( type="habitat", params=RES[[runtype]], redo=FALSE )
-    str( RES[[runtype]] )
-    plot( biomass_mean ~ yr, data=RES[[runtype]], lty=1, lwd=2.5, col="blue", type="b")
-
-    if (0) {
-      # map it
-      plot_crs = pN$aegis_proj4string_planar_km
-      coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
-      isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to=plot_crs )
-      managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
-
-      time_match = list( year=as.character(2020)  )
-
-      res = carstm_model( p=RES[[runtype]]$pW, DS="carstm_modelled_summary" )   # weights (mean)
-      res = carstm_model( p=RES[[runtype]]$pN, DS="carstm_modelled_summary" )   # numbers (density)
-
-      carstm_map(  res=res,
-        vn="predictions",
-        time_match=time_match,
-        coastline=coastline,
-        managementlines=managementlines,
-        isobaths=isobaths,
-        main=paste("Predicted habitat probability", paste0(time_match, collapse="-") )
-      )
-
-      # map all :
-      vn = "predictions"
-      outputdir = file.path( RES[[runtype]]$pN$modeldir, RES[[runtype]]$pN$carstm_model_label, "predicted.numerical.densitites" )
-      if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-      brks = pretty(  quantile(res[[vn]], probs=c(0,0.975))  )
-
-      for (y in res$year ){
-        time_match = list( year=as.character(y)  )
-        fn_root = paste("Predicted_habitat_probability", paste0(time_match, collapse="-"), sep="_")
-        fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
-        carstm_map(  res=res, vn=vn, time_match=time_match,
-          breaks =brks,
-          coastline=coastline,
-          isobaths=isobaths,
-          managementlines=managementlines,
-          main=paste("Predicted habitat probability", paste0(time_match, collapse="-") ),
-          outfilename=fn
-        )
+      if (RES[[runtype]]$type=="meansize") {
+        fn_root = "Predicted_mean_weight"
+        title = "Predicted mean weight"
+        pci = RES[[runtype]]$pW
       }
 
-    }
+      
+      vn = "predictions"
+      brks = pretty(  quantile( RES[[runtype]][[vn]], probs=c(0,0.975), na.rm=TRUE )  )
 
-  }
+      outputdir = file.path( pci$modeldir, pci$carstm_model_label, "predicted.numerical.densitites" )
+      
+      if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
-
+      for (y in res$year ){
+        time_match = as.character(y) 
+        
+        fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
+        carstm_map(  res=RES[[runtype]], vn=vn, tmatch=time_match,
+          # breaks=brks,
+          # palette="RdYlBu",
+          title= "biomass density t/km2" , #paste(fn_root, time_match, sep="_"),  
+          # outfilename=fn,
+          background = background,
+          # vwidth = 1600,
+          # vheight=1000,
+          map_mode="view",
+          tmap_zoom= c(map_centre, map_zoom)
+          #plot_elements=c( "isobaths",  "compass", "scale_bar", "legend" )
+        )
+      }
 
 
 

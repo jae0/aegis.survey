@@ -25,10 +25,10 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
   sppoly$strata_to_keep = TRUE
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
- 
+  params$sppoly = sppoly 
  
   M = survey_db( p=params, DS="carstm_inputs", sppoly=sppoly, redo=redo_surveydata )
-
+  params$M = M
 
   if (is.null(extrapolation_limit)) {
     if (exists("quantile_bounds", params$pN )) {
@@ -97,19 +97,13 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
   if (params$type=="abundance") {
   # operate upon numbers as a poisson and meansize as a gaussian
 
-    #size model
     if (redo_model) {
+      # size model
       fit = carstm_model( p=params$pW, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", 
-        control.inla = list( strategy='adaptive', int.strategy="eb" ), num.threads="4:2", mc.cores=2 )  
+        control.inla = list( strategy='adaptive'  ), num.threads="4:2", mc.cores=2 )  
       fit = NULL; gc()
-    }
-    resw = carstm_model( p=params$pW, DS="carstm_modelled_summary" )
-    wgts = resw[["predictions_posterior_simulations"]]
-    wgts[!is.finite(wgts)] = NA
-    resw = NULL; gc()
-
-    # numerical model
-    if (redo_model) {
+ 
+      # numerical model
       fit = carstm_model( p=params$pN, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE, 
         control.inla = list( strategy='adaptive' ), 
         num.threads="4:2", mc.cores=2 )  
@@ -117,11 +111,23 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
         # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
       fit = NULL; gc()
     }
+ 
 
+    resw = carstm_model( p=params$pW, DS="carstm_modelled_summary" )
     resn = carstm_model( p=params$pN, DS="carstm_modelled_summary" )
+ 
+
+    vars_to_copy = c(  "space", "time", "dyears" )
+    for ( vn in vars_to_copy ) params[[vn]] = resn[[vn]]
+
+
+    wgts = resw[["predictions_posterior_simulations"]]
+    wgts[!is.finite(wgts)] = NA
+    wgts[wgts<0] = NA
+
     nums = resn[[ "predictions_posterior_simulations" ]]   # numerical density (per km^2)
     nums[!is.finite(nums)] = NA
-    resn =NULL; gc()
+
 
     if (!is.null(extrapolation_replacement)) {
       uu = which( nums > extrapolation_limit )
@@ -132,18 +138,27 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     biom[!is.finite(biom)] = NA
     nums = wgts = NULL
 
+    # create for mapping ..
+    params[["predictions"]] = resn[[ "predictions" ]] * NA
+    params[["predictions"]][,,1]  = apply( simplify2array(biom*1000), c(1,2), mean, na.rm=TRUE ) 
+    params[["predictions"]][,,2]  = apply( simplify2array(biom*1000), c(1,2), sd, na.rm=TRUE ) 
+    params[["predictions"]][,,3]  = apply( simplify2array(biom*1000), c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
+    params[["predictions"]][,,4]  = apply( simplify2array(biom*1000), c(1,2), median, na.rm=TRUE )
+    params[["predictions"]][,,5]  = apply( simplify2array(biom*1000), c(1,2), quantile, probs=0.975, na.rm=TRUE ) 
+    attr( params[["predictions"]], "units") = "t / km^2"
+ 
     # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
     sims = colSums( biom * sppoly[[au_sa]], na.rm=TRUE )
 
     params[["biomass"]] = data.frame( cbind(
-      mean = apply( simplify2array(sims), 1, mean ), 
-      sd   = apply( simplify2array(sims), 1, sd ), 
-      median = apply( simplify2array(sims), 1, median ), 
-      q025 = apply( simplify2array(sims), 1, quantile, probs=0.025 ),
-      q975 = apply( simplify2array(sims), 1, quantile, probs=0.975 ) 
+      mean = apply( simplify2array(sims), 1, mean, na.rm=TRUE ), 
+      sd   = apply( simplify2array(sims), 1, sd , na.rm=TRUE), 
+      median = apply( simplify2array(sims), 1, median, na.rm=TRUE ), 
+      q025 = apply( simplify2array(sims), 1, quantile, probs=0.025, na.rm=TRUE ),
+      q975 = apply( simplify2array(sims), 1, quantile, probs=0.975, na.rm=TRUE ) 
     ))
     
-    attr( params[["biomass"]], "units") = "kt / km^2"
+    attr( params[["biomass"]], "units") = "kt"
 
     return(params)
 
@@ -163,8 +178,16 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     resh = carstm_model( p=params$pH, DS="carstm_modelled_summary" )
     pa =  resh[["predictions_posterior_simulations"]]
     pa[!is.finite(pa)] = NA
+
     #       pa = inverse.logit(pa)
     #       pa[!is.finite(pa)] = NA
+
+    # might as well just keep it in resh 
+    # params[["spatial_combined"]] = resn[[ "spatial_combined" ]]   
+    # attr( params[["spatial_combined"]], "units") = "probability"
+ 
+    # params[["predictions"]] = resn[[ "predictions" ]]   
+    # attr( params[["predictions"]], "units") = "probability"
 
     sims = colSums( pa * sppoly[[au_sa]]/ sum(  sppoly[[au_sa]] ), na.rm=TRUE )
 
