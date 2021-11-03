@@ -36,17 +36,6 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     }
   }
 
-  if (!is.null(extrapolation_limit)) {
-
-    uu = which( nums > extrapolation_limit )
-    if (length(uu) > 0 ) {
-      # about 2.9% have values greateer than reasonable
-      if (is.character(extrapolation_replacement)) if (extrapolation_replacement=="extrapolation_limit" ) extrapolation_replacement = extrapolation_limit
-      nums[ uu] = extrapolation_replacement
-      warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
-    }
-  }
-  
   # So fiddling is required as extreme events can cause optimizer to fail
   ql = c(0, 0.999)  # truncate 99.9% bound
 
@@ -103,6 +92,9 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
         control.inla = list( strategy='adaptive'  ), num.threads="4:2", mc.cores=2 )  
       fit = NULL; gc()
  
+
+ browser()
+ 
       # numerical model
       fit = carstm_model( p=params$pN, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE, 
         control.inla = list( strategy='adaptive' ), 
@@ -129,6 +121,17 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     nums[!is.finite(nums)] = NA
 
 
+    if (!is.null(extrapolation_limit)) {
+
+      uu = which( nums > extrapolation_limit )
+      if (length(uu) > 0 ) {
+        # about 2.9% have values greateer than reasonable
+        if (is.character(extrapolation_replacement)) if (extrapolation_replacement=="extrapolation_limit" ) extrapolation_replacement = extrapolation_limit
+        nums[ uu] = extrapolation_replacement
+        warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
+      }
+    }
+    
     if (!is.null(extrapolation_replacement)) {
       uu = which( nums > extrapolation_limit )
       if (length(uu)>0) nums[ uu] = extrapolation_replacement

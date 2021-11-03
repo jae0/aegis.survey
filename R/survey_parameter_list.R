@@ -57,7 +57,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
     }
   
 
-    if (runtype == "abundance.space_factor.time_factor" ) {
+    if (runtype == "abundance.space_factor.time_factor_full" ) {
       
       p$type="abundance"
       
@@ -75,8 +75,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
-            + as.factor(space)
-            + as.factor(time)
+            + as.factor(space) * as.factor(time)
         )
       )
 
@@ -121,7 +120,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         formula = formula( 
           totno ~ 1 + offset( data_offset )
             + as.factor(space) : as.factor(time)
-            + f( space_time, model="iid",  group=time_space, hyper=H$iid)  # required to stabilize missing combos
+            + f( space_time, model="iid",  group=time_space, hyper=H$iid )  # required to stabilize missing combos
+#            + f( space_time, model="iid",  group=time_space, hyper=H$iid, control.group=list(model="ar1", hyper=H$ar1_group))  # required to stabilize missing combos
         )
       )
 
@@ -140,7 +140,9 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         formula = formula( 
           meansize ~ 1 
             + as.factor(space) : as.factor(time)
-            + f( space_time, model="iid",  group=time_space, hyper=H$iid) # required to stabilize missing combos
+            + f( space_time, model="iid",  group=time_space, hyper=H$iid )  # required to stabilize missing combos
+#            + f( space_time, model="iid",  group=time_space, hyper=H$iid, control.group=list(model="ar1", hyper=H$ar1_group))  # required to stabilize missing combos
+
         )
       )
       return(p)

@@ -203,9 +203,9 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   require(aegis.survey)
 
   runtypes = c(
-    # "abundance.space_factor.time_factor", # broken: standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014 
+    # "abundance.space_factor.time_factor", # almost standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014  -- results are useless
     # "abundance.space_time_factor",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
-    "abundance.space_time_factor_ar1", # working
+    "abundance.space_time_factor_ar1", # working . though results are not useful
     "abundance.space_iid.time_iid",   # working
     "abundance.space_iid.time_iid.space_time_iid", # working
     "abundance.space_timeiid.time_iid.envir",
@@ -221,15 +221,10 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   areal_units_type = p$areal_units_type
 
 
-  if (0) {
-    
-    runtype = "abundance.space_iid.time_iid"
-    
-    params=RES[[runtype]]
 
-  }
 
   for ( runtype in runtypes ) {
+    if (0)   runtype = runtypes[4]
     RES[[runtype]] = survey_parameter_list( runtype=runtype, 
       project_name="atlantic_cod",  # key for lookup
       yrs=yrs, 
@@ -237,7 +232,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
       areal_units_type = areal_units_type,
       trawlable_units = trawlable_units
     )
-    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=FALSE, redo_sppoly=FALSE, redo_surveydata=FALSE )
+    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=FALSE )
 
     # store some of the aggregate timeseries in this list
     save(RES, file=fn)   # load(fn)
