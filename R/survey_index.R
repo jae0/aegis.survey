@@ -92,9 +92,6 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
         control.inla = list( strategy='adaptive'  ), num.threads="4:2", mc.cores=2 )  
       fit = NULL; gc()
  
-
- browser()
- 
       # numerical model
       fit = carstm_model( p=params$pN, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE, 
         control.inla = list( strategy='adaptive' ), 
