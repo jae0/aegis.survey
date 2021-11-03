@@ -36,7 +36,8 @@ require(aegis.survey)
   # store some of the aggregate timeseries in this list
   RES= list( yr = yrs )
   fn = file.path( getwd(), "RES.rdata" )
-  load(fn)
+  
+  if (0)  load(fn)
 
 
 # --------------------------------

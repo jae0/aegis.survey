@@ -306,8 +306,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
-            + as.factor(time)  ',
-#               + f( time, model="ar1",  hyper=H$ar1 ) '
+            + as.factor(time)  
+#               + f( time, model="ar1",  hyper=H$ar1 ) 
             + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
@@ -333,8 +333,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         family = "gaussian",
         formula = formula( 
           meansize ~ 1  
-            + as.factor(time)  ',
-#               + f( time, model="ar1",  hyper=H$ar1 ) '
+            + as.factor(time)   
+#               + f( time, model="ar1",  hyper=H$ar1 ) 
             + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
@@ -451,8 +451,8 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         family = "binomial", 
         formula = formula( 
           pa ~ 1 
-            + as.factor(time)  ',
-#               + f( time, model="ar1",  hyper=H$ar1 ) '
+            + as.factor(time)  
+#               + f( time, model="ar1",  hyper=H$ar1 ) 
             + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
