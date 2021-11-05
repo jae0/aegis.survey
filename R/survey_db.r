@@ -1448,17 +1448,36 @@
       nmi2mi = 1.1507794
       mi2ft = 5280
       standardtow_sakm2 = (41 * ft2m * m2km ) * ( 1.75 * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled by a standard tow in km^2  1.75 nm
+
       set$data_offset = switch( pci$trawlable_units,
         standardtow =  rep(standardtow_sakm2, nrow(set)) , # "standard tow"
         towdistance = set$sa_towdistance,  # "sa"=computed from tow distance and standard width, 0.011801==),
         sweptarea = set$sa  # swept area based upon stand tow width and variable lenths based upon start-end locations wherever possible
       )
+
       set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
       set = set[ which(  is.finite(set$data_offset)   ),  ]
 
+
+browser()
+
+
+      # So fiddling is required as extreme events can cause optimizer to fail
+      qupper = 0.99  # truncate 99% bound
+
+      qm = quantile( set$totno, qupper, na.rm=TRUE )
+      mi = which( set$totno > qm )
+      set$totno[mi] = floor( qm )
+
+      qv = quantile( set$totwgt, qupper, na.rm=TRUE )
+      vi = which( set$totwgt > qv )
+      set$totwgt[vi] = qv  
+
+      set$pa = presence.absence( X=set$totno / set$data_offset, px=0.05 )$pa  # determine presence absence and weighting
+      set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
+
       set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
       
-  
       M = carstm_prepare_inputdata(
         p=pci,
         M=set,
@@ -1469,11 +1488,6 @@
       )
 
 
-#      M$strata  = as.numeric( M$AUID)
-
-      M$meansize  = M$totwgt / M$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
-
-      M$pa = presence.absence( X={M$totno / M$data_offset}, px=0.05 )$pa  # determine presence absence and weighting
 
       if (!exists("yr", M)) M$yr = M$year  # req for meanweights
 

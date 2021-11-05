@@ -11,7 +11,7 @@
 require(aegis.survey)
 
   spatial_domain = "SSE"
-  yrs = 1970:2021
+  yrs = 1970:2018
   groundfish_survey_species_code = 10 # cod
 
   # basic selection criteria
@@ -223,9 +223,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
 
-
   for ( runtype in runtypes ) {
-    if (0)   runtype = runtypes[5]
+    if (0)   runtype = runtypes[6]
     RES[[runtype]] = survey_parameter_list( runtype=runtype, 
       project_name="atlantic_cod",  # key for lookup
       yrs=yrs, 
@@ -233,11 +232,11 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
       areal_units_type = areal_units_type,
       trawlable_units = trawlable_units
     )
-    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=FALSE )
+    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=TRUE )
 
     # store some of the aggregate timeseries in this list
     save(RES, file=fn)   # load(fn)
-    plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+    plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=runtype )
   }
 
  

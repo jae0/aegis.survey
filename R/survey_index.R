@@ -36,41 +36,6 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     }
   }
 
-  # So fiddling is required as extreme events can cause optimizer to fail
-  ql = c(0, 0.999)  # truncate 99.9% bound
-
-  nn = M$totno/M$data_offset
-  qn = quantile( nn, ql, na.rm=TRUE )
-  ni = which( nn > qn[2] )
-
-  ww = M$totwgt/M$data_offset
-  qw = quantile( ww, ql, na.rm=TRUE )
-  wi = which( ww > qw[2] )
-
-  mm = M$totno 
-  qm = quantile( mm, ql, na.rm=TRUE )
-  mi = which( mm > qm[2] )
-
-  vv = M$totwgt 
-  qv = quantile( vv, ql, na.rm=TRUE )
-  vi = which( vv > qv[2] )
-
-  # repeatedly extreme events
-  ii = intersect( ni, wi )
-  ii = intersect( ii, mi )
-  ii = intersect( ii, vi )
-
-  M$totno[ii] = floor( qm[2] )
-  M$totwgt[ii] =   qv[2] 
-
-  # assuming data_offset is not too extreme: 
-  # M[i,]
-  #      AUID          tag  data_offset totno       z substrate.grainsize year       dyear    t          pca1         pca2
-  # 298   444 observations 0.0462881453  2889 35.6616        1.4415774964 1973 0.561596271 5.97 -0.1539538038 0.0580442368
-  # 1017  450 observations 0.0323656969 12850 43.8912        0.3866592625 1982 0.560549848 2.54 -0.1978402951 0.1038139127
-  # 1780  456 observations 0.0367693481  1848 56.6928        1.4131698521 1989 0.565877093 3.13 -0.0519987927 0.0716135259
-  # 2200  444 observations 0.0397392372  3930 40.2336        0.9403246868 1993 0.565053272 4.13 -0.1828536016 0.1527385957
-  # 3595  455 observations 0.0378602602  2069 45.7200        0.0122716563 2006 0.579807839 7.15 -0.1283472829 0.0953725754
  
   if (params$type=="biomass") {
   # operating directly upon biomass (as a lognormal)
@@ -87,6 +52,7 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
   # operate upon numbers as a poisson and meansize as a gaussian
 
     if (redo_model) {
+   
       # size model
       fit = carstm_model( p=params$pW, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", 
         control.inla = list( strategy='adaptive'  ), num.threads="4:2", mc.cores=2 )  
@@ -127,11 +93,6 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
         nums[ uu] = extrapolation_replacement
         warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
       }
-    }
-    
-    if (!is.null(extrapolation_replacement)) {
-      uu = which( nums > extrapolation_limit )
-      if (length(uu)>0) nums[ uu] = extrapolation_replacement
     }
 
     biom = nums * wgts / 10^6  # kg / km^2 -> kt / km^2
