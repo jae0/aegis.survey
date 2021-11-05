@@ -1457,11 +1457,7 @@
 
       set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
       set = set[ which(  is.finite(set$data_offset)   ),  ]
-
-
-browser()
-
-
+ 
       # So fiddling is required as extreme events can cause optimizer to fail
       qupper = 0.99  # truncate 99% bound
 

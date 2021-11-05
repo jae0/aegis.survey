@@ -215,17 +215,17 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
     "abundance.space_bym2.time_ar1.spacetime.envir"
   )
  
-  # choose:
-  i = 3
-  trawlable_units = c( "standardtow", "towdistance", "sweptarea")[i]
-  
+
   areal_units_type = p$areal_units_type
 
 
-
   for ( runtype in runtypes ) {
-    if (0)   runtype = runtypes[6]
-    RES[[runtype]] = survey_parameter_list( runtype=runtype, 
+      if (0)  {
+        trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3]
+        i = 6
+        runtype = runtypes[6]
+      } 
+      RES[[runtype]] = survey_parameter_list( runtype=runtype, 
       project_name="atlantic_cod",  # key for lookup
       yrs=yrs, 
       selection=selection, 
