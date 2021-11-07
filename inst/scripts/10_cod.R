@@ -43,18 +43,24 @@ p = survey_parameters(
   speciesname = "Atlantic_cod",
   trawlable_units = "__to_be_filled_later__",  # to be filled in below in call to aegis_survey_index
   carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
-  selection = selection
+  selection = selection,
+  results_file = file.path( getwd(), "RES.rdata" )
 )
 
 
 
 # --------------------------------
 # store some of the aggregate timeseries in this list
-RES= list( yr = yrs )
-fn = file.path( getwd(), "RES.rdata" )
 
-if (0)  load(fn)
-  
+start_from_scratch = FALSE
+
+if ( start_from_scratch ) {
+  RES= list( yr = yrs )
+} else {
+  load( p$results_file )
+}  
+
+
 
 # --------------------------------
 # do stratanl for each of the following swept-area assumptions:
@@ -79,7 +85,7 @@ if (0)  load(fn)
     lines ( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
   
     # store some of the aggregate timeseries in this list
-    save(RES, file=fn)   # load(fn)
+    save(RES, file=p$results_file)   # load( p$results_file )
 
   }
 
@@ -224,20 +230,21 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   for ( runtype in runtypes ) {
     if (0)  {
       trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3]
-      i = 2
       runtype = runtypes[6]
     } 
     RES[[runtype]] = survey_parameter_list( runtype=runtype, 
       project_name="atlantic_cod",  # key for lookup
       yrs=yrs, 
       selection=selection, 
+      vars_to_retain = c("totwgt", "totno", "pa", "meansize"),
       areal_units_type = areal_units_type,
-      trawlable_units = trawlable_units
+      trawlable_units = trawlable_units, 
+      carstm_model_label = "default"
     )
     RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=TRUE )
 
     # store some of the aggregate timeseries in this list
-    save(RES, file=fn)   # load(fn)
+    save(RES, file=p$results_file)   # load(p$results_file)
     plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=runtype )
   }
 
@@ -457,9 +464,8 @@ legend("topright", legend=labels, lty=lty, col=col, lwd=lwd )
 
 
 if (0) {
-    fn = file.path( getwd(), "RES.rdata" )
-    # save(RES, file=fn)
-    # load(fn)
+     # save(RES, file=p$results_file)
+    # load(p$results_file)
 }
 
 
