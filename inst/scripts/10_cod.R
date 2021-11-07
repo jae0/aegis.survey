@@ -10,53 +10,55 @@
 # set up the run parameters
 require(aegis.survey)
 
-  spatial_domain = "SSE"
-  yrs = 1970:2018
-  groundfish_survey_species_code = 10 # cod
+spatial_domain = "SSE"
+yrs = 1970:2021
+groundfish_survey_species_code = 10 # cod
 
-  # basic selection criteria
-  selection = list(
-    biologicals=list(
-      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
-    ),
-    survey=list(
-      data.source="groundfish",
-      yr = yrs,      # time frame for comparison specified above
-      months=6:8,
-      # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
-      settype = 1,
-      gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
-      strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
-      polygon_enforce=TRUE,
-      ranged_data="dyear"
-    )
+# basic selection criteria
+selection = list(
+  biologicals=list(
+    spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
+  ),
+  survey=list(
+    data.source="groundfish",
+    yr = yrs,      # time frame for comparison specified above
+    months=6:8,
+    # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
+    settype = 1,
+    gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
+    strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
+    polygon_enforce=TRUE,
+    ranged_data="dyear"
   )
+)
 
-
-  # store some of the aggregate timeseries in this list
-  RES= list( yr = yrs )
-  fn = file.path( getwd(), "RES.rdata" )
-  
-  if (0)  load(fn)
-
-
-# --------------------------------
 # construct basic parameter list defining the main characteristics of the study
 # parameter setting used to filter data via 'survey_db( DS="filter")'
 # specific selection params required for survey_db(DS="filter") data selection mechanism
 
-  p = survey_parameters(
-    project_class = "stratanal",
-    project_name="atlantic_cod",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
-    label ="Atlantic cod summer standardtow",
-    speciesname = "Atlantic_cod",
-    trawlable_units = "__to_be_filled_later__",  # to be filled in below in call to aegis_survey_index
-    selection = selection
-  )
+p = survey_parameters(
+  project_class = "stratanal",
+  project_name="atlantic_cod",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
+  label ="Atlantic cod summer standardtow",
+  speciesname = "Atlantic_cod",
+  trawlable_units = "__to_be_filled_later__",  # to be filled in below in call to aegis_survey_index
+  carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
+  selection = selection
+)
 
-    
 
-  # do stratanl for each of the following swept-area assumptions:
+
+# --------------------------------
+# store some of the aggregate timeseries in this list
+RES= list( yr = yrs )
+fn = file.path( getwd(), "RES.rdata" )
+
+if (0)  load(fn)
+  
+
+# --------------------------------
+# do stratanl for each of the following swept-area assumptions:
+
   for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     sppoly =  areal_units( p=p  )
     bi = strata_timeseries(
@@ -220,12 +222,12 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
   for ( runtype in runtypes ) {
-      if (0)  {
-        trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3]
-        i = 6
-        runtype = runtypes[6]
-      } 
-      RES[[runtype]] = survey_parameter_list( runtype=runtype, 
+    if (0)  {
+      trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3]
+      i = 2
+      runtype = runtypes[6]
+    } 
+    RES[[runtype]] = survey_parameter_list( runtype=runtype, 
       project_name="atlantic_cod",  # key for lookup
       yrs=yrs, 
       selection=selection, 

@@ -24,7 +24,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
@@ -43,7 +43,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "gaussian",
         formula =  formula( 
           meansize ~ 1  
@@ -71,7 +71,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
@@ -89,7 +89,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "gaussian",
         formula =  formula( 
           meansize ~ 1  
@@ -115,7 +115,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
@@ -135,7 +135,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "gaussian",
         formula = formula( 
           meansize ~ 1 
@@ -164,7 +164,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
@@ -183,7 +183,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "gaussian",
         formula = formula( 
           meansize ~ 1 
@@ -209,7 +209,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
@@ -228,7 +228,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "gaussian",
         formula = formula( 
           meansize ~ 1  
@@ -256,7 +256,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
@@ -276,7 +276,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "gaussian",
         formula = formula( 
           meansize ~ 1  
@@ -304,7 +304,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "poisson", 
         formula = formula( 
           totno ~ 1 + offset( data_offset )
@@ -331,7 +331,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "gaussian",
         formula = formula( 
           meansize ~ 1  
@@ -368,7 +368,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "binomial", 
         formula = formula( 
           pa ~ 1  
@@ -394,7 +394,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "binomial", 
         formula = formula( 
           pa ~ 1  
@@ -423,7 +423,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "binomial", 
         formula = formula( 
           pa ~ 1 
@@ -449,7 +449,7 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
-        carstm_model_label = runtype,
+        carstm_model_label = p$carstm_model_label,
         family = "binomial", 
         formula = formula( 
           pa ~ 1 
