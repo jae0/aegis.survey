@@ -44,12 +44,12 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, extra
    
       # size model
       fit = carstm_model( p=params$pW, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", 
-        control.inla = list( strategy='adaptive'  ), num.threads="4:2", mc.cores=2 )  
+        control.inla = list( strategy='adaptive', int.strategy='eb'  ), num.threads="4:2", mc.cores=2 )  
       fit = NULL; gc()
  
       # numerical model
       fit = carstm_model( p=params$pN, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE, 
-        control.inla = list( strategy='adaptive' ), 
+        control.inla = list( strategy='adaptive',  int.strategy='eb' ), 
         num.threads="4:2", mc.cores=2 )  
         #  scale_offsets when using offsets for more stable results
         # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
