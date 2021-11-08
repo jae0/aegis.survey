@@ -68,25 +68,24 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   }
 
 
-  if (project_class=="stratanal") {
-    # needs additional information for polygons .. defaults
+  # default areal unit specification is for stratanl and basic groundfish survey design:
+
     p = parameters_add_without_overwriting( p, 
-      
       areal_units_xydata = "survey_db(p=p, DS='areal_units_input')",
       areal_units_type = "stratanal_polygons_pre2014", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
-      areal_units_resolution_km = 25, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
-      areal_units_proj4string_planar_km =  p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm
-      # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
+      areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
+      areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
       areal_units_overlay = "none",
       areal_units_timeperiod = "pre2014"    # "pre2014" for older
     )
 
-     # projection_proj4string("omerc_nova_scotia") ) # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
+
+
+  if (project_class=="stratanal") {
     return(p)
   }
 
   
-
 
   if (project_class %in% c("carstm") ) {
 
@@ -94,17 +93,9 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
     if (!exists("variabletomodel", p)) stop( "The dependent variable, p$variabletomodel needs to be defined")
 
-
-    # defaults in case not provided ...
+    # NOTE: default polygons are not the same as those of stratanal  ...
     
     p = parameters_add_without_overwriting( p,
-      areal_units_xydata = "survey_db(p=p, DS='areal_units_input')",
-      areal_units_type = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
-      areal_units_resolution_km = 25, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
-      areal_units_proj4string_planar_km =  p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm
-      # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
-      areal_units_overlay = "none",
-      areal_units_timeperiod = "none",
       tus="yr",
       fraction_todrop = 1/5,
       fraction_cv = 1.0,
@@ -114,7 +105,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       carstm_model_label = "default",
       carstm_inputs_prefilter = "sampled",
       carstm_inputs_prefilter_n = 100,
-      vars_to_retain = c("totno", "totwgt", "pa")
+      vars_to_retain = c("totno", "totwgt", "pa", "meansize")
     )
 
 
@@ -146,7 +137,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
         ))
       }
 
-      if ( !exists("family", p)  )  p$family = "gaussian"
+      if ( !exists("family", p)  )  stop("need to specifiy family")
     }
 
 

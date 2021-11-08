@@ -23,12 +23,12 @@ selection = list(
     data.source="groundfish",
     yr = yrs,      # time frame for comparison specified above
     months=6:8,
-    dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
+    # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
+    # ranged_data="dyear"
     settype = 1,
     gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
     strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
-    polygon_enforce=TRUE,
-    ranged_data="dyear"
+    polygon_enforce=TRUE
   )
 )
 
@@ -38,12 +38,18 @@ selection = list(
 
 p = survey_parameters(
   project_class = "stratanal",
-  project_name="atlantic_cod",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
+  project_name="survey",  
   label ="Atlantic cod summer",
   speciesname = "Atlantic_cod",
   trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
   carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
   selection = selection,
+  areal_units_type = "stratanal_polygons_pre2014",
+  areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
+  areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+  areal_units_overlay = "none",
+  areal_units_timeperiod = "pre2014"    # "pre2014" for older
+
   results_file = file.path( getwd(), "RES.rdata" )
 )
 
@@ -219,7 +225,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
   require(aegis.survey)
 
-
+  # force the same polygon configuration as stratanla (above) 
   p = survey_parameters(
     project_class = "carstm",
     project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
@@ -233,6 +239,10 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
     variabletomodel = "totno",
     vars_to_retain = c("totwgt", "totno", "pa", "meansize"),  # to compute mean size, etc
     areal_units_type = "stratanal_polygons_pre2014",
+    areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
+    areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+    areal_units_overlay = "none",
+    areal_units_timeperiod = "pre2014"    # "pre2014" for older
     results_file = file.path( getwd(), "RES.rdata" )
   )
 
@@ -271,7 +281,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
     if (0)    runtype = runtypes[7]
 
     RES[[runtype]] = survey_parameter_list( runtype=runtype, 
-      project_name="atlantic_cod",  # key for lookup
+      project_name="survey",   
       yrs=p$yrs, 
       selection=p$selection, 
       vars_to_retain = c("totwgt", "totno", "pa", "meansize"),
@@ -345,6 +355,17 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
           #plot_elements=c( "isobaths",  "compass", "scale_bar", "legend" )
         )
       }
+
+
+
+# for non-stratanly polys: 
+
+  # areal_units_type = "lattice",  
+  # areal_units_resolution_km = 25, 
+  # areal_units_proj4string_planar_km =  p$aegis_proj4string_planar_km,       
+  # areal_units_overlay = "none",
+  # areal_units_timeperiod = "none",
+    
 
 
 
