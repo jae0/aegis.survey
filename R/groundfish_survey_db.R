@@ -1,6 +1,6 @@
 
 
-groundfish_survey_db = function( DS="refresh.all.data.tables", yrs=NULL, netmensuration.do=FALSE, ...  ) {
+groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL, netmensuration.do=FALSE, ...  ) {
 
   # mostly for storage ... not too much processing
   if (is.null(p)) {

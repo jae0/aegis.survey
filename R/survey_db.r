@@ -1438,7 +1438,13 @@
 
       pci$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
       set = survey_db( p=pci, DS="filter" )
- 
+
+      set$totno0 = set$totno 
+      set$totwgt0 = set$totwgt 
+
+      set$totno = floor( set$totno_adjusted )  
+      set$totwgt = set$totwgt_adjusted  
+
       set$totno[which(!is.finite(set$totno))] = NA
 
       # ensure we have some estimate of sweptarea and choose the appropriate
@@ -1458,6 +1464,7 @@
       set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
       set = set[ which(  is.finite(set$data_offset)   ),  ]
  
+ if (0) {
       # So fiddling is required as extreme events can cause optimizer to fail
       qupper = 0.99  # truncate 99% bound
 
@@ -1468,7 +1475,8 @@
       qv = quantile( set$totwgt, qupper, na.rm=TRUE )
       vi = which( set$totwgt > qv )
       set$totwgt[vi] = qv  
-
+ }
+ 
       set$pa = presence.absence( X=set$totno / set$data_offset, px=0.05 )$pa  # determine presence absence and weighting
       set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
 

@@ -1,32 +1,34 @@
-strata_dataformat = function( p ) {
+strata_dataformat = function( selection, areal_units_proj4string_planar_km="+proj=utm +ellps=WGS84 +zone=20 +units=km" ) {
 
     #Extract data from groundfish survey
     #Extract Cat data from groundfish survey
-    k = aegis.survey::groundfish_survey_db(DS="gscat") #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
+    k = groundfish_survey_db(DS="gscat") #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
 
     # # add required variables .. not sure if still required JC
     u = data.frame( matrix( unlist(strsplit( k$id, ".", fixed=TRUE)), ncol=2, byrow=TRUE), stringsAsFactors=FALSE )
     k$mission = as.character( u[,1] )
     k$setno = as.numeric( u[,2] )
 
-    # apply p$selection criteria
-    if (exists("settype", p$selection$survey) )  k = k[ which(k$settype %in% p$selection$survey[["settype"]] ) , ]  # k = k[ which(k$settype %in% c(1,2,5)) , ]
-    if (exists("strata_toremove", p$selection$survey) ) k = k[-which( k$strat %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) ) , ]
-    if (exists("strata_tokeep", p$selection$survey) ) k = k[which( k$strat %in% p$selection$survey[["strata_to_keep"]] ) , ]
-    if (exists("yr", p$selection$survey) ) k = k[ which(k$yr %in% p$selection$survey[["yr"]] ), ]
-    if (exists("months", p$selection$survey) ) k = k[ which(month(k$timestamp) %in% p$selection$survey[["months"]] ), ]
-    if (exists("gear", p$selection$survey )) k = k[ which(k$geardesc %in% p$selection$survey[["gear"]] ), ]
+    # apply selection criteria
+    if (exists("survey", selection)) {  # filter survey information
+      if (exists("settype", selection$survey) )  k = k[ which(k$settype %in% selection$survey[["settype"]] ) , ]  # k = k[ which(k$settype %in% c(1,2,5)) , ]
+      if (exists("strata_toremove", selection$survey) ) k = k[-which( k$strat %in% strata_definitions( selection$survey[["strata_toremove"]] ) ) , ]
+      if (exists("strata_tokeep", selection$survey) ) k = k[which( k$strat %in% selection$survey[["strata_to_keep"]] ) , ]
+      if (exists("yr", selection$survey) ) k = k[ which(k$yr %in% selection$survey[["yr"]] ), ]
+      if (exists("months", selection$survey) ) k = k[ which(month(k$timestamp) %in% selection$survey[["months"]] ), ]
+      if (exists("gear", selection$survey )) k = k[ which(k$geardesc %in% selection$survey[["gear"]] ), ]
+    }
 
     # split biological and set specific variables to redo a join
     vars_biologicals = c("totwgt", "totno", "spec" )
     vars_set = setdiff( names(k), vars_biologicals )
 
-    if (length(p$selection$species) > 1) {
+    if (length(selection$species) > 1) {
       warning("you probably want to aggregate and create new species id code before running this...")
       warning(" or modify code here to do the aggregation")
     }
 
-    species.specific = k[ which(k$spec == p$selection$biologicals$spec ), c("id", vars_biologicals) ]  # keep id to join back ..
+    species.specific = k[ which(k$spec == selection$biologicals$spec ), c("id", vars_biologicals) ]  # keep id to join back ..
 
     set.specific = k[ match( sort(unique(k[,"id"])), k[,"id"] ), vars_set] # unique first locations that match .. set variables only
 
@@ -44,24 +46,22 @@ strata_dataformat = function( p ) {
 
     areal_units_timeperiod = "pre2014"  # "pre2014" for older
     sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod )
-    set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$areal_units_proj4string_planar_km  )
+    set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=areal_units_proj4string_planar_km  )
 
-      if (exists("selection", p)) {
-        if (exists("survey", p$selection)) {  # filter survey information
-          if (exists("polygon_enforce", p$selection$survey) ) {
-            set = set[ which(!is.na(set$AUID)), ] # remove unsetegorized sets
-          }
-          if (exists("months", p$selection$survey) ) set = set[ which(month(set$timestamp) %in% p$selection$survey[["months"]] ), ]
-          if (exists("strata_toremove", p$selection$survey) ) {
-            todrop = which(set$AUID %in% strata_definitions( p$selection$survey[["strata_toremove"]] ) )
-            if (length(todrop) > 0) set = set[- todrop , ]
-          }
-          isc = filter_data( set, p$selection$survey )
-          if (length(isc) > 0) set = set[isc,]
-          isc = NULL
-        }
+    if (exists("survey", selection)) {  # filter survey information
+      if (exists("polygon_enforce", selection$survey) ) {
+        set = set[ which(!is.na(set$AUID)), ] # remove unsetegorized sets
       }
-
+      if (exists("months", selection$survey) ) set = set[ which(month(set$timestamp) %in% selection$survey[["months"]] ), ]
+      if (exists("strata_toremove", selection$survey) ) {
+        todrop = which(set$AUID %in% strata_definitions( selection$survey[["strata_toremove"]] ) )
+        if (length(todrop) > 0) set = set[- todrop , ]
+      }
+      isc = filter_data( set, selection$survey )
+      if (length(isc) > 0) set = set[isc,]
+      isc = NULL
+    }
+  
 
     return(set)
 

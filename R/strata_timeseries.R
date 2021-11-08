@@ -8,6 +8,9 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
 
   res = data.frame()
  
+  # convert kg ->  kt
+  set[ , params[["variable"]] ] = set[ , params[["variable"]] ] / 10^6
+
   for (yr in params[["yrs"]]){
    
     i = which(set$yr == yr)
@@ -18,7 +21,7 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
 
     nh = as.vector(sapply(yhi, length)) #numer of tows per strata
     nhws = sapply(yhi, function(x) length(x [x > 0])) #calculate the number of samples > 1 in each strata
-    Nh = sapply( split(set[ i, "nh" ], set[i,"strat"] ), mean, na.rm=TRUE) #split the variable by strata to get trawalable units in each strata
+    Nh = sapply( split(set[ i, "nh" ], set[i, "strat"] ), mean, na.rm=TRUE) #split the variable by strata to get trawalable units in each strata
     Wh = Nh / sum(Nh) #strata percent of the total area in trawlable units
 
     #Calculate Stratified Estimates and Confidence intervals
@@ -187,6 +190,8 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
   res$variable = params[["variable"]]
 
   print(res)
+
+  attr( res, "units") = "kt"
 
   return(res)
 }

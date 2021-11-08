@@ -1,8 +1,6 @@
 
 
-stratanal_data = function( p,  toget="", sppoly=NULL, trawlable_units=NULL, ... ) {
-
-  p = parameters_add(p, list(...)) # add passed args to parameter list, priority to args
+stratanal_data = function( selection, toget="", sppoly=NULL, trawlable_units=NULL, ... ) {
 
   if ( toget=="stratanal_direct") {
     # used for DEBUGGING:  access via strata_dataformat .. ie. directly from groundfish_survey_db .. gscat
@@ -16,7 +14,7 @@ stratanal_data = function( p,  toget="", sppoly=NULL, trawlable_units=NULL, ... 
     # Results for the basic test cases are essentially identical to "stratanal" (via "strata_dataformat", above)
     # but faster and more QA/QC done on the input data
 
-    set = strata_dataformat( p=p )   # return values in kg or no per set
+    set = strata_dataformat( selection=selection )   # return values in kg or no per set
       # dim(set) # [1] 1682   45
       # sum(set$totwgt) # [1] 9683
       # sum(set$totno)  # [1] 15261
@@ -28,17 +26,11 @@ stratanal_data = function( p,  toget="", sppoly=NULL, trawlable_units=NULL, ... 
     # integrated with aegis.survey access methods .. i.e., more flexible
 
     # categorize Strata based on lon/lat
-    if (is.null(sppoly)) sppoly = areal_units( p=p  )
-    sppoly = st_transform(sppoly, crs=st_crs(projection_proj4string("lonlat_wgs84")) )
-
-    if (!exists("strata_to_keep", sppoly) ) sppoly$strata_to_keep = TRUE
-
-    if (exists( "selection", p)) {
-      if (exists( "survey", p$selection )) {
-        if(exists( "strata_toremove", p$selection$survey )) {
-          i = which( as.character(sppoly$AUID) %in%  strata_definitions( p$selection$survey$strata_toremove ) )
-          if (length(i) > 0 ) sppoly$strata_to_keep[i] = FALSE
-        }
+  
+    if (exists( "survey", selection )) {
+      if(exists( "strata_toremove", selection$survey )) {
+        i = which( as.character(sppoly$AUID) %in%  strata_definitions( selection$survey$strata_toremove ) )
+        if (length(i) > 0 ) sppoly$strata_to_keep[i] = FALSE
       }
     }
 

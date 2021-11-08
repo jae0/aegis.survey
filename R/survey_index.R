@@ -1,5 +1,5 @@
 
-survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=FALSE ) {
+survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo_model=TRUE ) {
 
     # see snowcrab methods for more variations/details
     if (0) {
@@ -8,8 +8,6 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
       extrapolation_replacement="extrapolation_limit"
       au_sa="au_sa_km2"
       redo_model=TRUE
-      redo_sppoly=FALSE 
-      redo_surveydata=FALSE
     }
 
   # parameter list can be varied: either pW (meansize) and pN (numbes) or pB (biomass) or pH (habitat) 
@@ -21,20 +19,11 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
   if (is.null(pci)) stop("parameter list is not correct ...")
 
  
-  sppoly = areal_units( p=pci, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
-  sppoly$strata_to_keep = TRUE
-  # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
-      # plot(  sppoly["AUID"])
-  params$sppoly = sppoly 
- 
-  M = survey_db( p=params, DS="carstm_inputs", sppoly=sppoly, redo=redo_surveydata )
-  params$M = M
-
-  if (is.null(extrapolation_limit)) {
-    if (exists("quantile_bounds", params$pN )) {
-      extrapolation_limit = quantile( M$totno/M$data_offset, probs=params$pN$quantile_bounds[2], na.rm=T) # 10014.881
-    }
-  }
+  # if (is.null(extrapolation_limit)) {
+  #   if (exists("quantile_bounds", params$pN )) {
+  #     extrapolation_limit = quantile( M$totno/M$data_offset, probs=params$pN$quantile_bounds[2], na.rm=T) # 10014.881
+  #   }
+  # }
 
  
   if (params$type=="biomass") {
@@ -84,16 +73,16 @@ survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_repl
     nums[!is.finite(nums)] = NA
 
 
-    if (!is.null(extrapolation_limit)) {
+    # if (!is.null(extrapolation_limit)) {
 
-      uu = which( nums > extrapolation_limit )
-      if (length(uu) > 0 ) {
-        # about 2.9% have values greateer than reasonable
-        if (is.character(extrapolation_replacement)) if (extrapolation_replacement=="extrapolation_limit" ) extrapolation_replacement = extrapolation_limit
-        nums[ uu] = extrapolation_replacement
-        warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
-      }
-    }
+    #   uu = which( nums > extrapolation_limit )
+    #   if (length(uu) > 0 ) {
+    #     # about 2.9% have values greateer than reasonable
+    #     if (is.character(extrapolation_replacement)) if (extrapolation_replacement=="extrapolation_limit" ) extrapolation_replacement = extrapolation_limit
+    #     nums[ uu] = extrapolation_replacement
+    #     warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
+    #   }
+    # }
 
     biom = nums * wgts / 10^6  # kg / km^2 -> kt / km^2
     biom[!is.finite(biom)] = NA

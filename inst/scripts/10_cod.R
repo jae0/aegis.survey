@@ -23,7 +23,7 @@ selection = list(
     data.source="groundfish",
     yr = yrs,      # time frame for comparison specified above
     months=6:8,
-    # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
+    dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
     settype = 1,
     gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
     strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
@@ -65,17 +65,18 @@ if ( start_from_scratch ) {
 # --------------------------------
 # do stratanl for each of the following swept-area assumptions:
 
+  sppoly =  areal_units( p=p  )
+  sppoly = st_transform(sppoly, crs=st_crs(projection_proj4string("lonlat_wgs84")) )
+  if (!exists("strata_to_keep", sppoly) ) sppoly$strata_to_keep = TRUE
+
   for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
-    sppoly =  areal_units( p=p  )
     bi = strata_timeseries(
-      set=stratanal_data( p=p, toget="stratanal", trawlable_units=tu, sppoly=sppoly ),
+      set=stratanal_data( toget="stratanal_direct", selection=selection, trawlable_units=tu, sppoly=sppoly ),
+      # set=stratanal_data( p=p, toget="stratanal", selection=selection, trawlable_units=tu, sppoly=sppoly ),
+      # set=stratanal_data( p=p, toget="stratanal_designated_au", selection=selection, trawlable_units=tu, sppoly=sppoly ),
       variable="totwgt",
-      speciesname=p[["label"]],
+      speciesname=p[["speciesname"]],
       yrs=p$yrs
-      # alpha.t = 0.05, # confidence interval eg. 0.05 = 95%, 0.1 = 90%
-      # alpha.b = 0.05,
-      # nresamp = 1000,
-      # prints=TRUE
     )
     runtype = paste("stratanal", tu, sep="_")
     RES[[runtype]] = bi[ match(RES[["yr"]], bi$year), ]
@@ -83,10 +84,13 @@ if ( start_from_scratch ) {
 
     plot( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8) )
     lines ( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
-  
-    # store some of the aggregate timeseries in this list
-    save(RES, file=p$results_file)   # load( p$results_file )
+  }
 
+
+  if (0) {
+    # store some of the aggregate timeseries in this list
+    save(RES, file=p$results_file)    
+    # load(p$results_file)
   }
 
   # comparative plots:
@@ -98,7 +102,7 @@ if ( start_from_scratch ) {
   lwd = c(4, 4, 4)
   type =c("l", "l", "l")
 
-  plot( pop.total  ~ RES[["yr"]], data=RES[["stratanal_standardtow"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,2.6e8), xlab="Year", ylab="kg")
+  plot( pop.total  ~ RES[["yr"]], data=RES[["stratanal_standardtow"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,2.6e2), xlab="Year", ylab="kt")
   lines( pop.total ~ RES[["yr"]], data=RES[["stratanal_towdistance"]], lty=lty[2], lwd=lwd[2], col=col[2], pch=pch[2], type=type[2])
   lines( pop.total ~ RES[["yr"]], data=RES[["stratanal_sweptarea"]], lty=lty[3], lwd=lwd[3], col=col[3], pch=pch[3], type=type[3])
   legend("topright", legend=c("Standard tow", "Length adjusted", "Length & width adjusted"), lty=lty, col=col, lwd=lwd )
@@ -123,7 +127,9 @@ if ( start_from_scratch ) {
 
 
 # # ------------------------------------------------
-# # these are Michelle's results: (base access of gcat without correction factors for boat, species, etc)
+# # these are Michelle's results: (base access of gcat without correction factors for boat, species, etc)  
+# NOTE here they are in kg .. but they are now recorded as kt
+
 #         speciesname year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length
 # 2.5%   COD ATLANTIC 2017  14593959 totwgt_sd    3.4420    3.4258       3.61840   3.3099   3.5451 0.235210 21313 0.81003
 # 2.5%34 COD ATLANTIC 2016  27531380 totwgt_sd    6.4932    6.3838      23.36500   6.0890   6.6869 0.597900 20779 0.89443
@@ -217,6 +223,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
     "abundance.space_iid.time_iid",   # working
     "abundance.space_iid.time_iid.space_time_iid", # working
     "abundance.space_bym2.time_factor.space_time_bym2.envir.eco",
+    "abundance.space_bym2.time_ar1.space_time_bym2.envir.eco",
     "abundance.space_timeiid.time_iid.envir",
     "abundance.space_iid.time_ar1.envir", 
     "abundance.space_bym2.time_ar1.envir", 
@@ -224,14 +231,27 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   )
  
 
-  areal_units_type = p$areal_units_type
+  # M should be copmputed outside of the loop using all available data
 
+  redo_sppoly=FALSE
+  # redo_sppoly=TRUE 
+  sppoly = areal_units( p=pci, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
+  sppoly$strata_to_keep = TRUE
+  # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
+      # plot(  sppoly["AUID"])
+  
+  redo_survey_data = FALSE
+  # redo_survey_data = TRUE
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data )
 
   for ( runtype in runtypes ) {
+    
     if (0)  {
       trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3]
-      runtype = runtypes[6]
+      runtype = runtypes[7]
+      areal_units_type = p$areal_units_type
     } 
+
     RES[[runtype]] = survey_parameter_list( runtype=runtype, 
       project_name="atlantic_cod",  # key for lookup
       yrs=yrs, 
@@ -241,11 +261,12 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
       trawlable_units = trawlable_units, 
       carstm_model_label = "default"
     )
-    RES[[runtype]] = survey_index( params=RES[[runtype]], redo_model=TRUE, redo_sppoly=FALSE, redo_surveydata=TRUE )
+    RES[[runtype]] = survey_index( params=RES[[runtype]], M=M, sppoly=sppoly, redo_model=TRUE )
 
     # store some of the aggregate timeseries in this list
     save(RES, file=p$results_file)   # load(p$results_file)
-    plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=runtype )
+    # plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=runtype )
+    # lines( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
   }
 
  
