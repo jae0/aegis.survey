@@ -46,15 +46,12 @@ p = survey_parameters(
   selection = selection,
   areal_units_type = "stratanal_polygons_pre2014",
   areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
-  areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+  areal_units_proj4string_planar_km = projection_proj4string("utm20"), #projection_proj4string("omerc_nova_scotia") ,
   areal_units_overlay = "none",
-  areal_units_timeperiod = "pre2014"    # "pre2014" for older
-
-  results_file = file.path( getwd(), "RES.rdata" )
+  areal_units_timeperiod = "pre2014",    # "pre2014" for older
+  results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES.rdata" )
 )
-
-
-
+ 
 # --------------------------------
 # store some of the aggregate timeseries in this list
 
@@ -91,8 +88,8 @@ if ( start_from_scratch ) {
     RES[[runtype]] = bi[ match(RES[["yr"]], bi$year), ]
     RES[[runtype]]$label = runtype
 
-    plot( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8) )
-    lines ( pop.total ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e8))
+    plot( Y ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e2) )
+    lines ( Y ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e2))
   }
 
 
@@ -111,22 +108,22 @@ if ( start_from_scratch ) {
   lwd = c(4, 4, 4)
   type =c("l", "l", "l")
 
-  plot( pop.total  ~ RES[["yr"]], data=RES[["stratanal_standardtow"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,2.6e2), xlab="Year", ylab="kt")
-  lines( pop.total ~ RES[["yr"]], data=RES[["stratanal_towdistance"]], lty=lty[2], lwd=lwd[2], col=col[2], pch=pch[2], type=type[2])
-  lines( pop.total ~ RES[["yr"]], data=RES[["stratanal_sweptarea"]], lty=lty[3], lwd=lwd[3], col=col[3], pch=pch[3], type=type[3])
+  plot( Y  ~ RES[["yr"]], data=RES[["stratanal_standardtow"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,2.6e2), xlab="Year", ylab="kt")
+  lines( Y ~ RES[["yr"]], data=RES[["stratanal_towdistance"]], lty=lty[2], lwd=lwd[2], col=col[2], pch=pch[2], type=type[2])
+  lines( Y ~ RES[["yr"]], data=RES[["stratanal_sweptarea"]], lty=lty[3], lwd=lwd[3], col=col[3], pch=pch[3], type=type[3])
   legend("topright", legend=c("Standard tow", "Length adjusted", "Length & width adjusted"), lty=lty, col=col, lwd=lwd )
 
 
   dev.new(width=6, height=4)
-  hist( RES[["stratanal_towdistance"]]$pop.total / RES[["stratanal_standardtow"]]$pop.total, breaks=20 )
+  hist( RES[["stratanal_towdistance"]]$Y / RES[["stratanal_standardtow"]]$Y, breaks=20 )
 
   dev.new(width=6, height=4)
-  hist( RES[["stratanal_sweptarea"]]$pop.total / RES[["stratanal_standardtow"]]$pop.total, breaks=20 )
+  hist( RES[["stratanal_sweptarea"]]$Y / RES[["stratanal_standardtow"]]$Y, breaks=20 )
 
   o = cbind(
-    RES[["stratanal_towdistance"]]$pop.total,
-    RES[["stratanal_sweptarea"]]$pop.total,
-    RES[["stratanal_standardtow"]]$pop.total
+    RES[["stratanal_towdistance"]]$Y,
+    RES[["stratanal_sweptarea"]]$Y,
+    RES[["stratanal_standardtow"]]$Y
   )
 
   cor( o, use="pairwise.complete.obs" )
@@ -189,7 +186,7 @@ if ( start_from_scratch ) {
 
 # TODO basic corelations and plots, summarizing the above
 
-set = stratanal_data( p=p, toget="stratanal", trawlable_units="sweptarea" )
+set = stratanal_data(  p=p, toget="stratanal", selection=selection, trawlable_units="sweptarea", sppoly=sppoly )
 
 set$strata_year = paste( set$AUID, set$yr, sep=".")
 nn = applySummary( set[, c("strata_year", "totno")]  )
@@ -230,20 +227,19 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
     project_class = "carstm",
     project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
     label ="Atlantic cod summer towdistance",
-
     speciesname = "Atlantic_cod",
     trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
     carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
     yrs = yrs,
     selection = selection,
     variabletomodel = "totno",
-    vars_to_retain = c("totwgt", "totno", "pa", "meansize"),  # to compute mean size, etc
+    vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset"),  # to compute mean size, etc
     areal_units_type = "stratanal_polygons_pre2014",
     areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
-    areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+    areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
     areal_units_overlay = "none",
-    areal_units_timeperiod = "pre2014"    # "pre2014" for older
-    results_file = file.path( getwd(), "RES.rdata" )
+    areal_units_timeperiod = "pre2014",    # "pre2014" for older
+    results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES.rdata" )
   )
 
 
@@ -261,10 +257,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
     "abundance.space_bym2.time_ar1.envir", 
     "abundance.space_bym2.time_ar1.spacetime.envir"
   )
- 
-
-  # M should be copmputed outside of the loop using all available data
-
+  
   redo_sppoly=FALSE
   # redo_sppoly=TRUE 
   sppoly = areal_units( p=p, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
@@ -275,30 +268,19 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data )
-
+ 
   for ( runtype in runtypes ) {
-    
     if (0)    runtype = runtypes[7]
-
-    RES[[runtype]] = survey_parameter_list( runtype=runtype, 
-      project_name="survey",   
-      yrs=p$yrs, 
-      selection=p$selection, 
-      vars_to_retain = c("totwgt", "totno", "pa", "meansize"),
-      areal_units_type = p$areal_units_type,
-      trawlable_units = trawlable_units, 
-      carstm_model_label = "default"
-    )
+    RES[[runtype]] = survey_parameter_list( runtype=runtype,  p=p )
     RES[[runtype]] = survey_index( params=RES[[runtype]], M=M, sppoly=sppoly, redo_model=TRUE )
-
-    # store some of the aggregate timeseries in this list
-    save(RES, file=p$results_file)   # load(p$results_file)
+    save(RES, file=p$results_file)   # load(p$results_file)     # store some of the aggregate timeseries in this list
     # plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=runtype )
     # lines( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
   }
 
- 
-    if (0) {
+
+
+  if (0) {
       # map it
       plot_crs = pN$aegis_proj4string_planar_km
       # managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
@@ -362,7 +344,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
   # areal_units_type = "lattice",  
   # areal_units_resolution_km = 25, 
-  # areal_units_proj4string_planar_km =  p$aegis_proj4string_planar_km,       
+  # areal_units_proj4string_planar_km =  projection_proj4string("utm20"),       
   # areal_units_overlay = "none",
   # areal_units_timeperiod = "none",
     

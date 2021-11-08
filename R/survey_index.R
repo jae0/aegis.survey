@@ -1,5 +1,5 @@
 
-survey_index = function( params, M, extrapolation_limit=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo_model=TRUE ) {
+survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo_model=TRUE ) {
 
     # see snowcrab methods for more variations/details
     if (0) {

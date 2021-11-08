@@ -1455,32 +1455,19 @@
 
       set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
       set = set[ which(  is.finite(set$data_offset)   ),  ]
- 
- if (0) {
-      # So fiddling is required as extreme events can cause optimizer to fail
-      qupper = 0.99  # truncate 99% bound
-
-      qm = quantile( set$totno, qupper, na.rm=TRUE )
-      mi = which( set$totno > qm )
-      set$totno[mi] = floor( qm )
-
-      qv = quantile( set$totwgt, qupper, na.rm=TRUE )
-      vi = which( set$totwgt > qv )
-      set$totwgt[vi] = qv  
- }
-
+  
       set$pa = presence.absence( X=set$totno / set$data_offset, px=0.05 )$pa  # determine presence absence and weighting
       set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
 
       set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
       
       M = carstm_prepare_inputdata(
-        p=pci,
+        p=p,
         M=set,
         sppoly=sppoly,
         APS_data_offset=1,
-        vars_to_retain= pci$vars_to_retain,
-        lookup_parameters= pci$carstm_lookup_parameters
+        vars_to_retain= p$vars_to_retain,
+        lookup_parameters= p$carstm_lookup_parameters
       )
 
 

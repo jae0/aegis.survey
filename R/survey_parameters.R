@@ -68,13 +68,13 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   }
 
 
-  # default areal unit specification is for stratanl and basic groundfish survey design:
+  # default areal unit specification is for stratanl and basic groundfish survey design for all subsequenct projects below
 
     p = parameters_add_without_overwriting( p, 
       areal_units_xydata = "survey_db(p=p, DS='areal_units_input')",
       areal_units_type = "stratanal_polygons_pre2014", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
       areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
-      areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+      areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
       areal_units_overlay = "none",
       areal_units_timeperiod = "pre2014"    # "pre2014" for older
     )
@@ -137,7 +137,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
         ))
       }
 
-      if ( !exists("family", p)  )  stop("need to specifiy family")
+      if ( !exists("family", p)  )  p$family = "gaussian"
     }
 
 
