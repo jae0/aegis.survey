@@ -7,9 +7,11 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
   params = list(...)
 
   res = data.frame()
- 
+  
+  vn = params[["variable"]]
+
   # convert kg ->  kt
-  set[ , params[["variable"]] ] = set[ , params[["variable"]] ] / 10^6
+  set[ , vn ] = set[ , vn ] / 10^6
 
   for (yr in params[["yrs"]]){
    
@@ -17,20 +19,24 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
 
     if (length(i) < 2) next()
 
-    yhi = split(set[ i, params[["variable"]] ], set[i,"strat"] ) #split the variable by strata
+    yhi = split(set[ i, vn ], set[i,"strat"] ) #split the variable by strata
 
     nh = as.vector(sapply(yhi, length)) #numer of tows per strata
     nhws = sapply(yhi, function(x) length(x [x > 0])) #calculate the number of samples > 1 in each strata
     Nh = sapply( split(set[ i, "nh" ], set[i, "strat"] ), mean, na.rm=TRUE) #split the variable by strata to get trawalable units in each strata
-    Wh = Nh / sum(Nh) #strata percent of the total area in trawlable units
+    Nhsum = sum(Nh, na.rm=TRUE)
+
+    Wh = Nh / Nhsum #strata percent of the total area in trawlable units
 
     #Calculate Stratified Estimates and Confidence intervals
     #-------------------------------------------------------------------------------------
-    yh = as.vector(sapply(yhi, mean)) #mean of variable for each strata
+    yh = as.vector(sapply(yhi, mean, na.rm=TRUE)) #mean of variable for each strata
     yst = sum(Wh * yh, na.rm = TRUE) #sum of the mean of the variable for each strata, multiplied by percent area of each strata
 
-    sh = as.vector(sapply(yhi, var)) #calculate variance of each variable, per strata
-    se.yst = sqrt(sum((((Nh * (Nh - nh))/sum(Nh)^2) * sh)/nh, na.rm = TRUE)) #calculate standard error
+    sh = as.vector(sapply(yhi, var, na.rm=TRUE)) #calculate variance of each variable, per strata
+
+
+    se.yst = sqrt(sum((((Nh * (Nh - nh))/Nhsum^2) * sh)/nh, na.rm = TRUE)) #calculate standard error
     ah = (Nh * (Nh - nh))/nh #
     df.yst = (sum(ah * sh, na.rm = TRUE)^2)/(sum(((ah * sh)^2)/(nh - 1), na.rm = TRUE)) #degrees of freedom
 
@@ -39,9 +45,9 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
     #based on the degrees of freedom calculated above. This is multiplied by the standard error calculated above
     #formulas are: Lower limit = M - (tCL)(sM), Upper limit = M + (tCL)(sM)
     #------------------------------------------------------------------------------------
-    ci.yst = yst + (c(qt(params[["alpha.t"]]/2, df.yst), -qt(params[["alpha.t"]]/2, df.yst)) * se.yst) #confidence interval
+    ci.yst = yst + c(qt(params[["alpha.t"]]/2, df.yst), -qt(params[["alpha.t"]]/2, df.yst)) * se.yst #confidence interval
 
-    dwao = sum(Wh*(nhws / nh)) * sum(Nh) * 0.011801 
+    dwao = sum(Wh*(nhws / nh), na.rm = TRUE) * sum(Nh, na.rm = TRUE) * 0.011801   #not sure what this is supposed to be
 
     #Calculate Design Weighted Area Occupied
     if (gini_compute) {
@@ -51,11 +57,7 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
       gi = gini(x=yh, y=Nh)
     }
 
-
-    #Calculate the total population
-    Yst = yst * sum(Nh)
-#    Yst = sum( yst * Nh)
-
+ 
     # Use mirror match method (BWR) to calculate confidence intervals in Bias Corrected (BC) method to calculate confidence interval
     #-------------------------------------------------------------------------
     # call = match.call(expand = FALSE)
@@ -134,7 +136,7 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
 
       if (params[["prints"]]) {cat(
         "\n",
-        "Pop Total =", format(Yst), "\n",
+        "Pop Total =", format(yst * Nhsum), "\n",
       #  "Original Mean =", format(orig.mean), "\n",
         "Year =", yr, "\n"
       #  "Original Variance =", format(orig.var), "\n",
@@ -153,7 +155,9 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
     
     res_summary = data.frame(
       year = as.numeric(yr),
-      pop.total = Yst,
+      Y = yst * Nhsum,
+      Ylb = ci.yst[1]*Nhsum,
+      Yub = ci.yst[2]*Nhsum,
       dwao = dwao
     )
 
@@ -187,7 +191,7 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
   # res$gm.40 = geometric.mean (res$boot.mean) * 0.4
   
   res$speciesname=params[["speciesname"]]
-  res$variable = params[["variable"]]
+  res$variable = vn
 
   print(res)
 

@@ -1,11 +1,8 @@
 
-survey_parameter_list = function( runtype, yrs, selection, project_name="atlantic_cod", 
-  vars_to_retain = c("totwgt", "totno", "pa", "meansize"),
-  areal_units_type = "stratanal_polygons_pre2014",
-  trawlable_units = "sweptarea",
+survey_parameter_list = function( runtype, yrs, selection, project_name="survey", 
+  trawlable_units = "towdistance", areal_units_type = "stratanal_polygons_pre2014",
   carstm_model_label = "default"
 ) {
-
 
   if (project_name=="atlantic_cod") {
     
@@ -22,7 +19,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -41,7 +37,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -69,7 +64,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -87,7 +81,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -113,7 +106,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -133,7 +125,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -162,7 +153,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -181,7 +171,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -207,7 +196,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -226,7 +214,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -254,7 +241,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -274,7 +260,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -302,7 +287,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -329,7 +313,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -365,7 +348,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "totno",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -391,7 +373,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "meansize", 
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -427,7 +408,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "pa",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -453,7 +433,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "pa",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -482,7 +461,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "pa",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,
@@ -508,7 +486,6 @@ survey_parameter_list = function( runtype, yrs, selection, project_name="atlanti
         yrs = yrs,
         selection = selection,
         variabletomodel = "pa",  
-        vars_to_retain = vars_to_retain,  # to compute mean size
         areal_units_type=areal_units_type,
         trawlable_units=trawlable_units,
         carstm_model_label = carstm_model_label,

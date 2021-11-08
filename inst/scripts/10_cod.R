@@ -39,9 +39,9 @@ selection = list(
 p = survey_parameters(
   project_class = "stratanal",
   project_name="atlantic_cod",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
-  label ="Atlantic cod summer standardtow",
+  label ="Atlantic cod summer",
   speciesname = "Atlantic_cod",
-  trawlable_units = "__to_be_filled_later__",  # to be filled in below in call to aegis_survey_index
+  trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
   carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
   selection = selection,
   results_file = file.path( getwd(), "RES.rdata" )
@@ -65,18 +65,21 @@ if ( start_from_scratch ) {
 # --------------------------------
 # do stratanl for each of the following swept-area assumptions:
 
-  sppoly =  areal_units( p=p  )
+  sppoly = areal_units( p=p  )
   sppoly = st_transform(sppoly, crs=st_crs(projection_proj4string("lonlat_wgs84")) )
   if (!exists("strata_to_keep", sppoly) ) sppoly$strata_to_keep = TRUE
 
   for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     bi = strata_timeseries(
-      set=stratanal_data( toget="stratanal_direct", selection=selection, trawlable_units=tu, sppoly=sppoly ),
-      # set=stratanal_data( p=p, toget="stratanal", selection=selection, trawlable_units=tu, sppoly=sppoly ),
+      # set=stratanal_data( toget="stratanal_direct", selection=selection, trawlable_units=tu, sppoly=sppoly ),
+      set=stratanal_data( p=p, toget="stratanal", selection=selection, trawlable_units=tu, sppoly=sppoly ),
       # set=stratanal_data( p=p, toget="stratanal_designated_au", selection=selection, trawlable_units=tu, sppoly=sppoly ),
       variable="totwgt",
       speciesname=p[["speciesname"]],
-      yrs=p$yrs
+      yrs=p$yrs,
+      alpha.t = 0.05 # confidence interval for t-tdist assumption eg. 0.05 = 95%, 0.1 = 90%
+      #alpha.b = 0.05,
+      # nresamp = 1000
     )
     runtype = paste("stratanal", tu, sep="_")
     RES[[runtype]] = bi[ match(RES[["yr"]], bi$year), ]
@@ -216,6 +219,25 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
   require(aegis.survey)
 
+
+  p = survey_parameters(
+    project_class = "carstm",
+    project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
+    label ="Atlantic cod summer towdistance",
+
+    speciesname = "Atlantic_cod",
+    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
+    carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
+    yrs = yrs,
+    selection = selection,
+    variabletomodel = "totno",
+    vars_to_retain = c("totwgt", "totno", "pa", "meansize"),  # to compute mean size, etc
+    areal_units_type = "stratanal_polygons_pre2014",
+    results_file = file.path( getwd(), "RES.rdata" )
+  )
+
+
+
   runtypes = c(
     "abundance.space_factor.time_factor", # almost standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014  -- results are useless
     "abundance.space_time_factor",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
@@ -235,7 +257,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
   redo_sppoly=FALSE
   # redo_sppoly=TRUE 
-  sppoly = areal_units( p=pci, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
+  sppoly = areal_units( p=p, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
   sppoly$strata_to_keep = TRUE
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
@@ -246,18 +268,14 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
   for ( runtype in runtypes ) {
     
-    if (0)  {
-      trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3]
-      runtype = runtypes[7]
-      areal_units_type = p$areal_units_type
-    } 
+    if (0)    runtype = runtypes[7]
 
     RES[[runtype]] = survey_parameter_list( runtype=runtype, 
       project_name="atlantic_cod",  # key for lookup
-      yrs=yrs, 
-      selection=selection, 
+      yrs=p$yrs, 
+      selection=p$selection, 
       vars_to_retain = c("totwgt", "totno", "pa", "meansize"),
-      areal_units_type = areal_units_type,
+      areal_units_type = p$areal_units_type,
       trawlable_units = trawlable_units, 
       carstm_model_label = "default"
     )

@@ -33,7 +33,7 @@
         y$data.source = "groundfish"
         y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
         # y$sa_towdistance_wing = y$wing.sa
-        y$sa_towdistance = y$sakm2
+        y$sa_towdistance = y$sakm2  # sakm2==(41 * ft2m * m2km ) * ( gsinf$dist * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled in km^2 ; suvery_db:gsinf
         y$z = y$sdepth  # m
         y$gear = y$geardesc
         y$setquality = NA
@@ -1402,16 +1402,9 @@
     if (DS == "carstm_inputs" ) {
 
       # format data, lookup variables where required and then create prediction surface
-
-      # parameter list can be varied: either pW (meansize) and pN (numbes) or pB (biomass) or pH (habitat) 
-      pci = NULL
-      if (p$type=="abundance") pci = p$pN
-      if (p$type=="meansize")  pci = p$pW
-      if (p$type=="biomass")   pci = p$pB
-      if (p$type=="habitat")   pci = p$pH
-      if (is.null(pci)) stop("parameter list is not correct ...")
-
-      if (is.null(sppoly)) sppoly = areal_units( p=pci  )
+      require(carstm)
+      
+      if (is.null(sppoly)) sppoly = areal_units( p=p )
 
       crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
       sppoly = st_transform(sppoly, crs=crs_lonlat )
@@ -1419,7 +1412,7 @@
 
       areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
-      fn = carstm_filenames( p=pci, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
+      fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
       # inputs are shared across various secneario using the same polys
       #.. store at the modeldir level as default
       outputdir = dirname( fn )
@@ -1435,9 +1428,8 @@
       }
       message( "Generating carstm_inputs ... ", fn)
 
-
-      pci$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
-      set = survey_db( p=pci, DS="filter" )
+      p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
+      set = survey_db( p=p, DS="filter" )
 
       set$totno0 = set$totno 
       set$totwgt0 = set$totwgt 
@@ -1455,7 +1447,7 @@
       mi2ft = 5280
       standardtow_sakm2 = (41 * ft2m * m2km ) * ( 1.75 * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled by a standard tow in km^2  1.75 nm
 
-      set$data_offset = switch( pci$trawlable_units,
+      set$data_offset = switch( p$trawlable_units,
         standardtow =  rep(standardtow_sakm2, nrow(set)) , # "standard tow"
         towdistance = set$sa_towdistance,  # "sa"=computed from tow distance and standard width, 0.011801==),
         sweptarea = set$sa  # swept area based upon stand tow width and variable lenths based upon start-end locations wherever possible
@@ -1476,7 +1468,7 @@
       vi = which( set$totwgt > qv )
       set$totwgt[vi] = qv  
  }
- 
+
       set$pa = presence.absence( X=set$totno / set$data_offset, px=0.05 )$pa  # determine presence absence and weighting
       set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
 
@@ -1492,12 +1484,11 @@
       )
 
 
-
       if (!exists("yr", M)) M$yr = M$year  # req for meanweights
 
       # IMPERATIVE:
       M = M[ which( is.finite(M$t ) ), ]
-      M = M[ which( is.finite(M$t ) ), ]
+      M = M[ which( is.finite(M$z ) ), ]
 
       save( M, file=fn, compress=TRUE )
 

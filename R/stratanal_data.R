@@ -1,6 +1,6 @@
 
 
-stratanal_data = function( selection, toget="", sppoly=NULL, trawlable_units=NULL, ... ) {
+stratanal_data = function( selection=NULL, toget="", sppoly=NULL, trawlable_units=NULL, ... ) {
 
   if ( toget=="stratanal_direct") {
     # used for DEBUGGING:  access via strata_dataformat .. ie. directly from groundfish_survey_db .. gscat
@@ -55,7 +55,7 @@ stratanal_data = function( selection, toget="", sppoly=NULL, trawlable_units=NUL
 
   spp = st_drop_geometry( sppoly )
   attributes(spp$au_sa_km2) = NULL
-  set = merge( set, spp, by="AUID", all.x=TRUE, all.y=FALSE)
+  set = merge( set, spp, by="AUID", all.x=TRUE, all.y=FALSE, suffixes=c(".set",""))
 
   # compute no of trawlable units for each stratum
   # "strat" and "nh" are used by "stratanal"
@@ -68,8 +68,16 @@ stratanal_data = function( selection, toget="", sppoly=NULL, trawlable_units=NUL
   standardtow_sakm2 = (41 * ft2m * m2km ) * ( 1.75 * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled by a standard tow in km^2  1.75 nm
   # = 0.0405 and NOT 0.011801 .. where did this come from?
   # set up trawlable units used in stratanal
-   
-  
+
+  if (!exists("sa_towdistance", set)) {
+    dtow_km = set$dist_pos
+    i = which(!is.finite(dtow_km)) 
+    if (length(i) > 0) dtow_km[i] = set$dist_km[i]
+    i = which(!is.finite(dtow_km)) 
+    if (length(i) > 0) dtow_km[i] = standardtow_sakm2
+    set$sa_towdistance = (41 * ft2m * m2km ) * dtow_km
+  }
+
   set$nh = switch( trawlable_units,
     sweptarea = as.numeric(set$au_sa_km2) * set$cf_cat, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by sweptarea
     standardtow = as.numeric(set$au_sa_km2) / standardtow_sakm2, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by 0.011801
