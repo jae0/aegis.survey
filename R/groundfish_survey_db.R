@@ -470,6 +470,7 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
     gsinf = convert.degmin2degdec(gsinf, vnames=c("lon.end", "lat.end") )
 
     gsinf$dist_km = gsinf$dist * 1.852  # nautical mile to km
+    
     gsinf$dist_pos = geosphere::distGeo( gsinf[, c("lon","lat")], gsinf[, c("lon.end", "lat.end")])/1000
 
     ii = which( abs( gsinf$dist_km) > 10 ) # 10 km is safely too extreme
@@ -493,7 +494,7 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
     m2km = 1/1000
     nmi2mi = 1.1507794
     mi2ft = 5280
-    gsinf$sakm2 = (41 * ft2m * m2km ) * ( gsinf$dist * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled in km^2
+    gsinf$sakm2 = (41 * ft2m * m2km ) * ( gsinf$dist * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled in km^2 (towlength Xstd width)
     oo = which( !is.finite(gsinf$sakm2 ))
 		if (length(oo) > 0 ) {
       gsinf$sakm2[oo] = median (gsinf$sakm2, na.rm=T)

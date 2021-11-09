@@ -142,6 +142,10 @@
     if (0) {
       # or in manual mode:
       # the following are done in "refresh.all.data.tables
+       require(bio.taxonomy)
+       require(aegis.survey)
+       require(aegis.mpa)
+       
        p = aegis.survey::groundfish_parameters( yrs=1970:year.assessment )
     
         groundfish_survey_db(p=p, DS="gscat.base.redo" )

@@ -49,19 +49,10 @@ p = survey_parameters(
   areal_units_proj4string_planar_km = projection_proj4string("utm20"), #projection_proj4string("omerc_nova_scotia") ,
   areal_units_overlay = "none",
   areal_units_timeperiod = "pre2014",    # "pre2014" for older
-  results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES.rdata" )
+  results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES_basic_stratanal.rdata" )
 )
- 
-# --------------------------------
-# store some of the aggregate timeseries in this list
 
-start_from_scratch = FALSE
-
-if ( start_from_scratch ) {
-  RES= list( yr = yrs )
-} else {
-  load( p$results_file )
-}  
+RES= list( yr = yrs )
 
 
 
@@ -72,46 +63,45 @@ if ( start_from_scratch ) {
   sppoly = st_transform(sppoly, crs=st_crs(projection_proj4string("lonlat_wgs84")) )
   if (!exists("strata_to_keep", sppoly) ) sppoly$strata_to_keep = TRUE
 
-  for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
+
+  for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
+  for ( tu in c( "standardtow", "towdistance", "sweptarea") ) {  
+    # c("Standard tow", "Length adjusted", "Length & width adjusted")
     bi = strata_timeseries(
-      set=stratanal_data( toget="stratanal_direct", selection=selection, trawlable_units=tu, sppoly=sppoly ),
-      # set=stratanal_data( p=p, toget="stratanal_designated_au", selection=selection, trawlable_units=tu, sppoly=sppoly ),
-      # set=stratanal_data( p=p, toget="stratanal", selection=selection, trawlable_units=tu, sppoly=sppoly ),
-      variable="totwgt",
-      speciesname=p[["speciesname"]],
-      yrs=p$yrs,
+      set=stratanal_data( toget=data_approach, selection=selection, trawlable_units=tu, sppoly=sppoly ),
+      variable="totwgt", speciesname=p[["speciesname"]], yrs=p$yrs,
       alpha.t = 0.05 # confidence interval for t-tdist assumption eg. 0.05 = 95%, 0.1 = 90%
-      #alpha.b = 0.05,
-      # nresamp = 1000
     )
-    runtype = paste("stratanal", tu, sep="_")
+    runtype = paste(data_approach, tu, sep=".")
     RES[[runtype]] = bi[ match(RES[["yr"]], bi$year), ]
     RES[[runtype]]$label = runtype
+  }}
 
-    plot( Y ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e2) )
-    lines ( Y ~ RES[["yr"]], data=RES[[runtype]], lty=5, lwd=4, col="red", type="b", ylim=c(0,8e2))
-  }
-
-
-  if (0) {
-    # store some of the aggregate timeseries in this list
-    save(RES, file=p$results_file)    
-    # load(p$results_file)
-  }
+  save(RES, file=p$results_file)    
+  # load(p$results_file)
+  
+  
+  # ------------------
 
   # comparative plots:
 
   dev.new(width=11, height=7)
-  col = c("slategray", "turquoise", "darkorange" )
-  pch = c(20, 21, 22)
-  lty = c(1, 3, 4 )
-  lwd = c(4, 4, 4)
-  type =c("l", "l", "l")
+  nvn = setdiff( names(RES), "yr" )
+  nv = 1:length(nvn)
 
-  plot( Y  ~ RES[["yr"]], data=RES[["stratanal_standardtow"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,3.2e2), xlab="Year", ylab="kt")
-  lines( Y ~ RES[["yr"]], data=RES[["stratanal_towdistance"]], lty=lty[2], lwd=lwd[2], col=col[2], pch=pch[2], type=type[2])
-  lines( Y ~ RES[["yr"]], data=RES[["stratanal_sweptarea"]], lty=lty[3], lwd=lwd[3], col=col[3], pch=pch[3], type=type[3])
-  legend("topright", legend=c("Standard tow", "Length adjusted", "Length & width adjusted"), lty=lty, col=col, lwd=lwd )
+  col = c("slategray", "turquoise", "darkorange", "green", "blue", "darkred", "cyan", "darkgreen", "purple" )[nv]
+  pch = c(20, 21, 22, 23, 24, 25, 26, 27, 20)[nv] 
+  lty = c(1, 3, 4, 5, 6, 7, 1, 3, 4 )[nv]
+  lwd = c(2, 4, 6, 2, 4, 6, 2, 4, 6 )[nv]
+  type =c("l", "l", "l", "l", "l", "l", "l", "l", "l") [nv]
+
+  plot( 0, 0, type="n", xlim=range(RES[["yr"]]), ylim=c(0, 3.2e2), xlab="Year", ylab="kt", main="Comparing input data treatment and sweptareas")
+  for (i in nv) {
+    lines( Y ~ RES[["yr"]], data=RES[[nvn[i]]], lty=lty[i], lwd=lwd[i], col=col[i], pch=pch[i], type=type[i])
+  }
+  legend("topright", legend=nvn, lty=lty, col=col, lwd=lwd )
+  # note: sweptarea methods have lower peak abundance
+
 
 
   dev.new(width=6, height=4)
@@ -206,7 +196,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 # ------------------------------------------------
 ## mimic stranal with aegis.survey::survey_db & carstm
 
-glm method
+glm methods here
 
 
 ### end basic stranal glm comparisons ###
@@ -229,33 +219,34 @@ glm method
 # ----------------------------------------------
 # define runtypes: params are stored in  survey_parameter_list()
 
+# adding settype 2 and 5 (comparative tows, and generic surveys) 
+
   require(aegis.survey)
 
   # basic selection criteria
+  ## note difference from stratanal: all gears kept, and all areas kept
   selection = list(
     biologicals=list(
       spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
     ),
     survey=list(
-      data.source="groundfish",
+      data.source = c("groundfish", "snowcrab"),
       yr = yrs,      # time frame for comparison specified above
       months=6:8,
       # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       # ranged_data="dyear"
-      settype = 1,
+      settype = c(1,2, 5),
       # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
       # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
       polygon_enforce=TRUE
     )
   )
-
-  # force the same polygon configuration as stratanla (above) 
   p = survey_parameters(
     project_class = "carstm",
     project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
-    label ="Atlantic cod summer towdistance",
+    label ="Atlantic cod summer",
     speciesname = "Atlantic_cod",
-    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
+    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3],  
     carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
     yrs = yrs,
     selection = selection,
@@ -266,8 +257,10 @@ glm method
     areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
     areal_units_overlay = "none",
     areal_units_timeperiod = "pre2014",    # "pre2014" for older
-    results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES.rdata" )
+    results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES_carstm.rdata" )
   )
+
+  RES= list( yr = yrs )
 
 
 
@@ -296,7 +289,7 @@ glm method
   
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
-  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.975 )
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.99 )
  
 
   for ( runtype in runtypes ) {
