@@ -59,11 +59,9 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, extra
 
     resw = carstm_model( p=params$pW, DS="carstm_modelled_summary" )
     resn = carstm_model( p=params$pN, DS="carstm_modelled_summary" )
- 
 
     vars_to_copy = c(  "space", "time", "dyears" )
     for ( vn in vars_to_copy ) params[[vn]] = resn[[vn]]
-
 
     wgts = resw[["predictions_posterior_simulations"]]
     wgts[!is.finite(wgts)] = NA

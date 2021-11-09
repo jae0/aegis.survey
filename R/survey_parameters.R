@@ -105,7 +105,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       carstm_model_label = "default",
       carstm_inputs_prefilter = "sampled",
       carstm_inputs_prefilter_n = 100,
-      vars_to_retain = c("totno", "totwgt", "pa", "meansize")
+      vars_to_retain = c("totno", "totwgt", "pa", "meansize", "data_offset", "gear", "data.source", "id")
     )
 
 

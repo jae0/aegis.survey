@@ -1,5 +1,5 @@
 
-  survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL ) {
+  survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL, qupper=0.99 ) {
     #\\ assimilation of all survey data into a coherent form
     surveydir = project.datadirectory( "aegis", "survey" )
 
@@ -1144,7 +1144,7 @@
         }
 
       cat$data.source = NULL
-      set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE)
+      set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE, suffixes=c("", ".cat") )
       set$totno_adjusted = set$totno * set$cf_cat
       set$totwgt_adjusted = set$totwgt * set$cf_cat
 
@@ -1202,6 +1202,21 @@
           isc = NULL
         }
       }
+
+      set$gear.cat = NULL
+
+      # fix NA's 
+
+      routine_replacement = c( "spec", "spec_bio", "name.common", "name.scientific", "itis.tsn" )
+      for ( vn in routine_replacement ) {
+        if (exists( vn, set)) {
+          i = which( is.na(set[, vn] ) )
+          if (length(i) > 0) set[i, vn] = unique( set[-i, vn] )[1] 
+        }
+      }
+
+      i = which( !is.finite(set$id2) )
+      if (length(i) > 0) set$id2[i] = paste( set$id[i], set$spec[i], sep="."  ) 
 
       return (set)
     }
@@ -1281,7 +1296,7 @@
         isc = NULL
         # catvars= c("id", "totno", "totwgt", "cf_cat")
         cat$data.source = NULL
-        set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE)
+        set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE, suffixes=c("", ".cat") )
         set$totno_adjusted = set$totno * set$cf_cat
         set$totwgt_adjusted = set$totwgt * set$cf_cat
       }
@@ -1391,6 +1406,22 @@
         }
       }
 
+
+      set$gear.cat = NULL
+
+      # fix NA's 
+
+      routine_replacement = c( "spec", "spec_bio", "name.common", "name.scientific", "itis.tsn" )
+      for ( vn in routine_replacement ) {
+        if (exists( vn, set)) {
+          i = which( is.na(set[, vn] ) )
+          if (length(i) > 0) set[i, vn] = unique( set[-i, vn] )[1] 
+        }
+      }
+
+      i = which( !is.finite(set$id2) )
+      if (length(i) > 0) set$id2[i] = paste( set$id[i], set$spec[i], sep="."  ) 
+
       return (set)
     }
 
@@ -1428,9 +1459,11 @@
       }
       message( "Generating carstm_inputs ... ", fn)
 
+      oo = p$selection$survey$strata_toremove 
       p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
       set = survey_db( p=p, DS="filter" )
-
+      p$selection$survey$strata_toremove = oo  
+      
       set$totno0 = set$totno 
       set$totwgt0 = set$totwgt 
 
@@ -1460,7 +1493,23 @@
       set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
 
       set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
-      
+
+      # So fiddling is required as extreme events can cause optimizer to fail
+      if (!is.null(qupper)) {
+        # truncate upper bounds of density 
+
+        density = set$totno / set$data_offset
+        qm = quantile( density, qupper, na.rm=TRUE )
+        mi = which( density > qm )
+        set$totno[mi] = floor( qm * set$data_offset[mi] )
+
+        density = set$totwgt / set$data_offset
+        qm = quantile( density, qupper, na.rm=TRUE )
+        mi = which( density > qm )
+        set$totwgt[mi] = floor( qm * set$data_offset[mi] )
+      }
+
+
       M = carstm_prepare_inputdata(
         p=p,
         M=set,
@@ -1470,12 +1519,31 @@
         lookup_parameters= p$carstm_lookup_parameters
       )
 
+      # these vars being missing means zero-valued
+      vars_to_zero = c( "mr", "Ea", "Pr.Reaction", "A", "smr" )
+      for ( vn in vars_to_zero ) {
+        if (exists( vn, M)) {
+          i = which( is.na(M[, vn] ) )
+          if (length(i) > 0) M[i, vn] = 0 
+        }
+      }
 
       if (!exists("yr", M)) M$yr = M$year  # req for meanweights
 
       # IMPERATIVE:
       M = M[ which( is.finite(M$t ) ), ]
       M = M[ which( is.finite(M$z ) ), ]
+
+
+      i = which(is.na(M$gear)) 
+      M$gear[ i ] = unique(M$gear[-i])[2] # Western
+
+
+      M$vessel = substring(M$id,1,3)
+      M$id = NULL 
+      i = which(is.na(M$vessel)) 
+      M$vessel[ i ] = "NED"   #  unique(M$vessel[-i])[3] # NED
+
 
       save( M, file=fn, compress=TRUE )
 

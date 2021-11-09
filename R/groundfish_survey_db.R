@@ -793,62 +793,69 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
     gscat = merge(x=gscat, y=set, by=c("id"), all.x=T, all.y=F, sort=F)
     rm (set)
 
-    # combine correction factors or ignore trapability corrections ..
-    # plaice correction ignored as they are size-dependent
 
-    # correct for different survey vessels (after, L.P Fanning 1985):
-    #   to obtain Alfred Needler comparable units:
-    # Lady Hammond (1982) and Alfred Needler (1983 to present) used a Western IIA Otter Trawl
-    # whereas The A.T. Cameron used a Yankee 36 ft trawl between 1970 to 1981
+    if (0) {
+        # combine correction factors or ignore trapability corrections ..
+        # plaice correction ignored as they are size-dependent
 
-    # vessel change correction factors apply to these years:
-    HAM=1   #  Lady Hammond (1979 - 1981)
-    ATC=2   #  A.T. Cameron (1982 - 1983)
+        # correct for different survey vessels (after, L.P Fanning 1985):
+        #   to obtain Alfred Needler comparable units:
+        # Lady Hammond (1982) and Alfred Needler (1983 to present) used a Western IIA Otter Trawl
+        # whereas The A.T. Cameron used a Yankee 36 ft trawl between 1970 to 1981
 
-    # species codes used by the database
-    cod=10
-    haddock=11
-    whitehake=12
-    silverhake=19
-    plaicelarge=40
-    plaicesmall=40
-    witch=41
-    yellowtail=42
-    winterflounder=43
+        # vessel change correction factors apply to these years:
+        HAM=1   #  Lady Hammond (1979 - 1981)
+        ATC=2   #  A.T. Cameron (1982 - 1983)
 
-    vc = NULL
-    vc$cod[HAM]         = 0.8
-    vc$haddock[HAM]     = 1.0
-    vc$whitehake[HAM]   = 1.0
-    vc$silverhake[HAM]  = 1.0
-    vc$plaicesmall[HAM] = 1   # <=28cm
-    vc$plaicelarge[HAM] = 1   # > 28cm
-    vc$witch[HAM]       = 0.8
-    vc$yellowtail[HAM]  = 0.8
-    vc$winterflounder[HAM] = 1.0
+        # species codes used by the database
+        cod=10
+        haddock=11
+        whitehake=12
+        silverhake=19
+        plaicelarge=40
+        plaicesmall=40
+        witch=41
+        yellowtail=42
+        winterflounder=43
 
-    vc$cod[ATC]         = 0.8
-    vc$haddock[ATC]     = 1.2
-    vc$whitehake[ATC]   = 1.0
-    vc$silverhake[ATC]  = 1.0
-    vc$plaicesmall[ATC] = 0.7
-    vc$plaicelarge[ATC] = 1.0
-    vc$witch[ATC]       = 0.8
-    vc$yellowtail[ATC]  = 0.8
-    vc$winterflounder[ATC] = 1.0
+        vc = NULL
+        vc$cod[HAM]         = 0.8
+        vc$haddock[HAM]     = 1.0
+        vc$whitehake[HAM]   = 1.0
+        vc$silverhake[HAM]  = 1.0
+        vc$plaicesmall[HAM] = 1   # <=28cm
+        vc$plaicelarge[HAM] = 1   # > 28cm
+        vc$witch[HAM]       = 0.8
+        vc$yellowtail[HAM]  = 0.8
+        vc$winterflounder[HAM] = 1.0
 
-    ids = substring(gscat$id,1,3)
-    spec = gscat$spec
+        vc$cod[ATC]         = 0.8
+        vc$haddock[ATC]     = 1.2
+        vc$whitehake[ATC]   = 1.0
+        vc$silverhake[ATC]  = 1.0
+        vc$plaicesmall[ATC] = 0.7
+        vc$plaicelarge[ATC] = 1.0
+        vc$witch[ATC]       = 0.8
+        vc$yellowtail[ATC]  = 0.8
+        vc$winterflounder[ATC] = 1.0
 
+        ids = substring(gscat$id,1,3)
+        spec = gscat$spec
+
+        gscat$cf_vessel = 1  # initialise .. default 1==no change
+        gscat$cf_vessel[ which((ids=="HAM" & spec==cod)) ] = vc$cod[HAM]
+        gscat$cf_vessel[ which((ids=="HAM" & spec==witch)) ] = vc$witch[HAM]
+        gscat$cf_vessel[ which((ids=="HAM" & spec==yellowtail)) ] = vc$yellowtail[HAM]
+        gscat$cf_vessel[ which((ids=="ATC" & spec==cod)) ] = vc$cod[ATC]
+        gscat$cf_vessel[ which((ids=="ATC" & spec==haddock)) ] = vc$haddock[ATC]
+        gscat$cf_vessel[ which((ids=="ATC" & spec==plaicesmall && len<=28)) ] = vc$plaicesmall[ATC]
+        gscat$cf_vessel[ which((ids=="ATC" & spec==witch)) ] = vc$witch[ATC]
+        gscat$cf_vessel[ which((ids=="ATC" & spec==yellowtail)) ] = vc$yellowtail[ATC]
+    }
+
+    # ignore vessel corrections
     gscat$cf_vessel = 1  # initialise .. default 1==no change
-    gscat$cf_vessel[ which((ids=="HAM" & spec==cod)) ] = vc$cod[HAM]
-    gscat$cf_vessel[ which((ids=="HAM" & spec==witch)) ] = vc$witch[HAM]
-    gscat$cf_vessel[ which((ids=="HAM" & spec==yellowtail)) ] = vc$yellowtail[HAM]
-    gscat$cf_vessel[ which((ids=="ATC" & spec==cod)) ] = vc$cod[ATC]
-    gscat$cf_vessel[ which((ids=="ATC" & spec==haddock)) ] = vc$haddock[ATC]
-    gscat$cf_vessel[ which((ids=="ATC" & spec==plaicesmall && len<=28)) ] = vc$plaicesmall[ATC]
-    gscat$cf_vessel[ which((ids=="ATC" & spec==witch)) ] = vc$witch[ATC]
-    gscat$cf_vessel[ which((ids=="ATC" & spec==yellowtail)) ] = vc$yellowtail[ATC]
+    gscat$vessel = substring(gscat$id,1,3)
 
     gscat$cf_cat = gscat$cf_tow * gscat$cf_vessel  # these are multipliers to get totwgt and totno as per unit surface area of "Alfred Needler comparable units"
 

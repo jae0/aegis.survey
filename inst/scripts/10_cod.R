@@ -74,9 +74,9 @@ if ( start_from_scratch ) {
 
   for (tu in c( "standardtow", "towdistance", "sweptarea") ) {
     bi = strata_timeseries(
-      # set=stratanal_data( toget="stratanal_direct", selection=selection, trawlable_units=tu, sppoly=sppoly ),
-      set=stratanal_data( p=p, toget="stratanal", selection=selection, trawlable_units=tu, sppoly=sppoly ),
+      set=stratanal_data( toget="stratanal_direct", selection=selection, trawlable_units=tu, sppoly=sppoly ),
       # set=stratanal_data( p=p, toget="stratanal_designated_au", selection=selection, trawlable_units=tu, sppoly=sppoly ),
+      # set=stratanal_data( p=p, toget="stratanal", selection=selection, trawlable_units=tu, sppoly=sppoly ),
       variable="totwgt",
       speciesname=p[["speciesname"]],
       yrs=p$yrs,
@@ -108,7 +108,7 @@ if ( start_from_scratch ) {
   lwd = c(4, 4, 4)
   type =c("l", "l", "l")
 
-  plot( Y  ~ RES[["yr"]], data=RES[["stratanal_standardtow"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,2.6e2), xlab="Year", ylab="kt")
+  plot( Y  ~ RES[["yr"]], data=RES[["stratanal_standardtow"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,3.2e2), xlab="Year", ylab="kt")
   lines( Y ~ RES[["yr"]], data=RES[["stratanal_towdistance"]], lty=lty[2], lwd=lwd[2], col=col[2], pch=pch[2], type=type[2])
   lines( Y ~ RES[["yr"]], data=RES[["stratanal_sweptarea"]], lty=lty[3], lwd=lwd[3], col=col[3], pch=pch[3], type=type[3])
   legend("topright", legend=c("Standard tow", "Length adjusted", "Length & width adjusted"), lty=lty, col=col, lwd=lwd )
@@ -203,6 +203,15 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
 
+# ------------------------------------------------
+## mimic stranal with aegis.survey::survey_db & carstm
+
+glm method
+
+
+### end basic stranal glm comparisons ###
+# ------------------------------------------------
+
 
 
 # ------------------------------------------------
@@ -222,6 +231,24 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
   require(aegis.survey)
 
+  # basic selection criteria
+  selection = list(
+    biologicals=list(
+      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
+    ),
+    survey=list(
+      data.source="groundfish",
+      yr = yrs,      # time frame for comparison specified above
+      months=6:8,
+      # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
+      # ranged_data="dyear"
+      settype = 1,
+      # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
+      # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
+      polygon_enforce=TRUE
+    )
+  )
+
   # force the same polygon configuration as stratanla (above) 
   p = survey_parameters(
     project_class = "carstm",
@@ -233,7 +260,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
     yrs = yrs,
     selection = selection,
     variabletomodel = "totno",
-    vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset"),  # to compute mean size, etc
+    vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id"),  # to compute mean size, etc
     areal_units_type = "stratanal_polygons_pre2014",
     areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
     areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
@@ -245,17 +272,19 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
   runtypes = c(
-    "abundance.space_factor.time_factor", # almost standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014  -- results are useless
-    "abundance.space_time_factor",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
-    "abundance.space_time_factor_ar1", # working . though results are not useful
-    "abundance.space_iid.time_iid",   # working
-    "abundance.space_iid.time_iid.space_time_iid", # working
-    "abundance.space_bym2.time_factor.space_time_bym2.envir.eco",
-    "abundance.space_bym2.time_ar1.space_time_bym2.envir.eco",
-    "abundance.space_timeiid.time_iid.envir",
-    "abundance.space_iid.time_ar1.envir", 
-    "abundance.space_bym2.time_ar1.envir", 
-    "abundance.space_bym2.time_ar1.spacetime.envir"
+    "A.S_fac.T_fac", # almost standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014  -- results are useless
+    "A.SxT",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
+    "A.SiT.ST_iid", # working . though results are not useful
+    "A.SxT.ST_iid",   # working
+    "A.S_iid.T_iid", # working
+    "A.S_iid.T_iid.ST_iid",
+    "A.S_bym2.T_fac.ST_bym2.env.eco",
+    "A.S_bym2.T_ar1.ST_bym2.env.eco",
+    "H.S_fac.T_fac",
+    "H.S_iid.T_iid",
+    "H.S_iid.T_iid.ST_iid",
+    "H.S_bym2.T_fac.ST_bym2.env.eco",
+    "H.S_bym2.T_ar1.ST_bym2.env.eco"
   )
   
   redo_sppoly=FALSE
@@ -267,10 +296,12 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
   
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
-  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data )
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.975 )
  
+
   for ( runtype in runtypes ) {
-    if (0)    runtype = runtypes[7]
+    if (0)    runtype = runtypes[8]
+    loadfunctions("aegis.survey")
     RES[[runtype]] = survey_parameter_list( runtype=runtype,  p=p )
     RES[[runtype]] = survey_index( params=RES[[runtype]], M=M, sppoly=sppoly, redo_model=TRUE )
     save(RES, file=p$results_file)   # load(p$results_file)     # store some of the aggregate timeseries in this list
