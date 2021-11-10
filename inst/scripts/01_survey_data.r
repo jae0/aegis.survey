@@ -6,182 +6,68 @@
 # run only if they have not already been updated
 # .. show other sources here as they become available
 
-# 02.surveys.*.r assimilates and models these data
-   year.assessment = 2021
+  require( aegis.survey )
 
+  year.assessment = 2021
+  yrs = 1970:year.assessment
 
-      if (0) {
-        # to manually extract data from Oracle on MSWindows: (use R - 3.6.3 in virutalbox ..)
-        # the following uses minimal libraries and parameter settings 
-        
-        require(ROracle)
+# ----------------------------------------
+# absorb groundfish data -- requires DFO oracle database connectivity
 
-        years_to_extract = 2018:2021
-        
-        fn.root =  file.path( getwd(), "trawl", "gscat" )
-        dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
+  if ( data_dump_with_minimal_dependencies ) {
+    # to manually extract data for a few years from Oracle on MSWindows: (use R - 3.6.3 in virutalbox ..)
+    # the following uses minimal libraries and parameter settings  
+    groundfish_survey_db( yrs=2020:year.assessment, DS="download_from_oracle_as_raw_tables_locally", outdir = getwd() )
+  }
 
-        connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+  if ( data_dump_from_a_full_installation ) {
+    # full data dump of all years in correct locations
+    aegis.survey::groundfish_survey_db( DS="refresh.all.data.tables", yrs=yrs )
+  }
 
-        for ( YR in years_to_extract ) {
-          fny = file.path( fn.root, paste( YR,"rdata", sep="."))
-          gscat = ROracle::dbGetQuery( connect,  paste(
-            "select i.*, substr(mission,4,4) year " ,
-            " from groundfish.gscat i " ,
-            " where substr(MISSION,4,4)=", YR)
-          )
-
-          names(gscat) =  tolower( names(gscat) )
-          print(fny)
-          save(gscat, file=fny, compress=T)
-          gc()  # garbage collection
-          print(YR)
-        }
-      ROracle::dbDisconnect(connect)
-
-    
-
-        connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
-
-        fn.root =  file.path( getwd(), "trawl", "gsdet" )
-        dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
-
-        for ( YR in years_to_extract ) {
-          fny = file.path( fn.root, paste( YR,"rdata", sep="."))
-          gsdet = ROracle::dbGetQuery( connect,  paste(
-            "select i.*, substr(mission,4,4) year" ,
-            " from groundfish.gsdet i " ,
-            " where substr(mission,4,4)=", YR)
-          )
-          names(gsdet) =  tolower( names(gsdet) )
-          gsdet$mission = as.character( gsdet$mission )
-          save(gsdet, file=fny, compress=T)
-          print(fny)
-          gc()  # garbage collection
-          print(YR)
-        }
-      
-      ROracle::dbDisconnect(connect)
-
-      
-
-        connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
-
-        fn.root =  file.path(getwd(), "trawl", "gsinf" )
-        dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
-
-        for ( YR in years_to_extract ) {
-          fny = file.path( fn.root, paste( YR,"rdata", sep="."))
-          gsinf = ROracle::dbGetQuery( connect,  paste(
-            "select * from groundfish.gsinf where EXTRACT(YEAR from SDATE) = ", YR )
-          )
-          names(gsinf) =  tolower( names(gsinf) )
-          save(gsinf, file=fny, compress=T)
-          print(fny)
-          gc()  # garbage collection
-          print(YR)
-        }
-      ROracle::dbDisconnect(connect)
-
-    
-        connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
-
-        fn = file.path( getwd(),  "trawl", "gsgear.rdata")
-        gsgear =  ROracle::dbGetQuery(connect, "select * from groundfish.gsgear", as.is=T)
-        ROracle::dbDisconnect(connect)
-        names(gsgear) =  tolower( names(gsgear) )
-        save(gsgear, file=fn, compress=T)
-        print(fn)
-
-      ROracle::dbDisconnect(connect)
-
-    
-      
-        connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
-      fn = file.path( getwd(),  "trawl", "gslist.rdata")
-        gslist = ROracle::dbGetQuery(connect, "select * from groundfish.gs_survey_list")
-        ROracle::dbDisconnect(connect)
-        names(gslist) =  tolower( names(gslist) )
-        save(gslist, file=fn, compress=T)
-        print(fn)
-      ROracle::dbDisconnect(connect)
-
-    
-        connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
-
-        fnmiss = file.path( getwd(),  "trawl", "gsmissions.rdata")
-        gsmissions = ROracle::dbGetQuery(connect, "select MISSION, VESEL, CRUNO from groundfish.gsmissions")
-        ROracle::dbDisconnect(connect)
-        names(gsmissions) =  tolower( names(gsmissions) )
-        save(gsmissions, file=fnmiss, compress=T)
-        print(fnmiss)
-
-      ROracle::dbDisconnect(connect)
-
-    
-        connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
-
-        fnspc = file.path( getwd(),  "trawl", "spcodes.rdata" )
-        spcodes = ROracle::dbGetQuery(connect, "select * from groundfish.gsspecies", as.is=T)
-        ROracle::dbDisconnect(connect)
-        names(spcodes) =  tolower( names(spcodes) )
-        save(spcodes, file=fnspc, compress=T)
-        print( fnspc )
-        print("Should follow up with a refresh of the taxonomy.db " )
-
-        ROracle::dbDisconnect(connect)
-
-
-      }
+  if (redo_historical_netmensuration_estimates ) {
+    # only relevent for a short window of time .. no need to rerun
+    # source ( "99_netmensuration_historical_data.R" )  # in aegis_survey:: scripts directory
+  }
 
 
 
+# ----------------------------------------
+# prepare snow crab data -- requires DFO oracle database connectivity
 
-  # prepare groundfish data -- requires DFO oracle database connectivity
-  aegis.survey::groundfish_survey_db( DS="refresh.all.data.tables", yrs=1970:year.assessment )
-    if (0) {
-      # or in manual mode:
-      # the following are done in "refresh.all.data.tables
-       require(bio.taxonomy)
-       require(aegis.survey)
-       require(aegis.mpa)
-       
-       p = aegis.survey::groundfish_parameters( yrs=1970:year.assessment )
-    
-        groundfish_survey_db(p=p, DS="gscat.base.redo" )
-        groundfish_survey_db(p=p, DS="gsdet.redo" )
-        groundfish_survey_db(p=p, DS="gsinf.redo" )
-        groundfish_survey_db(p=p, DS="sweptarea.redo" )  ## this is actually gsinf with updated data, etc.
-        # merged data sets
-        groundfish_survey_db(p=p, DS="set.base.redo"  ) # set info .. includes netmensuration.scanmar("sweptarea")
-        groundfish_survey_db(p=p, DS="gscat.redo"  ) # catches .. add correction factors
-      }
+  if ( data_dump_with_minimal_dependencies ) {
+    # to manually extract data for a few years from Oracle on MSWindows: (use R - 3.6.3 in virutalbox ..)
+    # the following uses minimal libraries and parameter settings  
+    ## NOTE not yet implemented :
+    snowcrab_db( yrs=2020:year.assessment, DS="download_from_oracle_as_raw_tables_locally", outdir = getwd() )
+  }
+
+  if ( data_dump_from_a_full_installation ) {
+    # full data dump of all years in correct locations
+    source( file.path( find.package(package="bio.snowcrab"), "scripts", "01.snowcrab.r") )
+  }
 
 
 
-  # prepare snow crab data -- requires DFO oracle database connectivity
-  source( file.path( find.package(package="bio.snowcrab"), "scripts", "01.snowcrab.r") )
+# ----------------------------------------
+# add other data such as biochem, etc  here
+# see 99.05.biochem.R ... mostl;y done , awaiting database clean up
 
 
 
-
-  # add other data such as biochem, etc  here
-  # see 99.05.biochem.R ... mostl;y done , awaiting database clean up
+  # etc
 
 
-
-# etc
-
-
-  # assimilate survey raw data into aegis and lookup some environmental that has been processed by aegis.*
-    ## NOTE resolution is fixed at SSE for the following
+# ----------------------------------------
+# assimilate survey raw data into aegis and lookup some environmental that has been processed by aegis.*
+## NOTE resolution is fixed at SSE for the following
 
 
 
-  # ----------------------------------------------------------
-  # glue biological data sets together from various surveys and lookup environmental data where possible
+# ----------------------------------------------------------
+# glue biological data sets together from various surveys and lookup environmental data where possible
 
-  p = aegis.survey::survey_parameters( yrs=1970:year.assessment )
+  p = aegis.survey::survey_parameters( yrs=yrs )
 
   survey_db( DS="set.init.redo", p=p )
   survey_db( DS="cat.init.redo", p=p )
@@ -195,7 +81,7 @@
   survey_db( DS="cat.redo", p=p ) # sanity checking and fixing mass estimates from det etc ...
   survey_db( DS="set.redo", p=p ) # sanity checking and year filtering to 1999 - present
 
-  aegis.mpa::figure.bio.map.survey.locations(p=p)  # see mpa/src/_Rfunctions/figure.trawl.density for more control
+  # aegis.mpa::figure.bio.map.survey.locations(p=p)  # see mpa/src/_Rfunctions/figure.trawl.density for more control
 
 
 
@@ -203,19 +89,19 @@
 # landings are like surveys -- but we do not want to interpolate this
 # .. rather aggregate into meaningful areas, model patterns and map
 # or modify as supplemntary data for distributional models
-if (0) {
+  if (0) {
 
-  pl = aegis.survey::landings_parameters( yrs=1970:year.assessment )  # these are default years
-  landings_db( DS="rawdata", p=pl )
+    pl = aegis.survey::landings_parameters( yrs=1970:year.assessment )  # these are default years
+    landings_db( DS="rawdata", p=pl )
 
-   for ( vn in p$varstomodel) {
-     print(vn)
-     aegis_db ( DS="complete.redo", p=p )
-     aegis_db_map( p=p )
-   }
+    for ( vn in p$varstomodel) {
+      print(vn)
+      aegis_db ( DS="complete.redo", p=p )
+      aegis_db_map( p=p )
+    }
 
- }
+  }
 
 
-  ### end
+### end
 

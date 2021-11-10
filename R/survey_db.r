@@ -15,7 +15,7 @@
       }
 
 			set.names =  c("data.source", "id", "timestamp", "yr", "lon", "lat",
-                     "z", "t", "sal", "oxyml", "sa", "sa_towdistance", "gear", "setquality", "settype", "cf_tow" )
+                     "z", "t", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "cf_tow" )
 
       if ( "groundfish" %in% p$data_sources ) {
         # settype:
@@ -29,12 +29,17 @@
         # 8=explorartory fishing,
         # 9=hydrography
 
-        y = aegis.survey::groundfish_survey_db(DS="set.base", yrs=1970:max(p$yrs) )
+        y = aegis.survey::groundfish_survey_db(DS="set.base" )
         y$data.source = "groundfish"
         y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
         # y$sa_towdistance_wing = y$wing.sa
         y$sa_towdistance = y$sakm2  # sakm2==(41 * ft2m * m2km ) * ( gsinf$dist * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled in km^2 ; suvery_db:gsinf
-        y$z = y$sdepth  # m
+        
+        y$z = y$bottom_depth  # m
+        i = which(!is.finite(y$z))
+        if (length(i) > 0) y$z[i] = y$sdepth[i]
+
+
         y$gear = y$geardesc
         y$setquality = NA
         y$setquality[ which( y$settype %in% c(1,2,5) ) ] = "good"
@@ -1534,15 +1539,26 @@
       M = M[ which( is.finite(M$t ) ), ]
       M = M[ which( is.finite(M$z ) ), ]
 
-
+      # predictions to: westeren 2a and NED
+      gears_ref = "Western IIA trawl"
       i = which(is.na(M$gear)) 
-      M$gear[ i ] = unique(M$gear[-i])[2] # Western
+      M$gear[ i ] = gears_ref
+      gears = unique(M$gear[-i])
+      gears = c( gears_ref, setdiff( gears, gears_ref ) ) # reorder
+      M$gear = as.numeric( factor( M$gear, levels=gears ) )
+      attr( M$gear, "levels" ) = gears
 
 
       M$vessel = substring(M$id,1,3)
       M$id = NULL 
-      i = which(is.na(M$vessel)) 
-      M$vessel[ i ] = "NED"   #  unique(M$vessel[-i])[3] # NED
+
+      vessels_ref = "NED"
+      i = which(is.na(M$vessel) )
+      M$vessel[ i ] = vessels_ref
+      vessels = unique(M$vessel[-i])
+      vessels = c( vessels_ref, setdiff( vessels, vessels_ref ) ) # reorder
+      M$vessel= as.numeric( factor( M$vessel, levels=vessels ) )
+      attr( M$vessel, "levels" ) = vessels
 
 
       save( M, file=fn, compress=TRUE )

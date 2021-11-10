@@ -253,8 +253,8 @@ survey_parameter_list = function( runtype, p ) {
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
         totno ~ 1 + offset( data_offset )
-            + f( vessel, model="iid",  hyper=H$iid ) 
-            + f( gear, model="iid",  hyper=H$iid ) 
+            + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid)) 
+#            + f( gear, model="iid",  hyper=H$iid ) 
             + f( time, model="ar1",  hyper=H$ar1 ) 
             # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
@@ -274,8 +274,7 @@ survey_parameter_list = function( runtype, p ) {
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
           meansize ~ 1  
-            + f( vessel, model="iid",  hyper=H$iid ) 
-            + f( gear, model="iid",  hyper=H$iid ) 
+            + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid)) 
             + f( time, model="ar1",  hyper=H$ar1 ) 
            # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 

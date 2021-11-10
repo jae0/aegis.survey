@@ -42,15 +42,16 @@ p = survey_parameters(
   label ="Atlantic cod summer",
   speciesname = "Atlantic_cod",
   trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
-  carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
+  carstm_model_label="stratnal",   # default = 1970:present, alt: 1999_present 
   selection = selection,
   areal_units_type = "stratanal_polygons_pre2014",
   areal_units_resolution_km = 25, # meaningless here .. just a placeholder for filenaming convention
   areal_units_proj4string_planar_km = projection_proj4string("utm20"), #projection_proj4string("omerc_nova_scotia") ,
   areal_units_overlay = "none",
-  areal_units_timeperiod = "pre2014",    # "pre2014" for older
-  results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES_basic_stratanal.rdata" )
+  areal_units_timeperiod = "pre2014"    # "pre2014" for older
 )
+
+results_file = file.path( p$modeldir, p$speciesname , "RES_basic_stratanal.rdata" )
 
 RES= list( yr = yrs )
 
@@ -77,8 +78,8 @@ RES= list( yr = yrs )
     RES[[runtype]]$label = runtype
   }}
 
-  save(RES, file=p$results_file)    
-  # load(p$results_file)
+  save(RES, file=results_file, compres=TRUE )    
+  # load( results_file )
   
   
   # ------------------
@@ -221,7 +222,14 @@ glm methods here
 
 # adding settype 2 and 5 (comparative tows, and generic surveys) 
 
+
+# set up the run parameters
   require(aegis.survey)
+
+  spatial_domain = "SSE"
+  yrs = 1970:2021
+  groundfish_survey_species_code = 10 # cod
+
 
   # basic selection criteria
   ## note difference from stratanal: all gears kept, and all areas kept
@@ -232,7 +240,7 @@ glm methods here
     survey=list(
       data.source = c("groundfish", "snowcrab"),
       yr = yrs,      # time frame for comparison specified above
-      months=6:8,
+      # months=6:8,
       # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       # ranged_data="dyear"
       settype = c(1,2, 5),
@@ -257,8 +265,9 @@ glm methods here
     areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
     areal_units_overlay = "none",
     areal_units_timeperiod = "pre2014",    # "pre2014" for older
-    results_file = file.path( project.datadirectory( "aegis", "survey", "Atlantic_cod" ), "RES_carstm.rdata" )
   )
+
+  results_file = file.path( p$modeldir, p$speciesname , "RES_basic_carstm.rdata" )
 
   RES= list( yr = yrs )
 
@@ -297,7 +306,7 @@ glm methods here
     loadfunctions("aegis.survey")
     RES[[runtype]] = survey_parameter_list( runtype=runtype,  p=p )
     RES[[runtype]] = survey_index( params=RES[[runtype]], M=M, sppoly=sppoly, redo_model=TRUE )
-    save(RES, file=p$results_file)   # load(p$results_file)     # store some of the aggregate timeseries in this list
+    save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
     # plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=runtype )
     # lines( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
   }
@@ -530,8 +539,8 @@ legend("topright", legend=labels, lty=lty, col=col, lwd=lwd )
 
 
 if (0) {
-     # save(RES, file=p$results_file)
-    # load(p$results_file)
+     # save(RES, file=results_file, compress=TRUE)
+    # load(results_file)
 }
 
 

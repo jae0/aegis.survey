@@ -1,25 +1,145 @@
 
 
-groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL, netmensuration.do=FALSE, ...  ) {
+groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmensuration.do=FALSE,  outdir = getwd() ) {
 
-  # mostly for storage ... not too much processing
-  if (is.null(p)) {
-    if (is.null(yrs)){
-      p = groundfish_parameters(...)
-    } else {
-      p = groundfish_parameters(yrs=yrs, ...)
-    }
+  if (is.null(yrs)) {
+    p = groundfish_parameters()
+  } else {
+    p = groundfish_parameters( yrs=yrs )
   }
 
-
   # ----------------
+  if (DS =="download_from_oracle_as_raw_tables_locally") {
+    
+    # to manually extract data from Oracle on MSWindows: (use R - 3.6.3 in virutalbox ..)
+    # the following uses minimal libraries and parameter settings 
+    
+    message( "Data dump saving to local directory from Roracle ... for use on mswindows:", outdir )
+  
+    require(ROracle)
+  
+    fn.root =  file.path( outdir,  "gscat" )
+    dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
+
+    connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+
+      for ( YR in yrs ) {
+        fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+        gscat = ROracle::dbGetQuery( connect,  paste(
+          "select i.*, substr(mission,4,4) year " ,
+          " from groundfish.gscat i " ,
+          " where substr(MISSION,4,4)=", YR)
+        )
+
+        names(gscat) =  tolower( names(gscat) )
+        print(fny)
+        save(gscat, file=fny, compress=T)
+        gc()  # garbage collection
+        print(YR)
+      }
+
+    ROracle::dbDisconnect(connect)
+
+    
+
+    connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+
+      fn.root =  file.path( outdir,  "gsdet" )
+      dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
+
+      for ( YR in yrs ) {
+        fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+        gsdet = ROracle::dbGetQuery( connect,  paste(
+          "select i.*, substr(mission,4,4) year" ,
+          " from groundfish.gsdet i " ,
+          " where substr(mission,4,4)=", YR)
+        )
+        names(gsdet) =  tolower( names(gsdet) )
+        gsdet$mission = as.character( gsdet$mission )
+        save(gsdet, file=fny, compress=T)
+        print(fny)
+        gc()  # garbage collection
+        print(YR)
+      }
+    
+    ROracle::dbDisconnect(connect)
+
+      
+
+    connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+
+      fn.root =  file.path(outdir,  "gsinf" )
+      dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
+
+      for ( YR in yrs ) {
+        fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+        gsinf = ROracle::dbGetQuery( connect,  paste(
+          "select * from groundfish.gsinf where EXTRACT(YEAR from SDATE) = ", YR )
+        )
+        names(gsinf) =  tolower( names(gsinf) )
+        save(gsinf, file=fny, compress=T)
+        print(fny)
+        gc()  # garbage collection
+        print(YR)
+      }
+    ROracle::dbDisconnect(connect)
+
+    
+    connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+
+      fn = file.path( outdir,   "gsgear.rdata")
+      gsgear =  ROracle::dbGetQuery(connect, "select * from groundfish.gsgear", as.is=T)
+      ROracle::dbDisconnect(connect)
+      names(gsgear) =  tolower( names(gsgear) )
+      save(gsgear, file=fn, compress=T)
+      print(fn)
+
+    ROracle::dbDisconnect(connect)
+
+    
+      
+    connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+
+      fn = file.path( outdir,   "gslist.rdata")
+      gslist = ROracle::dbGetQuery(connect, "select * from groundfish.gs_survey_list")
+      ROracle::dbDisconnect(connect)
+      names(gslist) =  tolower( names(gslist) )
+      save(gslist, file=fn, compress=T)
+      print(fn)
+  
+    ROracle::dbDisconnect(connect)
+
+    
+    connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+
+      fnmiss = file.path( outdir,   "gsmissions.rdata")
+      gsmissions = ROracle::dbGetQuery(connect, "select MISSION, VESEL, CRUNO from groundfish.gsmissions")
+      ROracle::dbDisconnect(connect)
+      names(gsmissions) =  tolower( names(gsmissions) )
+      save(gsmissions, file=fnmiss, compress=T)
+      print(fnmiss)
+
+    ROracle::dbDisconnect(connect)
+
+    
+    connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
+
+      fnspc = file.path( outdir,   "spcodes.rdata" )
+      spcodes = ROracle::dbGetQuery(connect, "select * from groundfish.gsspecies", as.is=T)
+      ROracle::dbDisconnect(connect)
+      names(spcodes) =  tolower( names(spcodes) )
+      save(spcodes, file=fnspc, compress=T)
+      print( fnspc )
+      print("Should follow up with a refresh of the taxonomy.db " )
+
+    ROracle::dbDisconnect(connect)
+
+  }
 
   if (DS =="refresh.bio.species.codes") {
-	
-	#    p = groundfish_parameters(yrs=2019:2020)
 
 	# the following is copied from taxonomy/src/taxonomy.r
-    groundfish_survey_db(p=p, DS="spcodes.rawdata.redo" )
+    groundfish_survey_db(DS="spcodes.rawdata.redo" )
     # bootstrap an initial set of tables .. these will be incomplete as a parsimonious tree needs to be created first but
     # it depends upon the last file created taxonomy.db("complete") .. so ...
     taxonomy.db( "groundfish.itis.redo" )  ## link itis with groundfish tables using taxa names, vernacular, etc
@@ -36,27 +156,27 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
   if (DS=="refresh.all.data.tables") {
 
     # rawdata data dump of aegis tables
-    groundfish_survey_db(p=p, DS="gscat.rawdata.redo" )
-    groundfish_survey_db(p=p, DS="gsdet.rawdata.redo" )
-    groundfish_survey_db(p=p, DS="gsinf.rawdata.redo" )
+    groundfish_survey_db( DS="gscat.rawdata.redo" )
+    groundfish_survey_db( DS="gsdet.rawdata.redo" )
+    groundfish_survey_db( DS="gsinf.rawdata.redo" )
 
-    #groundfish_survey_db(p=p, DS="gshyd.profiles.rawdata.redo" )
+    #groundfish_survey_db( DS="gshyd.profiles.rawdata.redo" )
 
-    groundfish_survey_db(p=p, DS="gsmissions.rawdata.redo" ) #  not working?
+    groundfish_survey_db( DS="gsmissions.rawdata.redo" ) #  not working?
 
     update.infrequently = FALSE
     if (update.infrequently) {
       # the following do not need to be updated annually
-      groundfish_survey_db(p=p, DS="gscoords.rawdata.redo"  )
-      groundfish_survey_db(p=p, DS="spcodes.rawdata.redo"  )
-      groundfish_survey_db(p=p, DS="gslist.rawdata.redo"  )
-      groundfish_survey_db(p=p, DS="gsgear.rawdata.redo"  )
-      groundfish_survey_db(p=p, DS="gsstratum.rawdata.redo"  )
+      groundfish_survey_db( DS="gscoords.rawdata.redo"  )
+      groundfish_survey_db( DS="spcodes.rawdata.redo"  )
+      groundfish_survey_db( DS="gslist.rawdata.redo"  )
+      groundfish_survey_db( DS="gsgear.rawdata.redo"  )
+      groundfish_survey_db( DS="gsstratum.rawdata.redo"  )
     }
 
-    groundfish_survey_db(p=p, DS="gscat.base.redo" )
-    groundfish_survey_db(p=p, DS="gsdet.redo" )
-    groundfish_survey_db(p=p, DS="gsinf.redo" )
+    groundfish_survey_db( DS="gscat.base.redo" )
+    groundfish_survey_db( DS="gsdet.redo" )
+    groundfish_survey_db( DS="gsinf.redo" )
 
     if ( netmensuration.do ) {
       # requires gsinf
@@ -84,11 +204,11 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
     # swept areas are computed in bottom.contact.redo ..
     # this step estimates swept area for those where there was insufficient data to compute SA directly from logs,
     # estimate via approximation using speed etc.
-    groundfish_survey_db(p=p, DS="sweptarea.redo" )  ## this is actually gsinf with updated data, etc.
+    groundfish_survey_db( DS="sweptarea.redo" )  ## this is actually gsinf with updated data, etc.
 
-    #groundfish_survey_db(p=p, DS="gshyd.profiles.redo"  )
-    #groundfish_survey_db(p=p, DS="gshyd.redo"  )
-    #groundfish_survey_db(p=p, DS="gshyd.georef.redo"  )  # not used here but used in temperature re-analysis
+    #groundfish_survey_db( DS="gshyd.profiles.redo"  )
+    #groundfish_survey_db( DS="gshyd.redo"  )
+    #groundfish_survey_db( DS="gshyd.georef.redo"  )  # not used here but used in temperature re-analysis
 
     if (0) {
 
@@ -112,8 +232,8 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
     }
 
     # merged data sets
-    groundfish_survey_db(p=p, DS="set.base.redo"  ) # set info .. includes netmensuration.scanmar("sweptarea")
-    groundfish_survey_db(p=p, DS="gscat.redo"  ) # catches .. add correction factors
+    groundfish_survey_db( DS="set.base.redo"  ) # set info .. includes netmensuration.scanmar("sweptarea")
+    groundfish_survey_db( DS="gscat.redo"  ) # catches .. add correction factors
 
   }
 
@@ -199,7 +319,7 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
       return (gscat)
     }
 
-    gscat = groundfish_survey_db(p=p, DS="gscat.rawdata"  )  # kg/set
+    gscat = groundfish_survey_db( DS="gscat.rawdata"  )  # kg/set
     gscat$year = NULL
 
     gscat = gscat[ - which(gscat$spec %in% c(9000, 9630, 1200, 9400) ), ]  # 9000 = unident, digested remains; 9630 = organic debris; 1200 fish eggs
@@ -303,7 +423,7 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
       return (gsdet)
     }
 
-    gsdet = groundfish_survey_db(p=p, DS="gsdet.rawdata" )
+    gsdet = groundfish_survey_db( DS="gsdet.rawdata" )
     gsdet$year = NULL
 
     oo = which(!is.finite(gsdet$spec) )
@@ -384,10 +504,10 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
       return (gsinf)
     }
 
-    gsinf = groundfish_survey_db(p=p, DS="gsinf.rawdata" )
+    gsinf = groundfish_survey_db( DS="gsinf.rawdata" )
     names(gsinf)[which(names(gsinf)=="type")] = "settype"
 
-    gsgear = groundfish_survey_db(p=p, DS="gsgear" )
+    gsgear = groundfish_survey_db( DS="gsgear" )
     gsinf = merge (gsinf, gsgear, by="gear", all.x=TRUE, all.y=FALSE, sort= FALSE )
 
     # fix some time values that have lost the zeros due to numeric conversion
@@ -584,7 +704,7 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
       return (gshyd)
     }
 
-    gshyd = groundfish_survey_db(p=p, DS="gshyd.profiles.rawdata" )
+    gshyd = groundfish_survey_db( DS="gshyd.profiles.rawdata" )
     gshyd$id = paste(gshyd$mission, gshyd$setno, sep=".")
     gshyd = gshyd[, c("id", "sdepth", "temp", "sal", "oxyml" )]
     save(gshyd, file=fn, compress=T)
@@ -603,7 +723,7 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
       load( fn )
       return (gshyd)
     }
-    gshyd = groundfish_survey_db(p=p, DS="gshyd.profiles" )
+    gshyd = groundfish_survey_db( DS="gshyd.profiles" )
     nr = nrow( gshyd)
 
     # candidate depth estimates from profiles
@@ -619,7 +739,7 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
     oo = which( duplicated( gshyd$id ) )
     if (length(oo) > 0) stop( "Duplicated data in GSHYD" )
 
-    gsinf = groundfish_survey_db(p=p, DS="gsinf" )
+    gsinf = groundfish_survey_db( DS="gsinf" )
     gsinf = gsinf[, c("id", "bottom_temperature", "bottom_salinity", "bottom_depth" ) ]
     gshyd = merge( gshyd, gsinf, by="id", all.x=T, all.y=F, sort=F )
 
@@ -656,13 +776,13 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
       load( fn )
       return (gshyd)
     }
-    gsinf = groundfish_survey_db(p=p, DS="gsinf" )
+    gsinf = groundfish_survey_db( DS="gsinf" )
     gsinf$timestamp = gsinf$sdate
     gsinf$yr = lubridate::year( gsinf$timestamp)
     gsinf$longitude = gsinf$lon
     gsinf$latitude = gsinf$lat
     gsinf = gsinf[ , c( "id", "lon", "lat", "yr", "timestamp" ) ]
-    gshyd = groundfish_survey_db(p=p, DS="gshyd.profiles" )
+    gshyd = groundfish_survey_db( DS="gshyd.profiles" )
     gshyd = merge( gshyd, gsinf, by="id", all.x=T, all.y=F, sort=F )
     gshyd$sal[gshyd$sal<5]=NA
     save(gshyd, file=fn, compress=T)
@@ -787,10 +907,10 @@ groundfish_survey_db = function( p=NULL, DS="refresh.all.data.tables", yrs=NULL,
       return (gscat)
     }
 
-    gscat = groundfish_survey_db(p=p, DS="gscat.base" ) #kg/set, no/set
+    gscat = groundfish_survey_db( DS="gscat.base" ) #kg/set, no/set
     gscat = gscat[, c("id", "spec", "totwgt", "totno", "sampwgt" )] # kg, no/set
 
-    set = groundfish_survey_db(p=p, DS="set.base" )
+    set = groundfish_survey_db( DS="set.base" )
     gscat = merge(x=gscat, y=set, by=c("id"), all.x=T, all.y=F, sort=F)
     rm (set)
 
@@ -883,7 +1003,7 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
     return( gsinf )
   }
 
-  gsinf = groundfish_survey_db(p=p, DS="gsinf" )
+  gsinf = groundfish_survey_db( DS="gsinf" )
   gsinf_bc = netmensuration.scanmar( DS="bottom.contact", p=p )
 
   toreject = which( !is.na( gsinf_bc$bc.error.flag ) )
@@ -1186,9 +1306,9 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
       load( fn )
       return ( set )
     }
-    gsinf = groundfish_survey_db(p=p, DS="sweptarea" )
+    gsinf = groundfish_survey_db( DS="sweptarea" )
 
-    gshyd = groundfish_survey_db(p=p, DS="gshyd" ) # already contains temp data from gsinf
+    gshyd = groundfish_survey_db( DS="gshyd" ) # historical hydrogra[hy data (upto 2015 or so..) .. already contains temp data from gsinf
     set = merge(x=gsinf, y=gshyd, by=c("id"), all.x=TRUE, all.y=FALSE, sort=FALSE)
     rm (gshyd, gsinf)
     oo = which( !is.finite( set$sdate)) # NED1999842 has no accompanying gsinf data ... drop it
