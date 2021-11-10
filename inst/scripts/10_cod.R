@@ -78,7 +78,7 @@ RES= list( yr = yrs )
     RES[[runtype]]$label = runtype
   }}
 
-  save(RES, file=results_file, compres=TRUE )    
+  save(RES, file=results_file, compress=TRUE )    
   # load( results_file )
   
   
