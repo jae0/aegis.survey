@@ -29,7 +29,7 @@
         # 8=explorartory fishing,
         # 9=hydrography
 
-        y = aegis.survey::groundfish_survey_db(DS="set.base" )
+        y = aegis.survey::groundfish_survey_db(DS="set.base", yrs=p$yrs )
         y$data.source = "groundfish"
         y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
         # y$sa_towdistance_wing = y$wing.sa
@@ -91,7 +91,7 @@
       cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno", "totwgt", "cf_cat" )
       if ( "groundfish" %in% p$data_sources ) {
 
-        x = aegis.survey::groundfish_survey_db(DS="gscat" )  #kg/set, no/set
+        x = aegis.survey::groundfish_survey_db(DS="gscat", yrs=p$yrs )  #kg/set, no/set
         x$data.source = "groundfish"
         x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
         x$id2 = paste(x$id, x$spec_bio, sep=".")
@@ -105,7 +105,7 @@
         mw = applyMean( x[, c("spec_bio", "meanwgt", "cf_cat")], newnames=c("spec_bio", "meanweight.crude") )
 
         # meansize directly:
-        k = groundfish_survey_db( DS="gsdet" )
+        k = groundfish_survey_db( DS="gsdet", yrs=p$yrs )
         k$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=k$spec )
         ml = applyMean( k[,c( "spec_bio", "len")], newnames=c("spec_bio", "meanlength.direct") )
         mw = merge( mw, ml, by="spec_bio", all=T, sort=T )
@@ -244,7 +244,7 @@
       det.names =  c("data.source", "id", "id2", "spec", "spec_bio", "sex", "mass", "len", "mat")
       if ( "groundfish" %in% p$data_sources ) {
 
-        x = aegis.survey::groundfish_survey_db(DS="gsdet" )
+        x = aegis.survey::groundfish_survey_db( DS="gsdet", yrs=p$yrs )
         x$data.source = "groundfish"
 
         x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )

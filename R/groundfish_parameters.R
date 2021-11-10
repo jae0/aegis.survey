@@ -24,6 +24,7 @@ groundfish_parameters = function( p=NULL, project_name=NULL, project_class="core
 
   if (!exists("spatial_domain", p) ) p$spatial_domain = "SSE"
   if (!exists("spatial_domain_subareas", p)) p$spatial_domain_subareas = c( "snowcrab", "SSE.mpa" )
+
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
 
   if ( !exists("scanmar.dir", p) )  p$scanmar.dir = file.path( p$datadir, "nets", "Scanmar" )
@@ -37,27 +38,6 @@ groundfish_parameters = function( p=NULL, project_name=NULL, project_class="core
   p$nw = 10  # from temperature.r, number of intervals in a year
   p$clusters = rep("localhost", detectCores() )
 
-
-  if (project_class=="core") {
-    return(p)
-  }
-
-  if (project_class %in% c("stmv") ) {
-    p$libs = c( p$libs, project.library ( "stmv" ) )
-    return(p)
-  }
-
-
-  if (project_class %in% c("default", "hybrid") ) {
-    p$libs = c( p$libs, project.library ( "stmv" ) )
-    return(p)
-  }
-
-
-  if (project_class %in% c("carstm") ) {
-    p$libs = c( p$libs, project.library ( "carstm" ) )
-
-    return(p)
-  }
+  return(p)
 
 }

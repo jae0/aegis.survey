@@ -2,7 +2,7 @@ strata_dataformat = function( selection, areal_units_proj4string_planar_km="+pro
 
     #Extract data from groundfish survey
     #Extract Cat data from groundfish survey
-    k = groundfish_survey_db(DS="gscat") #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
+    k = groundfish_survey_db(DS="gscat", yrs=selection$survey$yr ) #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
 
     # # add required variables .. not sure if still required JC
     u = data.frame( matrix( unlist(strsplit( k$id, ".", fixed=TRUE)), ncol=2, byrow=TRUE), stringsAsFactors=FALSE )
