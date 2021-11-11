@@ -14,10 +14,10 @@
         return ( set )
       }
 
-			set.names =  c("data.source", "id", "timestamp", "yr", "lon", "lat",
-                     "z", "t", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "cf_tow" )
+        set.names =  c("data.source", "id", "timestamp", "yr", "lon", "lat",
+                      "z", "t", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "cf_tow" )
 
-      if ( "groundfish" %in% p$data_sources ) {
+        if ( "groundfish" %in% p$data_sources ) {
         # settype:
         # 1=stratified random,
         # 2=regular survey,
@@ -39,12 +39,23 @@
         i = which(!is.finite(y$z))
         if (length(i) > 0) y$z[i] = y$sdepth[i]
 
+        i = which(!is.finite(y$sal))
+        if (length(i) > 0) y$sal[i] = y$bottom_salinity[i]
+
+        i = which( y$sal < 5 )
+        if (length(i) > 0) y$sal[i] = NA
+
+        i = which(!is.finite(y$temp))
+        if (length(i) > 0) y$temp[i] = y$bottom_temperature[i]
+
+        i = which(!is.finite(y$lon))
+        if (length(i) > 0) y$lon[i] = y$bottom_temperature[i]
 
         y$gear = y$geardesc
         y$setquality = NA
         y$setquality[ which( y$settype %in% c(1,2,5) ) ] = "good"
         gsvn = c("data.source", "id", "timestamp", "yr", "lon", "lat",
-                 "z", "temp", "sal", "oxyml", "sa", "sa_towdistance", "gear", "setquality", "settype", "cf_tow" )
+                 "z", "temp", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "cf_tow" )
         set = rbind( set, y[ ,gsvn ] )
         names(set) = set.names
         rm (y); gc()

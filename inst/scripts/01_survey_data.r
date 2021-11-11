@@ -153,9 +153,9 @@
 
   p = aegis.survey::survey_parameters( yrs=yrs )
 
-  survey_db( DS="set.init.redo", p=p )
-  survey_db( DS="cat.init.redo", p=p )
-  survey_db( DS="det.init.redo", p=p )
+  o = survey_db( DS="set.init.redo", p=p ) ; head(o)
+  o = survey_db( DS="cat.init.redo", p=p ) ; head(o)
+  o = survey_db( DS="det.init.redo", p=p ) ; head(o)
 
   # the following does a lookup of env data ...
   # want to make sure the relevent ones are complete (t, z, etc.)
