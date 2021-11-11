@@ -150,20 +150,21 @@
 
 # ----------------------------------------------------------
 # FINALLY: glue biological data sets together from various surveys and lookup environmental data where possible
+  require(aegis.survey)
 
-  p = aegis.survey::survey_parameters( yrs=yrs )
+  p = survey_parameters( yrs=yrs )
 
-  o = survey_db( DS="set.init.redo", p=p ) ; head(o)
-  o = survey_db( DS="cat.init.redo", p=p ) ; head(o)
-  o = survey_db( DS="det.init.redo", p=p ) ; head(o)
+  o = survey_db( DS="set.init", p=p, redo=TRUE ) ; head(o)
+  o = survey_db( DS="cat.init", p=p, redo=TRUE  ) ; head(o)
+  o = survey_db( DS="det.init", p=p, redo=TRUE  ) ; head(o)
 
   # the following does a lookup of env data ...
   # want to make sure the relevent ones are complete (t, z, etc.)
-  survey_db( DS="lengthweight.redo", p=p  )  # # TODO:: parallelize me ... update the local tables (not necessary)
-  survey_db( DS="set.base.redo", p=p ) # adds temperature required for metabolism lookup in "det.redo"
-  survey_db( DS="det.redo", p=p ) # mass/length imputation and sanity checking
-  survey_db( DS="cat.redo", p=p ) # sanity checking and fixing mass estimates from det etc ...
-  survey_db( DS="set.redo", p=p ) # sanity checking and year filtering to 1999 - present
+  o = survey_db( DS="lengthweight.parameters", p=p, redo=TRUE   ) ; head(o) # # TODO:: parallelize me ... update the local tables (not necessary)
+  o = survey_db( DS="set.base", p=p, redo=TRUE  ); head(o) # adds temperature required for metabolism lookup in "det"
+  o = survey_db( DS="det", p=p, redo=TRUE  ) ; head(o) # mass/length imputation and sanity checking
+  o = survey_db( DS="cat", p=p, redo=TRUE  ) ; head(o) # sanity checking and fixing mass estimates from det etc ...
+  o = survey_db( DS="set", p=p, redo=TRUE  ) ; head(o) # sanity checking and year filtering to 1999 - present
 
   # aegis.mpa::figure.bio.map.survey.locations(p=p)  # see mpa/src/_Rfunctions/figure.trawl.density for more control
 
