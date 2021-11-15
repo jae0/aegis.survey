@@ -1324,7 +1324,6 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       mi = which( density > qm )
       set$totwgt[mi] = floor( qm * set$data_offset[mi] )
     }
-browser()
 
     M = carstm_prepare_inputdata(
       p=p,
