@@ -115,9 +115,9 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
         p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
           bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
           substrate = aegis.substrate::substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
-          temperature = aegis.temperature::temperature_parameters( project_class="carstm",  carstm_model_label="default", yrs=p$yrs ),
-          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca1", yrs=p$yrs  ),
-          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="default", variabletomodel="pca2", yrs=p$yrs  )
+          temperature = aegis.temperature::temperature_parameters( project_class="carstm",  carstm_model_label="1970_present", yrs=p$yrs ),
+          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="1970_present", variabletomodel="pca1", yrs=p$yrs  ),
+          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="1970_present", variabletomodel="pca2", yrs=p$yrs  )
         )
     }
 

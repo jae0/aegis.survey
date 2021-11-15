@@ -1,17 +1,17 @@
 
-survey_parameter_list = function( runtype, p ) {
+survey_parameter_list = function( mf, p ) {
 
-  p$label = runtype 
+  p$label = mf 
 
   if (p$speciesname == "Atlantic_cod") {
     
-    if (runtype == "A.S_fac.T_fac" ) {
+    if (mf == "A.S_fac.T_fac" ) {
       
       p$type="abundance"
       
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -23,7 +23,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -37,13 +37,13 @@ survey_parameter_list = function( runtype, p ) {
     }
   
 
-    if (runtype == "A.SxT" ) {
+    if (mf == "A.SxT" ) {
       
       p$type="abundance"
 
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -54,7 +54,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -67,13 +67,13 @@ survey_parameter_list = function( runtype, p ) {
 
     }
   
-    if (runtype == "A.SiT.ST_iid" ) {
+    if (mf == "A.SiT.ST_iid" ) {
       
       p$type="abundance"
 
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -86,7 +86,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -101,13 +101,13 @@ survey_parameter_list = function( runtype, p ) {
     }
   
 
-    if (runtype == "A.SxT.ST_iid" ) {
+    if (mf == "A.SxT.ST_iid" ) {
       
       p$type="abundance"
 
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -119,7 +119,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -132,13 +132,13 @@ survey_parameter_list = function( runtype, p ) {
 
     }
   
-    if (runtype == "A.S_iid.T_iid" ) {
+    if (mf == "A.S_iid.T_iid" ) {
       
       p$type="abundance"
 
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -150,7 +150,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -163,13 +163,13 @@ survey_parameter_list = function( runtype, p ) {
     }
 
 
-    if (runtype == "A.S_iid.T_iid.ST_iid" ) {
+    if (mf == "A.S_iid.T_iid.ST_iid" ) {
  
       p$type="abundance"
 
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -182,7 +182,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -196,13 +196,13 @@ survey_parameter_list = function( runtype, p ) {
     }
 
 
-    if (runtype == "A.S_bym2.T_fac.ST_bym2.env.eco" ) {
+    if (mf == "A.S_bym2.T_fac.ST_bym2.env.eco" ) {
  
       p$type="abundance"
 
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -221,7 +221,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -242,13 +242,13 @@ survey_parameter_list = function( runtype, p ) {
 
 
 
-    if (runtype == "A.S_bym2.T_ar1.ST_bym2.env.eco" ) {
+    if (mf == "A.S_bym2.T_ar1.ST_bym2.env.eco" ) {
  
       p$type="abundance"
       
       p$pN = p
       p$pN$label ="Atlantic cod summer standardtow totno"
-      p$pN$carstm_model_label = runtype
+      p$pN$carstm_model_label = mf
       p$pN$variabletomodel = "totno"  
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
@@ -269,7 +269,7 @@ survey_parameter_list = function( runtype, p ) {
 
       p$pW = p
       p$pW$label ="Atlantic cod summer standardtow meansize"
-      p$pW$carstm_model_label = runtype
+      p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
       p$pW$family = "gaussian" 
       p$pW$formula = formula ( 
@@ -293,13 +293,13 @@ survey_parameter_list = function( runtype, p ) {
 
     ## habitat
 
-    if (runtype == "H.S_fac.T_fac" ) {
+    if (mf == "H.S_fac.T_fac" ) {
       
       p$type="habitat"
     
       p$pH = p
       p$pH$label ="Atlantic cod summer standardtow habitat"
-      p$pH$carstm_model_label = runtype
+      p$pH$carstm_model_label = mf
       p$pH$variabletomodel = "pa"  
       p$pH$family = "binomial" 
       p$pH$formula = formula( 
@@ -312,13 +312,13 @@ survey_parameter_list = function( runtype, p ) {
 
     }
   
-    if (runtype == "H.S_iid.T_iid" ) {
+    if (mf == "H.S_iid.T_iid" ) {
       
       p$type="habitat"
 
       p$pH = p
       p$pH$label ="Atlantic cod summer standardtow habitat"
-      p$pH$carstm_model_label = runtype
+      p$pH$carstm_model_label = mf
       p$pH$variabletomodel = "pa"  
       p$pH$family = "binomial" 
       p$pH$formula = formula( 
@@ -334,13 +334,13 @@ survey_parameter_list = function( runtype, p ) {
   
 
 
-    if (runtype == "H.S_iid.T_iid.ST_iid" ) {
+    if (mf == "H.S_iid.T_iid.ST_iid" ) {
  
       p$type="habitat"
 
       p$pH = p
       p$pH$label ="Atlantic cod summer standardtow habitat"
-      p$pH$carstm_model_label = runtype
+      p$pH$carstm_model_label = mf
       p$pH$variabletomodel = "pa"  
       p$pH$family = "binomial" 
       p$pH$formula = formula( 
@@ -353,13 +353,13 @@ survey_parameter_list = function( runtype, p ) {
       return(p)
  
 
-    if (runtype == "H.S_bym2.T_fac.ST_bym2.env.eco" ) {
+    if (mf == "H.S_bym2.T_fac.ST_bym2.env.eco" ) {
  
       p$type="habitat"
 
       p$pH = p
       p$pH$label ="Atlantic cod summer standardtow habitat"
-      p$pH$carstm_model_label = runtype
+      p$pH$carstm_model_label = mf
       p$pH$variabletomodel = "pa"  
       p$pH$family = "binomial" 
       p$pH$formula = formula( 
@@ -379,13 +379,13 @@ survey_parameter_list = function( runtype, p ) {
     }
 
 
-    if (runtype == "H.S_bym2.T_ar1.ST_bym2.env.eco" ) {
+    if (mf == "H.S_bym2.T_ar1.ST_bym2.env.eco" ) {
  
       p$type="habitat"
 
       p$pH = p
       p$pH$label ="Atlantic cod summer standardtow habitat"
-      p$pH$carstm_model_label = runtype
+      p$pH$carstm_model_label = mf
       p$pH$variabletomodel = "pa"  
       p$pH$family = "binomial" 
       p$pH$formula = formula( 

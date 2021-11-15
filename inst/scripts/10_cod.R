@@ -73,9 +73,9 @@ RES= list( yr = yrs )
       variable="totwgt", speciesname=p[["speciesname"]], yrs=p$yrs,
       alpha.t = 0.05 # confidence interval for t-tdist assumption eg. 0.05 = 95%, 0.1 = 90%
     )
-    runtype = paste(data_approach, tu, sep=".")
-    RES[[runtype]] = bi[ match(RES[["yr"]], bi$year), ]
-    RES[[runtype]]$label = runtype
+    mf = paste(data_approach, tu, sep=".")
+    RES[[mf]] = bi[ match(RES[["yr"]], bi$year), ]
+    RES[[mf]]$label = mf
   }}
 
   save(RES, file=results_file, compress=TRUE )    
@@ -218,7 +218,7 @@ glm methods here
     
 
 # ----------------------------------------------
-# define runtypes: params are stored in  survey_parameter_list()
+# define model_forms: params are stored in  survey_parameter_list()
 
 # adding settype 2 and 5 (comparative tows, and generic surveys) 
 
@@ -227,7 +227,15 @@ glm methods here
   require(aegis.survey)
 
   spatial_domain = "SSE"
+  
   yrs = 1970:2021
+  runtype = "1970_present"
+
+  if (0) {
+    yrs = 1999:2021
+    runtype = "1999_present"
+  }
+
   groundfish_survey_species_code = 10 # cod
 
 
@@ -255,7 +263,8 @@ glm methods here
     label ="Atlantic cod summer",
     speciesname = "Atlantic_cod",
     trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3],  
-    carstm_model_label="default",   # default = 1970:present, alt: 1999_present 
+    carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present 
+    runtype=runtype,
     yrs = yrs,
     selection = selection,
     variabletomodel = "totno",
@@ -273,7 +282,7 @@ glm methods here
 
 
 
-  runtypes = c(
+  model_forms = c(
     "A.S_fac.T_fac", # almost standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014  -- results are useless
     "A.SxT",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
     "A.SiT.ST_iid", # working . though results are not useful
@@ -301,14 +310,14 @@ glm methods here
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.99 )
  
 
-  for ( runtype in runtypes ) {
-    if (0)    runtype = runtypes[8]
+  for ( mf in model_forms ) {
+    if (0)    mf = model_forms[8]
     loadfunctions("aegis.survey")
-    RES[[runtype]] = survey_parameter_list( runtype=runtype,  p=p )
-    RES[[runtype]] = survey_index( params=RES[[runtype]], M=M, sppoly=sppoly, redo_model=TRUE )
+    RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
+    RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE )
     save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
-    # plot( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=runtype )
-    # lines( RES[[runtype]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+    # plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf )
+    # lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
   }
 
 
@@ -327,27 +336,27 @@ glm methods here
   
       # map all :
 
-      if (RES[[runtype]]$type=="abundance") {
+      if (RES[[mf]]$type=="abundance") {
         fn_root = "Predicted_numerical_abundance"
         title = "Predicted numerical abundance"
-        pci = RES[[runtype]]$pN
+        pci = RES[[mf]]$pN
 
       }
-      if (RES[[runtype]]$type=="habitat") {
+      if (RES[[mf]]$type=="habitat") {
         fn_root = "Predicted_habitat_probability"
         title = "Predicted habitat probability"
-        pci = RES[[runtype]]$pH
+        pci = RES[[mf]]$pH
       }
 
-      if (RES[[runtype]]$type=="meansize") {
+      if (RES[[mf]]$type=="meansize") {
         fn_root = "Predicted_mean_weight"
         title = "Predicted mean weight"
-        pci = RES[[runtype]]$pW
+        pci = RES[[mf]]$pW
       }
 
       
       vn = "predictions"
-      brks = pretty(  quantile( RES[[runtype]][[vn]], probs=c(0,0.975), na.rm=TRUE )  )
+      brks = pretty(  quantile( RES[[mf]][[vn]], probs=c(0,0.975), na.rm=TRUE )  )
 
       outputdir = file.path( pci$modeldir, pci$carstm_model_label, "predicted.numerical.densitites" )
       
@@ -357,7 +366,7 @@ glm methods here
         time_match = as.character(y) 
         
         fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
-        carstm_map(  res=RES[[runtype]], vn=vn, tmatch=time_match,
+        carstm_map(  res=RES[[mf]], vn=vn, tmatch=time_match,
           # breaks=brks,
           # palette="RdYlBu",
           title= "biomass density t/km2" , #paste(fn_root, time_match, sep="_"),  
@@ -526,13 +535,13 @@ labels = c("Standard tow stratanal" )
 
 plot( pop.total  ~ RES[["yr"]], data=RES[["stratanal_towdistance"]], lty=lty[1], lwd=lwd[1], col=col[1], pch=pch[1], type=type[1], ylim=c(0,0.46e9), xlab="Year", ylab="kg")
 
-runtypes = setdiff( names( RES ), "yr" )
-runtypes = runtypes[ - grep("stratanal.*", runtypes) ]
+model_forms = setdiff( names( RES ), "yr" )
+model_forms = model_forms[ - grep("stratanal.*", model_forms) ]
 
-for (rt in 1:length( runtypes) ) {
-  runtype = runtypes[rt]
-  labels = c( labels, RES[[runtype]]$label )
-  lines( biomass_mean ~ RES[["yr"]], data=RES[[runtype]], lty=lty[rt], lwd=lwd[rt], col=col[rt], pch=pch[rt], type=type[rt])
+for (rt in 1:length( model_forms) ) {
+  mf = model_forms[rt]
+  labels = c( labels, RES[[mf]]$label )
+  lines( biomass_mean ~ RES[["yr"]], data=RES[[mf]], lty=lty[rt], lwd=lwd[rt], col=col[rt], pch=pch[rt], type=type[rt])
 }
 
 legend("topright", legend=labels, lty=lty, col=col, lwd=lwd )

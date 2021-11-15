@@ -72,9 +72,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       y$setquality[ which( y$towquality == 1 ) ] = "good"  # 1=good
       y$sal = NA  # dummy
       y$oxyml = NA # dummy var
-        y$cf_tow = 1/y$sa
-      # y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
-      y$sa_towdistance = NA  # TODO
+      y$cf_tow = 1/y$sa
+      y$sa_towdistance = y$sa  #copy
       set = rbind( set, y[ , set.names ] )  # sa is in km^2
       rm (y); gc()
     }
@@ -1325,7 +1324,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       mi = which( density > qm )
       set$totwgt[mi] = floor( qm * set$data_offset[mi] )
     }
-
+browser()
 
     M = carstm_prepare_inputdata(
       p=p,
