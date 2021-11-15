@@ -51,18 +51,20 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   if ( is.null(lookup_parameters)) {
     # these params are for observation data
-    lookup_parameters = list(
-      bathymetry = bathymetry_parameters( project_class="carstm" ),  # full default
-      substrate = substrate_parameters(  project_class="carstm" ), 
-      temperature =  temperature_parameters(  project_class="carstm", yrs=p$yrs ),
-      speciescomposition_pca1 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  ),
-      speciescomposition_pca2 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
-      # ,
-      # speciescomposition_pca3 = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  ),
-      # speciescomposition_ca1 = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  ),
-      # speciescomposition_ca2 = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  ),
-      # speciescomposition_ca3 = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
-    )
+    lookup_parameters = list()
+
+    if ("bathymetry"  %in% lookup_projects) lookup_parameters[["bathymetry"]] = bathymetry_parameters( project_class="carstm" )  # full default
+    if ("substrate"   %in% lookup_projects) lookup_parameters[["substrate"]] = substrate_parameters(  project_class="carstm" )
+    if ("temperature" %in% lookup_projects) lookup_parameters[["temperature"]] =  temperature_parameters(  project_class="carstm", yrs=p$yrs )
+    if (any( grepl("speciescomposition", lookup_projects)) ) {
+      lookup_parameters[["speciescomposition_pca1"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_pca2"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_pca3"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_ca1"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_ca2"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_ca3"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
+
+    }
  
   }
    
