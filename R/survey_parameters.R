@@ -102,7 +102,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       fraction_good_bad = 0.8,
       nAU_min = 5,
       carstm_modelengine = "inla",  # {model engine}.{label to use to store}
-      carstm_model_label = "default",
+      carstm_model_label = "1970_present",
       carstm_inputs_prefilter = "sampled",
       carstm_inputs_prefilter_n = 100,
       vars_to_retain = c("totno", "totwgt", "pa", "meansize", "data_offset", "gear", "data.source", "id")
