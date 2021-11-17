@@ -6,8 +6,8 @@ This package integrates data from various surveys. Currently they include:
 - ![Groundfish RV surveys](https://github.com/jae0/aegis.survey/blob/master/R/groundfish_survey_db.R); and,
 - ![Snow crab surveys](https://github.com/jae0/bio.snowcrab/blob/master/README.md).
 
-<!--
-- ![Nova Scotia Zone 1 Western](./inst/doc/Nova%20Scotia%20__%20Zone%201%20-%20Western/README.md) -->
+but of course is readily extended to any other survey. Use the above as guides.
+
 
 The main categories of information streams are named:
 - "set" for sample events at a set-level (location, time, etc.)
@@ -94,8 +94,24 @@ plot( results$Y ~ p[["yrs"]] )
 
 ```
 
+Usually, one just wants the data, aggregated at each set level and not the backwards compatible "Stratanal" solution. This is accomplished via:
 
-The folowing is the code to be run to generate some plots and can be hidden in a comment:
+```
+set = survey_db( p=p, DS="filter"  ) 
+
+```
+
+If catch-level or individual-level results are required: 
+
+```
+cat = survey_db( p=p, DS="cat.filter"  ) 
+det = survey_db( p=p, DS="det.filter"  )
+```
+
+
+<!--
+
+The folowing is the code to be run to generate some plots :
 
 ```
 
@@ -119,7 +135,8 @@ The folowing is the code to be run to generate some plots and can be hidden in a
 
 
 ```
+ 
+--/>
 
-The utility of the above is that it is quite simple once the parameters are understood. Further, individual level information can e filtered resulting in a fast interface for data extraction and routine modelling.
 
-More examples are found in the ![scripts directory](./inst/README.md)
+The utility of the above is that it is quite simple once the parameters are understood. Further, individual level information can e filtered resulting in a fast interface for data extraction and routine modelling. Examples of the latter are found in the ![scripts directory](./inst/README.md)
