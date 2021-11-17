@@ -9,7 +9,7 @@ This package integrates data from various surveys. Currently they include:
 but of course is readily extended to any other survey. Use the above as guides.
 
 
-The main categories of information streams are named:
+The main categories of information in the internal data structures operation upon:
 - "set" for sample events at a set-level (location, time, etc.)
 - "cat" for information on captured organisms (biomass, number) by species,
 - "det" for information measured from individual orgamisms (length, width, mass).
@@ -18,6 +18,24 @@ For data extraction, a structured list of selection criteria are required and co
 - "biologicals" define individual level data and correspond to "cat" and "det" information
 - "surveys" define sample event level data and correspond wit "set" information .
 
+They are simple and easily extensible.
+
+- "aggregate" is a list that has options related to:
+  - drop.unreliable.zeros.groundfish.data - TRUE/FALSE : unreliable zero's for snowcrab in the groundfish data
+  - pattern matching on any set-level information defined by a "variable_name = list()" 
+- "survey" is a list with the following options:
+  - polygon_enforce : ensure AUID is specified and drop any that are not
+  - strata_to_remove : drop areal units that match
+  - strata_to_keep : ensure that specified areal units are retained
+  - months : retain data that match specified months 
+  - pattern matching on any set-level information defined by a "variable_name = list()"
+- "biologicals" is a list with the following options:
+  - pattern matching on any catt-level information defined by a "variable_name = list()"
+  - pattern matching on any det-level information defined by a "variable_name = list()"
+  - spec_bio : internal species code ( accessed via groundfish code with a helper function, bio.taxonomy::taxonomy.recode ) 
+
+filter_data is the core function that does the pattern matching. However, it also can make ranged selections using the following syntax:
+  - "ranged_data", "less_than", "greater_than"
 
 For example, with Atlantic cod in the Martimes Region of Canada, one can specify:
 
