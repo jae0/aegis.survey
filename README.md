@@ -136,7 +136,7 @@ The folowing is the code to be run to generate some plots :
 
 ```
  
---/>
+-->
 
 
 The utility of the above is that it is quite simple once the parameters are understood. Further, individual level information can e filtered resulting in a fast interface for data extraction and routine modelling. Examples of the latter are found in the ![scripts directory](./inst/README.md)
