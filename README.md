@@ -14,8 +14,12 @@ The main categories of information streams are named:
 - "cat" for information on captured organisms (biomass, number) by species,
 - "det" for information measured from individual orgamisms (length, width, mass).
 
-For data extraction, a list of selection criteria are required. For example, with Atlantic cod in the Martimes Region of Canada, one can specify:
+For data extraction, a structured list of selection criteria are required and correspond to the above levels of informtion:
+- "biologicals" define individual level data and correspond to "cat" and "det" information
+- "surveys" define sample event level data and correspond wit "set" information .
 
+
+For example, with Atlantic cod in the Martimes Region of Canada, one can specify:
 
 ```
 require(aegis.survey)
