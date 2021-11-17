@@ -4,7 +4,7 @@
 This package integrates data from various surveys. Currently they include:
 
 - ![Groundfish RV surveys](https://github.com/jae0/aegis.survey/blob/master/R/groundfish_survey_db.R); and,
-- ![Snow crab surveys](https://github.com/jae0/bio.snowcrab/blob/master/R/snowcrab_db.R).
+- ![Snow crab surveys](https://github.com/jae0/bio.snowcrab/blob/master/README.md).
 
 <!--
 - ![Nova Scotia Zone 1 Western](./inst/doc/Nova%20Scotia%20__%20Zone%201%20-%20Western/README.md) -->
