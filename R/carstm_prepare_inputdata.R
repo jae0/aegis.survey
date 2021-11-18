@@ -90,6 +90,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   M = M[!is.na(M$AUID),]
   M$AUID = as.character( M$AUID )  # match each datum to an area
 
+  M_au = unique(M$AUID)
+  sppoly_au = unique(sppoly$AUID)
+
+  missing_au = setdiff( sppoly_au, M_au )
+  if (length(missing_au) > 0 )  {
+    warning("Areal units with no data found, this will likely cause problems:")
+    print( paste0(missing_au))
+  }
+  
       
   if ("bathymetry" %in% lookup_projects) {
     message( "lookup: bathymetry observations")

@@ -60,8 +60,7 @@ RES= list( yr = yrs )
 # --------------------------------
 # do stratanl for each of the following swept-area assumptions:
 
-  sppoly = areal_units( p=p  )
-  sppoly = st_transform(sppoly, crs=st_crs(projection_proj4string("lonlat_wgs84")) )
+  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  )
   if (!exists("strata_to_keep", sppoly) ) sppoly$strata_to_keep = TRUE
 
 
@@ -248,10 +247,10 @@ glm methods here
     survey=list(
       data.source = c("groundfish", "snowcrab"),
       yr = yrs,      # time frame for comparison specified above
-      # months=6:8,
+      months=6:8,
       # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       # ranged_data="dyear"
-      settype = c(1,2, 5),
+      settype = c(1,2,4,5,8),
       # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
       # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
       polygon_enforce=TRUE
@@ -262,7 +261,7 @@ glm methods here
     project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
     label ="Atlantic cod summer",
     speciesname = "Atlantic_cod",
-    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[3],  
+    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
     carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present 
     runtype=runtype,
     yrs = yrs,
@@ -283,10 +282,10 @@ glm methods here
 
 
   model_forms = c(
-    "A.S_fac.T_fac", # almost standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014  -- results are useless
-    "A.SxT",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
-    "A.SiT.ST_iid", # working . though results are not useful
-    "A.SxT.ST_iid",   # working
+    # "A.S_fac.T_fac", # almost standard GF strata, no cov, no s, no st ;~ "stratanl"; stratanal_polygons_pre2014  -- results are useless
+    # "A.SxT",  # broken: interaction only model (space:time) == stratanl .. will fail as there are missing combinations -- trying to add  a random spacetime iid effect to stabilize computations still does not help .. 
+    # "A.SiT.ST_iid", # working . though results are not useful
+    # "A.SxT.ST_iid",   # working
     "A.S_iid.T_iid", # working
     "A.S_iid.T_iid.ST_iid",
     "A.S_bym2.T_fac.ST_bym2.env.eco",
@@ -297,21 +296,22 @@ glm methods here
     "H.S_bym2.T_fac.ST_bym2.env.eco",
     "H.S_bym2.T_ar1.ST_bym2.env.eco"
   )
-  
+
+
   redo_sppoly=FALSE
   # redo_sppoly=TRUE 
   sppoly = areal_units( p=p, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
   sppoly$strata_to_keep = TRUE
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
-  
+
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.99 )
  
 
   for ( mf in model_forms ) {
-    if (0)    mf = model_forms[8]
+    if (0)    mf = model_forms[2]
     loadfunctions("aegis.survey")
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
     RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE )

@@ -253,15 +253,15 @@ survey_parameter_list = function( mf, p ) {
       p$pN$family = "poisson" 
       p$pN$formula = formula( 
         totno ~ 1 + offset( data_offset )
-            + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid)) 
-#            + f( gear, model="iid",  hyper=H$iid ) 
+            # + f( gear, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid)) 
+            + f( gear, model="iid",  hyper=H$iid ) 
             + f( time, model="ar1",  hyper=H$ar1 ) 
-            # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
+#            + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
 #            + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-            + f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-            + f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+#            + f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+#            + f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
             + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
             + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
       )
@@ -271,17 +271,18 @@ survey_parameter_list = function( mf, p ) {
       p$pW$label ="Atlantic cod summer standardtow meansize"
       p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
-      p$pW$family = "gaussian" 
+      p$pW$family = "normal" 
       p$pW$formula = formula ( 
           meansize ~ 1  
-            + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid)) 
+#            + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid)) 
+            + f( gear, model="iid",  hyper=H$iid ) 
             + f( time, model="ar1",  hyper=H$ar1 ) 
-           # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
+#            + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   ) 
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
 #            + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-            + f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-            + f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+ #           + f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+ #           + f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
             + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
             + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
       )
