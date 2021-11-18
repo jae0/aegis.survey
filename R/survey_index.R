@@ -26,12 +26,12 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
     if (redo_model) {
    
       # size model
-      fit = carstm_model( p=params$pW, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", 
+      fit = carstm_model( p=params$pW, data=M, sppoly=sppoly, redo_fit=TRUE, posterior_simulations_to_retain="predictions", 
         control.inla = list( strategy='adaptive'   ), num.threads="4:2", mc.cores=2 )  
       fit = NULL; gc()
  
       # numerical model
-      fit = carstm_model( p=params$pN, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE, 
+      fit = carstm_model( p=params$pN, data=M, sppoly=sppoly, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE, 
         control.inla = list( strategy='adaptive'  ), 
         num.threads="4:2", mc.cores=2 )  
         #  scale_offsets when using offsets for more stable results
@@ -40,8 +40,8 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
     }
  
 
-    resw = carstm_model( p=params$pW, DS="carstm_modelled_summary" )
-    resn = carstm_model( p=params$pN, DS="carstm_modelled_summary" )
+    resw = carstm_model( p=params$pW, DS="carstm_modelled_summary", sppoly=sppoly )
+    resn = carstm_model( p=params$pN, DS="carstm_modelled_summary", sppoly=sppoly )
 
     vars_to_copy = c(  "space", "time", "dyears" )
     for ( vn in vars_to_copy ) params[[vn]] = resn[[vn]]

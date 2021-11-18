@@ -322,17 +322,17 @@ glm methods here
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
     RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE, extrapolation_limit=c(0.025, 0.975) )
     save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
-    # plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf )
-    # lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+    
+    if (0) {
+      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf )
+      lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+    }
   }
 
 
 
   if (0) {
       # map it
-      plot_crs = pN$aegis_proj4string_planar_km
-      # managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
-       # time_match = "2020"
  
 
       map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
@@ -360,9 +360,12 @@ glm methods here
         pci = RES[[mf]]$pW
       }
 
+      plot_crs = pci$aegis_proj4string_planar_km
+        # managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
+       # time_match = "2020"
       
       vn = "predictions"
-      brks = pretty(  quantile( RES[[mf]][[vn]], probs=c(0,0.975), na.rm=TRUE )  )
+      brks = pretty(  quantile( RES[[mf]][[vn]], probs=c(0.025,0.975), na.rm=TRUE )  )
 
       outputdir = file.path( pci$modeldir, pci$carstm_model_label, "predicted.numerical.densitites" )
       
@@ -373,6 +376,7 @@ glm methods here
         
         fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
         carstm_map(  res=RES[[mf]], vn=vn, tmatch=time_match,
+          sppoly = sppoly, 
           # breaks=brks,
           # palette="RdYlBu",
           title= "biomass density t/km2" , #paste(fn_root, time_match, sep="_"),  
