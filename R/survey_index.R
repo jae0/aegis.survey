@@ -1,11 +1,10 @@
 
-survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, extrapolation_replacement="extrapolation_limit", au_sa="au_sa_km2", redo_model=TRUE ) {
+survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa="au_sa_km2", redo_model=TRUE ) {
 
     # see snowcrab methods for more variations/details
     if (0) {
       params$type="abundance"
       extrapolation_limit=NULL
-      extrapolation_replacement="extrapolation_limit"
       au_sa="au_sa_km2"
       redo_model=TRUE
     }
@@ -17,14 +16,7 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, extra
   if (params$type=="biomass")   pci = params$pB
   if (params$type=="habitat")   pci = params$pH
   if (is.null(pci)) stop("parameter list is not correct ...")
-
  
-  # if (is.null(extrapolation_limit)) {
-  #   if (exists("quantile_bounds", params$pN )) {
-  #     extrapolation_limit = quantile( M$totno/M$data_offset, probs=params$pN$quantile_bounds[2], na.rm=T) # 10014.881
-  #   }
-  # }
-
  
   if (params$type=="biomass") {
   # operating directly upon biomass (as a lognormal)
@@ -67,23 +59,40 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, extra
     wgts[!is.finite(wgts)] = NA
     wgts[wgts<0] = NA
 
+    if (!is.null(extrapolation_limit) ) {
+      wgts_limits = quantile( M$meansize, probs=extrapolation_limit, na.rm=TRUE )
+    } else {
+      wgts_limits = range(M$meansize, na.rm=TRUE)
+    }
+
+    wgts[wgts < wgts_limits[1] ] = wgts_limits[1]
+    wgts[wgts > wgts_limits[2] ] = wgts_limits[2]
+    
     nums = resn[[ "predictions_posterior_simulations" ]]   # numerical density (per km^2)
     nums[!is.finite(nums)] = NA
 
+    if (!is.null(extrapolation_limit) ) {
+      nums_limits = quantile( M$totno/M$data_offset, probs=extrapolation_limit, na.rm=TRUE )
+    } else {
+      nums_limits = range( M$totno/M$data_offset, na.rm=TRUE)
+    }
 
-    # if (!is.null(extrapolation_limit)) {
-
-    #   uu = which( nums > extrapolation_limit )
-    #   if (length(uu) > 0 ) {
-    #     # about 2.9% have values greateer than reasonable
-    #     if (is.character(extrapolation_replacement)) if (extrapolation_replacement=="extrapolation_limit" ) extrapolation_replacement = extrapolation_limit
-    #     nums[ uu] = extrapolation_replacement
-    #     warning("\n Extreme-valued predictions were found, capping them to max observed rates .. \n you might want to have more informed priors, or otherwise set extrapolation=NA to replacement value \n")
-    #   }
-    # }
+    nums[nums < nums_limits[1] ] = nums_limits[1]
+    nums[nums > nums_limits[2] ] = nums_limits[2]
+    
 
     biom = nums * wgts / 10^6  # kg / km^2 -> kt / km^2
     biom[!is.finite(biom)] = NA
+
+    if (!is.null(extrapolation_limit) ) {
+      biom_limits = quantile( M$totwgt/M$data_offset, probs=extrapolation_limit, na.rm=TRUE )
+    } else {
+      biom_limits = range( M$totwgt/M$data_offset, na.rm=TRUE)
+    }
+    biom[biom < biom_limits[1] ] = biom_limits[1]
+    biom[biom > biom_limits[2] ] = biom_limits[2]
+
+
     nums = wgts = NULL
 
     # create for mapping ..

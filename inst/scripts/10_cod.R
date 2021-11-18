@@ -59,11 +59,8 @@ RES= list( yr = yrs )
 
 # --------------------------------
 # do stratanl for each of the following swept-area assumptions:
-
-  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  )
-  if (!exists("strata_to_keep", sppoly) ) sppoly$strata_to_keep = TRUE
-
-
+sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  )
+  
   for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
   for ( tu in c( "standardtow", "towdistance", "sweptarea") ) {  
     # c("Standard tow", "Length adjusted", "Length & width adjusted")
@@ -300,21 +297,30 @@ glm methods here
 
   redo_sppoly=FALSE
   # redo_sppoly=TRUE 
-  sppoly = areal_units( p=p, duplications_action="separate", redo=redo_sppoly )  # separate ids for each new sub area
-  sppoly$strata_to_keep = TRUE
+  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly  )
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
+
+  # no data in these areal units: remove 
+  missingS = c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8")
+  sppoly = sppoly[- which(sppoly$AUID %in% missingS), ]
+  attributes(sppoly)$W.nb  = nb_remove(attributes(sppoly)$W.nb, missingS )
+  if (0) {
+    plot(sppoly["AUID"], reset=FALSE)
+    plot(sppoly[which(sppoly$AUID %in% missingS ), "AUID"], col="green", add=TRUE )
+  }
 
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.99 )
  
 
+
   for ( mf in model_forms ) {
     if (0)    mf = model_forms[2]
     loadfunctions("aegis.survey")
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
-    RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE )
+    RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE, extrapolation_limit=c(0.025, 0.975) )
     save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
     # plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf )
     # lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )

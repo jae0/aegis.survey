@@ -271,7 +271,7 @@ survey_parameter_list = function( mf, p ) {
       p$pW$label ="Atlantic cod summer standardtow meansize"
       p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
-      p$pW$family = "normal" 
+      p$pW$family = "lognormal" 
       p$pW$formula = formula ( 
           meansize ~ 1  
 #            + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid)) 
