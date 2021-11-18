@@ -317,14 +317,14 @@ glm methods here
 
 
   for ( mf in model_forms ) {
-    if (0)    mf = model_forms[2]
+    if (0)    mf = model_forms[4]
     loadfunctions("aegis.survey")
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
     RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE, extrapolation_limit=c(0.025, 0.975) )
     save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
     
     if (0) {
-      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf )
+      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab="", xlab="year" )
       lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
     }
   }
