@@ -8,15 +8,6 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
       au_sa="au_sa_km2"
       redo_model=TRUE
     }
-
-  # parameter list can be varied: either pW (meansize) and pN (numbes) or pB (biomass) or pH (habitat) 
-  pci = NULL
-  if (params$type=="abundance") pci = params$pN
-  if (params$type=="meansize")  pci = params$pW
-  if (params$type=="biomass")   pci = params$pB
-  if (params$type=="habitat")   pci = params$pH
-  if (is.null(pci)) stop("parameter list is not correct ...")
- 
  
   if (params$type=="biomass") {
   # operating directly upon biomass (as a lognormal)

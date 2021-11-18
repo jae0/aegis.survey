@@ -1,6 +1,6 @@
 
 carstm_prepare_inputdata = function( p, M, sppoly, 
-  lookup_parameters = NULL, APS_data_offset=NULL, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=FALSE
+  lookup_parameters = NULL, APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=FALSE
 ) {
 
   # lookup_parameters  are for observation data (not prediction surface)
@@ -412,19 +412,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     APS$AUID = as.character( APS$AUID )
     APS$tag ="predictions"
+    APS$data_offset =  APS_data_offset   
 
-    if (any( grepl("offset", as.character(p$formula)))) {
-      if (!is.null(APS_data_offset)) {
-        APS$data_offset =  APS_data_offset   
-      } else {
-        message( "APS_data_offset is required as there is an offset in the formula ... using 1 for now")
-        APS$data_offset = 1
-      }
-      APS = APS[ , c( "AUID", "tag", "data_offset" ) ]
-    } else {
-      APS = APS[ , c( "AUID", "tag" ) ]
-    }
-
+    APS = APS[ , c( "AUID", "tag", "data_offset" ) ]
     APS[, p$variabletomodel] = NA
    
   }
