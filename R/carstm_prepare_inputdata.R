@@ -1,6 +1,6 @@
 
 carstm_prepare_inputdata = function( p, M, sppoly, 
-  lookup_parameters = NULL, APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=FALSE
+  lookup_parameters = NULL, APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE
 ) {
 
   # lookup_parameters  are for observation data (not prediction surface)
@@ -539,9 +539,11 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variable_name=list("predictions"),
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
+      tz="America/Halifax",
       yrs=p$yrs,
       returntype = "vector"
     )
+  
   }
 
 

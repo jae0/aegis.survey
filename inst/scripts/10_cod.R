@@ -313,7 +313,7 @@ glm methods here
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.99 )
 
   for ( mf in model_forms ) {
-    if (0)    mf = model_forms[4]
+    if (0)    mf = model_forms[1]
     loadfunctions("aegis.survey")
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
     RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE, extrapolation_limit=c(0.025, 0.975) )
