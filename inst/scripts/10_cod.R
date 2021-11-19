@@ -297,24 +297,20 @@ glm methods here
 
   redo_sppoly=FALSE
   # redo_sppoly=TRUE 
-  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly  )
+  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), 
+    areal_units_to_drop=c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8"), redo=redo_sppoly  )
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
 
   # no data in these areal units: remove 
-  missingS = c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8")
-  sppoly = sppoly[- which(sppoly$AUID %in% missingS), ]
-  attributes(sppoly)$W.nb  = nb_remove(attributes(sppoly)$W.nb, missingS )
   if (0) {
     plot(sppoly["AUID"], reset=FALSE)
-    plot(sppoly[which(sppoly$AUID %in% missingS ), "AUID"], col="green", add=TRUE )
+    plot(sppoly[which(sppoly$AUID %in% c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8") ), "AUID"], col="green", add=TRUE )
   }
 
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.99 )
- 
-
 
   for ( mf in model_forms ) {
     if (0)    mf = model_forms[4]
@@ -324,23 +320,20 @@ glm methods here
     save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
     
     if (0) {
-      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab="", xlab="year" )
+      units = attr( RES[[mf]][["biomass"]], "units")
+      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
       lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
     }
+
   }
 
 
 
   if (0) {
       # map it
- 
-
       map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
       map_zoom = 7
-
       background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
-  
-      # map all :
 
       if (RES[[mf]]$type=="abundance") {
         fn_root = "Predicted_numerical_abundance"
@@ -361,7 +354,7 @@ glm methods here
       }
 
       plot_crs = pci$aegis_proj4string_planar_km
-        # managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
+       # managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
        # time_match = "2020"
       
       vn = "predictions"
@@ -371,6 +364,8 @@ glm methods here
       
       if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
+      # attr( RES[[mf]][["predictions"]], "units")
+
       for (y in res$year ){
         time_match = as.character(y) 
         
@@ -379,7 +374,7 @@ glm methods here
           sppoly = sppoly, 
           # breaks=brks,
           # palette="RdYlBu",
-          title= "biomass density t/km2" , #paste(fn_root, time_match, sep="_"),  
+          title= "biomass density t/km^2" , #paste(fn_root, time_match, sep="_"),  
           # outfilename=fn,
           background = background,
           # vwidth = 1600,
@@ -390,9 +385,9 @@ glm methods here
         )
       }
 
+  }
 
-
-# for non-stratanly polys: 
+  # for non-stratanly polys: 
 
   # areal_units_type = "lattice",  
   # areal_units_resolution_km = 25, 
@@ -407,65 +402,8 @@ glm methods here
 # Model lattice 1:
 # "INLA Envir AR1|year iid|Strata"	ar1	rw2: temp+depth, no car just iid in space
 # simple factorial with totno and poisson; 79 configs; 6 hrs
-
-pN$formula =  formula(
-  totno ~ 1 + offset( log( data_offset) )
-    + f(strata, model="iid", group=year, hyper=H$iid)
-    + f(year, model="ar1", hyper=H$ar1 )
-    + f(uid, model="iid", hyper=H$iid)
-    + f(ti, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
-    + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
-)
-pN$family = "poisson"
-RES[["space_iid.year_ar1"]]$pN =pN
-
-pW$formula =  formula(
-  totno ~ 1
-    + f(strata, model="iid", group=year, hyper=H$iid)
-    + f(year, model="ar1", hyper=H$ar1 )
-    + f(uid, model="iid", hyper=H$iid)
-    + f(ti, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
-    + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
-)
-pW$family = "gaussian"
-RES[["space_iid.year_ar1"]]$pW =pW
-
-
-
-
-# ------------------------------------------------
-#  Model lattice 2: CAR simple and year iid
-# 46hr; 45 configs
-
-  formula = totno ~ 1
-    + offset( log(data_offset) )
-    + f(uid, model="iid", hyper=H$iid)
-    + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
-    + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
-    + f(year, model="iid", hyper=H$iid)
-    + f(strata, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
-  family = "poisson",
-
-RES$space_car.year_iid = colSums( {out * weight_year * sppoly$au_sa_km2}[sppoly$strata_to_keep, ], na.rm=TRUE )
-
-
-
-# ------------------------------
-# Model 3 Lattice  CAR in space grouped by year and ar1 in time (year)
-# 81 configs and about 97 hrs!
-
-  formula = totno ~ 1
-    + offset( log(data_offset) )
-    + f(uid, model="iid", hyper=H$iid)
-    + f(ti, model="rw2", scale.model=TRUE, hyper=H$rw2)
-    + f(zi, model="rw2", scale.model=TRUE, hyper=H$rw2)
-    + f(year, model="ar1", hyper=H$ar1)
-    + f(strata, model="bym2", graph=slot(sppoly, "nb"), group = year, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
-  family = "poisson",
-
-RES$space_car.year_ar1 = colSums( {out * weight_year * sppoly$au_sa_km2}[sppoly$strata_to_keep, ], na.rm=TRUE )
-
-
+ 
+ 
 
 
 #########################################
