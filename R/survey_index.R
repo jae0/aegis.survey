@@ -1,5 +1,5 @@
 
-survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa="au_sa_km2", redo_model=TRUE ) {
+survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa="au_sa_km2", subset_data=NULL, redo_model=TRUE ) {
 
     # see snowcrab methods for more variations/details
     if (0) {
@@ -42,6 +42,7 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
 
     resw = carstm_model( p=params$pW, DS="carstm_modelled_summary", sppoly=sppoly )
     resn = carstm_model( p=params$pN, DS="carstm_modelled_summary", sppoly=sppoly )
+
 
     vars_to_copy = c(  "space", "time", "dyears" )
     for ( vn in vars_to_copy ) params[[vn]] = resn[[vn]]
@@ -86,7 +87,7 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
 
     nums = wgts = NULL
 
-    # create for mapping ..
+    # create for mapping .. in t/km^2
     params[["predictions"]] = resn[[ "predictions" ]] * NA
     params[["predictions"]][,,1]  = apply( simplify2array(biom*1000), c(1,2), mean, na.rm=TRUE ) 
     params[["predictions"]][,,2]  = apply( simplify2array(biom*1000), c(1,2), sd, na.rm=TRUE ) 
@@ -96,7 +97,13 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
     attr( params[["predictions"]], "units") = "t / km^2"
  
     # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
-    sims = colSums( biom * sppoly[[au_sa]], na.rm=TRUE )
+    sims = colSums( biom * sppoly[[au_sa]], na.rm=TRUE ) 
+
+    sa =   sppoly[[au_sa]] 
+    attributes( sa ) = NULL
+    bb = apply( biom , c(2,3), function(u) u*sa )
+    params[["biomass_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
+    attr( params[["biomass_simulations"]], "units") = "kt"
 
     params[["biomass"]] = data.frame( cbind(
       mean = apply( simplify2array(sims), 1, mean, na.rm=TRUE ), 
@@ -105,8 +112,30 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
       q025 = apply( simplify2array(sims), 1, quantile, probs=0.025, na.rm=TRUE ),
       q975 = apply( simplify2array(sims), 1, quantile, probs=0.975, na.rm=TRUE ) 
     ))
-    
     attr( params[["biomass"]], "units") = "kt"
+    
+    
+    if (!is.null(subset_data)) {
+      ss = which( sppoly$AUID %in% subset_data )
+      if (length(ss) > 0) {
+        sa =   sppoly[[au_sa]][ss] 
+        attributes( sa ) = NULL
+        bb = apply( biom[ ss,, ] , c(2,3), function(u) u*sa )
+
+        params[["biomass_subset_simulations"]] = apply( bb, c(2,3), sum, na.rm=TRUE )
+        attr( params[["biomass_subset_simulations"]], "units") = "kt"
+
+        params[["biomass_subset"]] = data.frame( cbind(
+          mean = apply( params[["biomass_subset_simulations"]] , 1, mean, na.rm=TRUE ), 
+          sd   = apply( params[["biomass_subset_simulations"]] , 1, sd , na.rm=TRUE), 
+          median = apply( params[["biomass_subset_simulations"]] , 1, median, na.rm=TRUE ), 
+          q025 = apply( params[["biomass_subset_simulations"]] , 1, quantile, probs=0.025, na.rm=TRUE ),
+          q975 = apply( params[["biomass_subset_simulations"]] , 1, quantile, probs=0.975, na.rm=TRUE ) 
+        ))
+        attr( params[["biomass_subset"]], "units") = "kt"
+        attr( params[["biomass_subset"]], "areal_units") = subset_data
+      }
+    }
 
     return(params)
 

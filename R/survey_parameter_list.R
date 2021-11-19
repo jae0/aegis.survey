@@ -223,7 +223,7 @@ survey_parameter_list = function( mf, p ) {
       p$pW$label ="Atlantic cod summer standardtow meansize"
       p$pW$carstm_model_label = mf
       p$pW$variabletomodel = "meansize"  
-      p$pW$family = "gaussian" 
+      p$pW$family = "lognormal" 
       p$pW$formula = formula ( 
           meansize ~ 1  
             + as.factor(time)   

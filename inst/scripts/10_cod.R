@@ -302,39 +302,52 @@ glm methods here
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
 
-  # no data in these areal units: remove 
   if (0) {
+    # no data in these areal units: remove .. they seem to be US locations
     plot(sppoly["AUID"], reset=FALSE)
     plot(sppoly[which(sppoly$AUID %in% c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8") ), "AUID"], col="green", add=TRUE )
   }
 
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
-  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, qupper=0.99 )
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99 )
 
   for ( mf in model_forms ) {
-    if (0)    mf = model_forms[1]
+    if (0)    mf = model_forms[4]
     loadfunctions("aegis.survey")
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
     RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE, extrapolation_limit=c(0.025, 0.975) )
     save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
-    
-    if (0) {
-      units = attr( RES[[mf]][["biomass"]], "units")
-      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
-      lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
-    }
-
   }
 
 
+    if (0) {
 
-  if (0) {
+      mf = 1
+      RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=FALSE, extrapolation_limit=c(0.025, 0.975) )
+
+      # RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=FALSE, extrapolation_limit=c(0.025, 0.975), subset_data=c("440", ... )  ## if you also want summary for subsets 
+      
+      units = attr( RES[[mf]][["biomass"]], "units")
+      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
+      lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+
+      hist( params[["biomass_simulations"]][1,] )  # posterior distributions
+      # hist( params[["biomass_subset_simulations"]][1,] ) 
+
+      params[["biomass"]] # aggregate summaries 
+
       # map it
       map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
       map_zoom = 7
       background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
 
+      if (RES[[mf]]$type=="biomass") {
+        fn_root = "Predicted_biomass"
+        title = "Predicted biomass"
+        pci = RES[[mf]]$pB
+
+      }
       if (RES[[mf]]$type=="abundance") {
         fn_root = "Predicted_numerical_abundance"
         title = "Predicted numerical abundance"
@@ -384,6 +397,14 @@ glm methods here
           #plot_elements=c( "isobaths",  "compass", "scale_bar", "legend" )
         )
       }
+
+
+
+  
+  
+
+
+
 
   }
 

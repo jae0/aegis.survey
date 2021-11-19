@@ -1,5 +1,5 @@
 
-survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL, qupper=0.99 ) {
+survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL, quantile_upper_limit=0.99 ) {
   #\\ assimilation of all survey data into a coherent form
   surveydir = project.datadirectory( "aegis", "survey" )
 
@@ -1311,16 +1311,16 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
 
     # So fiddling is required as extreme events can cause optimizer to fail
-    if (!is.null(qupper)) {
+    if (!is.null(quantile_upper_limit)) {
       # truncate upper bounds of density 
 
       density = set$totno / set$data_offset
-      qm = quantile( density, qupper, na.rm=TRUE )
+      qm = quantile( density, quantile_upper_limit, na.rm=TRUE )
       mi = which( density > qm )
       set$totno[mi] = floor( qm * set$data_offset[mi] )
 
       density = set$totwgt / set$data_offset
-      qm = quantile( density, qupper, na.rm=TRUE )
+      qm = quantile( density, quantile_upper_limit, na.rm=TRUE )
       mi = which( density > qm )
       set$totwgt[mi] = floor( qm * set$data_offset[mi] )
     }
