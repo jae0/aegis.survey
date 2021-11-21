@@ -27,7 +27,7 @@ selection = list(
     # ranged_data="dyear"
     settype = 1,
     gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
-    strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
+#    strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
     polygon_enforce=TRUE
   )
 )
@@ -285,13 +285,15 @@ glm methods here
     # "A.SxT.ST_iid",   # working
     "A.S_iid.T_iid", # working
     "A.S_iid.T_iid.ST_iid",
-    "A.S_bym2.T_fac.ST_bym2.env.eco",
+#    "A.S_bym2.T_fac.ST_bym2.env.eco",
     "A.S_bym2.T_ar1.ST_bym2.env.eco",
-    "H.S_fac.T_fac",
+    "A.full_model",
+#    "H.S_fac.T_fac",
     "H.S_iid.T_iid",
     "H.S_iid.T_iid.ST_iid",
-    "H.S_bym2.T_fac.ST_bym2.env.eco",
-    "H.S_bym2.T_ar1.ST_bym2.env.eco"
+#    "H.S_bym2.T_fac.ST_bym2.env.eco",
+    "H.S_bym2.T_ar1.ST_bym2.env.eco",
+    "H.full_model"
   )
 
 
@@ -313,17 +315,16 @@ glm methods here
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99 )
 
   for ( mf in model_forms ) {
-    if (0)    mf = model_forms[4]
-    loadfunctions("aegis.survey")
+    if (0)    mf = model_forms[5]
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
     RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE, extrapolation_limit=c(0.025, 0.975) )
-    save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
   }
+  save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
 
 
     if (0) {
 
-      mf = 1
+      mf = model_forms[1] 
       RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=FALSE, extrapolation_limit=c(0.025, 0.975) )
 
       # RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=FALSE, extrapolation_limit=c(0.025, 0.975), subset_data=c("440", ... )  ## if you also want summary for subsets 
@@ -332,10 +333,10 @@ glm methods here
       plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
       lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
 
-      hist( params[["biomass_simulations"]][1,] )  # posterior distributions
-      # hist( params[["biomass_subset_simulations"]][1,] ) 
+      hist(  RES[[mf]][["biomass_simulations"]][1,] )  # posterior distributions
+      # hist(  RES[[mf]][["biomass_subset_simulations"]][1,] ) 
 
-      params[["biomass"]] # aggregate summaries 
+      RES[[mf]][["biomass"]] # aggregate summaries 
 
       # map it
       map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
@@ -346,13 +347,11 @@ glm methods here
         fn_root = "Predicted_biomass"
         title = "Predicted biomass"
         pci = RES[[mf]]$pB
-
       }
       if (RES[[mf]]$type=="abundance") {
         fn_root = "Predicted_numerical_abundance"
         title = "Predicted numerical abundance"
         pci = RES[[mf]]$pN
-
       }
       if (RES[[mf]]$type=="habitat") {
         fn_root = "Predicted_habitat_probability"
@@ -398,7 +397,14 @@ glm methods here
         )
       }
 
-
+      # weight m
+      fitw = carstm_model( p=RES[[mf]]$pW, DS="carstm_modelled_fit", sppoly=sppoly  )  
+ 
+      # numerical model
+      fitn = carstm_model( p=RES[[mf]]$pN, DS="carstm_modelled_fit", sppoly=sppoly )
+       
+      resw = carstm_model( p=RES[[mf]]$pW, DS="carstm_modelled_summary", sppoly=sppoly )
+      resn = carstm_model( p=RES[[mf]]$pN, DS="carstm_modelled_summary", sppoly=sppoly )
 
   
   

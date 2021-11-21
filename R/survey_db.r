@@ -1305,7 +1305,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
     set = set[ which(  is.finite(set$data_offset)   ),  ]
 
-    set$pa = presence.absence( X=set$totno / set$data_offset, px=0.05 )$pa  # determine presence absence and weighting
+    set$pa = presence.absence( X=set$totno / set$data_offset, px=p$habitat_quantile )$pa  # determine presence absence and weighting
     set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
 
     set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata

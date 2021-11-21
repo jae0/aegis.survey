@@ -38,11 +38,9 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
         # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
       fit = NULL; gc()
     }
- 
 
     resw = carstm_model( p=params$pW, DS="carstm_modelled_summary", sppoly=sppoly )
     resn = carstm_model( p=params$pN, DS="carstm_modelled_summary", sppoly=sppoly )
-
 
     vars_to_copy = c(  "space", "time", "dyears" )
     for ( vn in vars_to_copy ) params[[vn]] = resn[[vn]]
@@ -71,8 +69,7 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
 
     nums[nums < nums_limits[1] ] = nums_limits[1]
     nums[nums > nums_limits[2] ] = nums_limits[2]
-    
-
+   
     biom = nums * wgts / 10^6  # kg / km^2 -> kt / km^2
     biom[!is.finite(biom)] = NA
 
@@ -83,7 +80,6 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
     }
     biom[biom < biom_limits[1] ] = biom_limits[1]
     biom[biom > biom_limits[2] ] = biom_limits[2]
-
 
     nums = wgts = NULL
 
@@ -141,42 +137,80 @@ survey_index = function( params, M, extrapolation_limit=NULL, sppoly=NULL, au_sa
 
   }
 
+  # -------------------
+
   if (params$type=="habitat") {
 
     # numerical model
     if (redo_model) {
-      fit = carstm_model( p=params$pH, data=M, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE,
+      fit = carstm_model( p=params$pH, data=M, sppoly=sppoly, redo_fit=TRUE, posterior_simulations_to_retain="predictions", scale_offsets=TRUE,
         control.family=list(control.link=list(model="logit"))
-      )  #  scale_offsets when using offsets for more stable results
+      ) 
       # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
       fit = NULL; gc()
     }
 
     resh = carstm_model( p=params$pH, DS="carstm_modelled_summary" )
-    pa =  resh[["predictions_posterior_simulations"]]
+
+    vars_to_copy = c(  "space", "time", "dyears" )
+    for ( vn in vars_to_copy ) params[[vn]] = resh[[vn]]
+
+    pa = resh[["predictions_posterior_simulations"]]
+    # pa = inverse.logit(pa)
     pa[!is.finite(pa)] = NA
 
-    #       pa = inverse.logit(pa)
-    #       pa[!is.finite(pa)] = NA
-
     # might as well just keep it in resh 
-    # params[["spatial_combined"]] = resn[[ "spatial_combined" ]]   
+    # params[["spatial_combined"]] = resh[[ "spatial_combined" ]]   
     # attr( params[["spatial_combined"]], "units") = "probability"
  
-    # params[["predictions"]] = resn[[ "predictions" ]]   
-    # attr( params[["predictions"]], "units") = "probability"
+    # create for mapping .. in probability
+    params[["predictions"]] = resh[[ "predictions" ]] * NA
+    params[["predictions"]][,,1]  = apply( simplify2array(pa), c(1,2), mean, na.rm=TRUE ) 
+    params[["predictions"]][,,2]  = apply( simplify2array(pa), c(1,2), sd, na.rm=TRUE ) 
+    params[["predictions"]][,,3]  = apply( simplify2array(pa), c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
+    params[["predictions"]][,,4]  = apply( simplify2array(pa), c(1,2), median, na.rm=TRUE )
+    params[["predictions"]][,,5]  = apply( simplify2array(pa), c(1,2), quantile, probs=0.975, na.rm=TRUE ) 
+    attr( params[["predictions"]], "units") = "probability"
+ 
+    # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
+    sims = colSums( pa * sppoly[[au_sa]] / sum(  sppoly[[au_sa]] ), na.rm=TRUE ) 
 
-    sims = colSums( pa * sppoly[[au_sa]]/ sum(  sppoly[[au_sa]] ), na.rm=TRUE )
+    sa = sppoly[[au_sa]] 
+    attributes( sa ) = NULL
+    bb = apply( pa , c(2,3), function(u) u*sa )
+    params[["habitat_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
+    attr( params[["habitat_simulations"]], "units") = "probability"
 
     params[["habitat"]] = data.frame( cbind(
-      mean = apply( simplify2array(sims), 1, mean ), 
-      sd   = apply( simplify2array(sims), 1, sd ), 
-      median = apply( simplify2array(sims), 1, median ), 
-      q025 = apply( simplify2array(sims), 1, quantile, probs=0.025 ),
-      q975 = apply( simplify2array(sims), 1, quantile, probs=0.975 ) 
+      mean = apply( simplify2array(sims), 1, mean, na.rm=TRUE ), 
+      sd   = apply( simplify2array(sims), 1, sd , na.rm=TRUE), 
+      median = apply( simplify2array(sims), 1, median, na.rm=TRUE ), 
+      q025 = apply( simplify2array(sims), 1, quantile, probs=0.025, na.rm=TRUE ),
+      q975 = apply( simplify2array(sims), 1, quantile, probs=0.975, na.rm=TRUE ) 
     ))
-     
     attr( params[["habitat"]], "units") = "probability"
+    
+    if (!is.null(subset_data)) {
+      ss = which( sppoly$AUID %in% subset_data )
+      if (length(ss) > 0) {
+        sa =   sppoly[[au_sa]][ss] 
+        attributes( sa ) = NULL
+        bb = apply( pa[ ss,, ] , c(2,3), function(u) u*sa )
+
+        params[["habitat_subset_simulations"]] = apply( bb, c(2,3), sum, na.rm=TRUE )
+        attr( params[["habitat_subset_simulations"]], "units") = "probability"
+
+        params[["habitat_subset"]] = data.frame( cbind(
+          mean = apply( params[["habitat_subset_simulations"]] , 1, mean, na.rm=TRUE ), 
+          sd   = apply( params[["habitat_subset_simulations"]] , 1, sd , na.rm=TRUE), 
+          median = apply( params[["habitat_subset_simulations"]] , 1, median, na.rm=TRUE ), 
+          q025 = apply( params[["habitat_subset_simulations"]] , 1, quantile, probs=0.025, na.rm=TRUE ),
+          q975 = apply( params[["habitat_subset_simulations"]] , 1, quantile, probs=0.975, na.rm=TRUE ) 
+        ))
+        attr( params[["habitat_subset"]], "units") = "probability"
+        attr( params[["habitat_subset"]], "areal_units") = subset_data
+      }
+    }
 
     return(params)
   }
