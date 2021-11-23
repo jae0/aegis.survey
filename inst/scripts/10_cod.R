@@ -329,9 +329,13 @@ glm methods here
 
       # RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=FALSE, extrapolation_limit=c(0.025, 0.975), subset_data=c("440", ... )  ## if you also want summary for subsets 
       
-      units = attr( RES[[mf]][["biomass"]], "units")
-      plot( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
-      lines( RES[[mf]][["biomass"]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+      vn = "biomass"
+      vn = "habitat"
+
+      units = attr( RES[[mf]][[vn]], "units")
+      plot( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
+      lines( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+   
 
       hist(  RES[[mf]][["biomass_simulations"]][1,] )  # posterior distributions
       # hist(  RES[[mf]][["biomass_subset_simulations"]][1,] ) 
@@ -399,12 +403,13 @@ glm methods here
 
       # weight m
       fitw = carstm_model( p=RES[[mf]]$pW, DS="carstm_modelled_fit", sppoly=sppoly  )  
- 
-      # numerical model
       fitn = carstm_model( p=RES[[mf]]$pN, DS="carstm_modelled_fit", sppoly=sppoly )
+      fith = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_fit", sppoly=sppoly )
+       
        
       resw = carstm_model( p=RES[[mf]]$pW, DS="carstm_modelled_summary", sppoly=sppoly )
       resn = carstm_model( p=RES[[mf]]$pN, DS="carstm_modelled_summary", sppoly=sppoly )
+      resh = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_summary", sppoly=sppoly )
 
   
   
