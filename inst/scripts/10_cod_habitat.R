@@ -1,0 +1,413 @@
+
+ 
+# ------------------------------------------------
+# Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
+# using sweptarea only on a lattice system with environmental covariates.
+# Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
+# This adds some differences relative to "statanal" (which uses sa in sq nautical miles, btw)
+
+# NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
+
+# the variations examined here:
+
+# ----------------------------------------------
+# define model_forms: params are stored in  survey_parameter_list()
+
+# adding settype 2 and 5 (comparative tows, and generic surveys) 
+
+
+# set up the run parameters
+  require(aegis.survey)
+
+  spatial_domain = "SSE"
+  
+  yrs = 1970:2021
+  runtype = "1970_present"
+ 
+  groundfish_survey_species_code = 10 # cod
+
+
+  # basic selection criteria
+  ## note difference from stratanal: all gears kept, and all areas kept
+  selection = list(
+    biologicals=list(
+      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
+    ),
+    survey=list(
+      data.source = c("groundfish", "snowcrab"),
+      yr = yrs,      # time frame for comparison specified above
+      months=6:8,  #"summer"
+      # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
+      # ranged_data="dyear"
+      settype = c(1,2,4,5,8),
+      # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
+      # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
+      polygon_enforce=TRUE
+    )
+  )
+
+  p = survey_parameters(
+    project_class = "carstm",
+    project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
+    label ="Atlantic cod summer",
+    speciesname = "Atlantic_cod",
+    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
+    # carstm_model_label = "full_model"   ## <<----- 
+    carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present 
+    runtype=runtype,
+    yrs = yrs,
+    selection = selection,
+    type="habitat",
+    variabletomodel = "pa",  
+    vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id")  # to compute mean size, etc
+  )
+
+  results_file = file.path( p$modeldir, p$speciesname , "RES_habitat_comparisons.rdata" )
+
+  RES= list( yr = yrs )
+
+
+  # basic param set definitions END
+  # --------------------------------  
+ 
+
+
+  # --------------------------------  
+  # choose design
+
+  mf = c( "stranal_design", "tesselation" ) [2]
+
+
+  if (mf == "stranal_design") {
+    ## -- stratanal design-based polygons 
+    p$label ="Atlantic cod summer standardtow habitat stratanal"
+ 
+    p = parameters_add( p, list(
+      areal_units_type = "stratanal_polygons_pre2014",
+      areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+      areal_units_resolution_km = 25, # km  
+      areal_units_overlay = "none",
+      areal_units_timeperiod = "pre2014"    # "pre2014" for older
+    ) )
+  
+    p$formula = formula( 
+        pa ~ 1 
+          + f( time, model="ar1",  hyper=H$ar1 ) 
+          + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
+          + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
+    )
+    p$family = "binomial" 
+
+  }
+
+
+
+  if (mf == "tesselation") {
+    # tesselation-based solution
+    p$label ="Atlantic cod summer standardtow habitat tesselation"
+    p = parameters_add( p, list(
+      areal_units_type = "tesselation",
+      areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+      areal_units_resolution_km = 1, # km  
+      areal_units_constraint_ntarget = 50,
+      areal_units_constraint_nmin = 3,  
+      areal_units_overlay = "none",
+      sa_threshold_km2 = 5,
+      fraction_cv = 0.9,   # ie. stop if essentially a poisson distribution
+      fraction_todrop = 0.1  # control roughness and speed of tesselation
+    ) )
+
+    p$formula = formula( 
+        pa ~ 1 
+          + f( time, model="ar1",  hyper=H$ar1 ) 
+          + f( gear, model="iid",  hyper=H$iid ) 
+          + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          # + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          #+ f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          #+ f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
+          + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
+    )
+    p$family = "binomial" 
+ 
+  }
+
+  # basic param set definitions END
+  # --------------------------------  
+
+
+
+
+  # --------------------------------  
+  # create polygons
+  redo_sppoly=FALSE
+  # redo_sppoly=TRUE 
+
+  if (mf == "stratanl_design") {
+    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
+    ff = NULL
+    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), 
+      areal_units_to_drop=c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8"), redo=redo_sppoly  )
+    plot(sppoly["AUID"], reset=FALSE)
+    # no data in these areal units: remove .. they seem to be US locations
+    plot(sppoly[which(sppoly$AUID %in% c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8") ), "AUID"], col="green", add=TRUE )
+  }
+
+
+  if (mf == "tesselation") {
+    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
+    ff = NULL
+    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"),  redo=redo_sppoly , verbose=TRUE )
+    plot(sppoly["AUID"], reset=FALSE)
+    plot(sppoly[which(sppoly$AUID %in% c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",  
+ "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32"  ,
+ "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"  ,
+ "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61", "62", "63", "64"  ,
+ "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76", "77", "78", "79", "80"  ,
+ "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96"  ,
+ "97", "98", "99", "100", "1340", "1344", "1347" ) ), "AUID"], col="green", add=TRUE )
+  }
+  # these are US locations 
+
+
+  # create polygons END
+  # --------------------------------  
+
+
+  # --------------------------------  
+  # analysis and output
+
+  redo_survey_data = FALSE
+  # redo_survey_data = TRUE
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99 )
+  
+
+  # average bottom temperature of prediction surface
+  Mp  = data.table( M[which(M$tag=="predictions"),] )
+  o = Mp[, list(mean=mean(t), lb025=quantile(t, probs=0.025), ub975=quantile(t, probs=0.975)), by=yr]
+  trange = range( o[,c("mean","lb025", "ub975")]) * c(0.9, 1.1)
+  plot( mean ~ yr, o, type="b", ylim = trange, ylab="Bottom temperature, bottom deg C", xlab="year", lwd=1.5)
+  lines (lb025~yr, o, col="darkgray", lty="dashed")
+  lines (ub975~yr, o, col="darkgray", lty="dashed")
+  
+
+  fith = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
+    posterior_simulations_to_retain="predictions", scale_offsets=TRUE,
+    control.family=list(control.link=list(model="logit"))
+  ) 
+
+  plot( fith,  plot.prior=TRUE,   plot.fixed.effects=TRUE,  plot.lincomb = TRUE,
+                   plot.random.effects = TRUE,
+                   plot.hyperparameters = TRUE,
+                   plot.predictor = TRUE,
+                   plot.q = TRUE,
+                   plot.cpo = TRUE
+               )
+
+# taken from INLA:::plot.inla
+# fixed
+fix <- fith$marginals.fixed
+labels.fix <- names(fith$marginals.fixed)
+
+i=1 # loop
+m <- inla.smarginal(fix[[i]])
+my.plot(m, type = "l", main = paste("PostDens [", 
+inla.nameunfix(labels.fix[i]), "]", sep = ""),  sub = sub, xlab = "", ylab = "")
+
+all.hyper <- inla.all.hyper.postprocess( fith$all.hyper)
+xy <- (inla.get.prior.xy(section = "fixed", hyperid = labels.fix[i], all.hyper = all.hyper, range = range(m$x), debug = debug))
+my.lines(xy, col = "blue")
+
+
+# hypers
+hyper <- x$internal.marginals.hyperpar
+if (!is.null(hyper)) {
+
+# loop
+hh <- hyper[[i]]
+if (!is.null(hh)) {
+  label <- inla.nameunfix(names(hyper)[i])
+  m <- inla.smarginal(hh)
+  my.plot(m, type = "l", ylab = "", xlab = "")
+  my.title(main = paste("PostDens [", label, 
+    "]", sep = ""))
+
+
+  id <- unlist(strsplit(attr(hyper[[i]], "hyperid"),  "\\|"))
+  if (length(id) > 0) {
+    xy <- (inla.get.prior.xy(section = tolower(id[2]),  hyperid = id[1], all.hyper = all.hyper, 
+    range = range(m$x), intern = FALSE, debug = debug))
+    my.lines(xy, col = "blue")
+  }
+}
+
+
+  resh = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
+
+  names(resh[["random"]])
+  resh[["random"]][["gear"]]
+
+  params = list()
+  vars_to_copy = c(  "space", "time", "dyears" )  # needed for plotting 
+  for ( vn in vars_to_copy ) params[[vn]] = resh[[vn]]
+
+  pa = resh[["predictions_posterior_simulations"]]
+  # pa = inverse.logit(pa)
+  pa[!is.finite(pa)] = NA
+ 
+  # create for mapping .. in probability
+  oo = simplify2array(pa)
+  params[["predictions"]] = resh[[ "predictions" ]] * NA
+  params[["predictions"]][,,1]  = apply( oo, c(1,2), mean, na.rm=TRUE ) 
+  params[["predictions"]][,,2]  = apply( oo, c(1,2), sd, na.rm=TRUE ) 
+  params[["predictions"]][,,3]  = apply( oo, c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
+  params[["predictions"]][,,4]  = apply( oo, c(1,2), median, na.rm=TRUE )
+  params[["predictions"]][,,5]  = apply( oo, c(1,2), quantile, probs=0.975, na.rm=TRUE ) 
+  attr( params[["predictions"]], "units") = "probability"
+  oo = NULL
+
+  # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
+  au_sa="au_sa_km2"
+  sa = sppoly[[au_sa]] 
+  attributes( sa ) = NULL
+
+  sims = colSums( pa * sa / sum(  sa ), na.rm=TRUE ) 
+
+  bb = apply( pa , c(2,3), function(u) u*sa )
+  params[["habitat_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
+  attr( params[["habitat_simulations"]], "units") = "probability"
+
+  oo = simplify2array(sims)
+  params[["habitat"]] = data.frame( cbind(
+    mean = apply( oo, 1, mean, na.rm=TRUE ), 
+    sd   = apply( oo, 1, sd , na.rm=TRUE), 
+    median = apply( oo, 1, median, na.rm=TRUE ), 
+    q025 = apply( oo, 1, quantile, probs=0.025, na.rm=TRUE ),
+    q975 = apply( oo, 1, quantile, probs=0.975, na.rm=TRUE ) 
+  ))
+  attr( params[["habitat"]], "units") = "probability"
+  oo = NULL
+
+  RES[[mf]] = params
+   
+  save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
+
+  # to reload:
+  fith = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_fit", sppoly=sppoly )
+  resh = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_summary", sppoly=sppoly )
+
+
+  # analysis and output END
+  # --------------------------------  
+
+
+
+  # --------------------------------  
+  # maps and plots
+
+  plot_crs = st_crs(sppoly)
+
+    additional_features =  
+      tm_shape( st_transform( maritimes_groundfish_strata(areal_units_timeperiod = p$areal_units_timeperiod), plot_crs ) ) + 
+        tm_borders( col="darkgrey", alpha=0.9, lwd=1.5)   + 
+      tm_shape( aegis.bathymetry::isobath_db(  depths=c( seq(0, 500, by=100), 1000), project_to=plot_crs  ), projection=plot_crs ) +
+        tm_lines( col="slategray", alpha=0.5, lwd=0.5) 
+      #   +
+      # tm_shape( aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs ), projection=plot_crs ) +
+      #   tm_polygons( col="lightgray", alpha=0.5 , border.alpha =0.5)
+
+    (additional_features)
+
+    vn=c( "random", "space", "combined" )
+    vn=c( "random", "spacetime", "combined" )
+    vn="predictions"  # numerical density (km^-2)
+
+    tmatch="2015"
+ 
+    carstm_map(  res=resh, vn=vn, tmatch=tmatch, 
+        palette="-RdYlBu",
+        plot_elements=c(  "compass", "scale_bar", "legend" ),
+        additional_features=additional_features,
+        tmap_zoom= c(map_centre, map_zoom),
+        title =paste( paste0(vn, collapse=" "), paste0(tmatch, collapse="-"), "probability"  )
+    )
+
+
+  vn = "habitat"
+
+  units = attr( RES[[mf]][[vn]], "units")
+  plot( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
+  lines( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+
+
+  hist(  RES[[mf]][["habitat_simulations"]][1,] )  # posterior distributions
+
+
+  RES[[mf]][["habitat"]] # aggregate summaries 
+
+  # map it
+  map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
+  map_zoom = 7
+  background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
+
+
+  fn_root = "Predicted_habitat_probability"
+  title = "Predicted habitat probability"
+
+  plot_crs = pci$aegis_proj4string_planar_km
+  # managementlines = aegis.polygons::area_lines.db( DS="cfa.regions", returntype="sf", project_to=plot_crs )
+  # time_match = "2020"
+      
+
+  vn = "predictions"
+  brks = pretty(  quantile( RES[[mf]][[vn]], probs=c(0.025,0.975), na.rm=TRUE )  )
+
+  outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted.habitat" )
+  
+  if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+
+  # attr( RES[[mf]][["predictions"]], "units")
+
+  for (y in res$year ){
+    time_match = as.character(y) 
+    
+    fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
+    carstm_map(  res=RES[[mf]], vn=vn, tmatch=time_match,
+      sppoly = sppoly, 
+      # breaks=brks,
+      # palette="RdYlBu",
+      title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
+      # outfilename=fn,
+      background = background,
+      # vwidth = 1600,
+      # vheight=1000,
+      map_mode="view",
+      tmap_zoom= c(map_centre, map_zoom)
+      #plot_elements=c( "isobaths",  "compass", "scale_bar", "legend" )
+    )
+  }
+
+ 
+  # --------------------------------  
+  # maps and plots END
+     
+
+
+
+  # --------------------------------  
+  # other variations
+     
+-- zero-inflated binomial
+-- negative binomial ?
+-- split by size (as covariate) and sex
+
+
+### end
+
+ 
