@@ -518,7 +518,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     APS = cbind( APS[ rep.int(1:n_aps, p$nt), ], rep.int( p$prediction_ts, rep(n_aps, p$nt )) )
     names(APS)[ncol(APS)] = "tiyr"
     APS$timestamp = lubridate::date_decimal( APS$tiyr, tz=p$timezone )
-    APS$year = aegis_floor( APS$tiyr)
+    APS$year = trunc( APS$tiyr)
     APS$dyear = APS$tiyr - APS$year
   }
 
@@ -698,8 +698,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   M$space = as.character( M$AUID)
  
   if (exists("tiyr", M)) {
-    M$tiyr  = aegis_floor( M$tiyr / p$tres )*p$tres    # discretize for inla .. midpoints
-    M$yr = aegis_floor( M$tiyr)
+    M$tiyr  = trunc( M$tiyr / p$tres )*p$tres    # discretize for inla .. midpoints
+    M$yr = trunc( M$tiyr)
     M$time = as.character( M$yr )  # copy for INLA
 
     # do not sepraate out as season can be used even if not predicted upon

@@ -501,8 +501,14 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     if (mean(gsinf$lon,na.rm=T) >0 ) gsinf$lon = - gsinf$lon  # make sure form is correct
     if (mean(gsinf$lon.end,na.rm=T) >0 ) gsinf$lon.end = - gsinf$lon.end  # make sure form is correct
 
-    gsinf = convert.degmin2degdec(gsinf, vnames=c("lon", "lat") )
-    gsinf = convert.degmin2degdec(gsinf, vnames=c("lon.end", "lat.end") )
+    # degree minutes to decimal degree 
+    gsinf$lon = trunc(gsinf$lon) + round((gsinf$lon - trunc(gsinf$lon)) /60 * 100, 6)
+
+    gsinf$lat = trunc(gsinf$lat) + round((gsinf$lat - trunc(gsinf$lat)) /60 * 100, 6)
+
+    gsinf$lon.end = trunc(gsinf$lon.end) + round((gsinf$lon.end - trunc(gsinf$lon.end)) /60 * 100, 6)
+
+    gsinf$lat.end = trunc(gsinf$lat.end) + round((gsinf$lat.end - trunc(gsinf$lat.end)) /60 * 100, 6)
 
     gsinf$dist_km = gsinf$dist * 1.852  # nautical mile to km
     
