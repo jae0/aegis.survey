@@ -67,6 +67,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       y$data.source = "snowcrab"
       y$gear ="Nephrops trawl"
       y$id = paste( y$trip, y$set, sep="." )
+      y = planar2lonlat ( y, proj.type=ps$aegis_proj4string_planar_km )  # plon+plat required for lookups
+
       y$settype  = y$towquality  # copy  and overwrite  .. NOTE: in case of confusion, set_type is used in snow crab to indcate MAP or survey stations ...
       y$setquality = NA
       y$setquality[ which( y$towquality == 1 ) ] = "good"  # 1=good
@@ -345,6 +347,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     xydata = st_as_sf ( xydata, coords= c('lon', 'lat') )
     st_crs(xydata) = st_crs(projection_proj4string("lonlat_wgs84"))
     xydata = st_transform( xydata, st_crs( p$areal_units_proj4string_planar_km ))
+    xydata = xydata[ geo_subset( spatial_domain=p$spatial_domain, Z=xydata ) , ]
+
     save(xydata, file=fn, compress=TRUE )
     return( xydata )
   }

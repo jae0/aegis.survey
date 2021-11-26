@@ -103,6 +103,15 @@
     )
     p$family = "binomial" 
 
+
+    # create polygons
+    redo_sppoly=FALSE
+    # redo_sppoly=TRUE 
+    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
+    ff = NULL
+    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey"  )
+    plot(sppoly["AUID"], reset=FALSE)
+ 
   }
 
 
@@ -115,11 +124,11 @@
       areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
       areal_units_resolution_km = 1, # km  
       areal_units_constraint_ntarget = 50,
-      areal_units_constraint_nmin = 3,  
+      areal_units_constraint_nmin = 10,  
       areal_units_overlay = "none",
       sa_threshold_km2 = 5,
-      fraction_cv = 0.9,   # ie. stop if essentially a poisson distribution
-      fraction_todrop = 0.1  # control roughness and speed of tesselation
+      fraction_cv = 0.7,   # ie. stop if sd/mean is less than 
+      fraction_todrop = 0.1  # control frction dropped on each iteration: speed vs roughness 
     ) )
 
     p$formula = formula( 
@@ -128,56 +137,42 @@
           + f( gear, model="iid",  hyper=H$iid ) 
           + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          # + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           #+ f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           #+ f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
           + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
     )
     p$family = "binomial" 
- 
+
+    p$theta =  c(1.138, -0.000, -0.576, 0.545, -0.080, 3.210, -0.798, 1.929, 3.087, -0.674, -0.031)  # starting theta
+ 	# theta[0] = [Log precision for time]
+	# 	theta[1] = [Rho_intern for time]
+	# 	theta[2] = [Log precision for gear]
+	# 	theta[3] = [Log precision for inla.group(t, method = "quantile", n = 11)]
+	# 	theta[4] = [Log precision for inla.group(z, method = "quantile", n = 11)]
+	# 	theta[5] = [Log precision for inla.group(substrate.grainsize, method = "quantile", n = 11)]
+	# 	theta[6] = [Log precision for space]
+	# 	theta[7] = [Logit phi for space]
+	# 	theta[8] = [Log precision for space_time]
+	# 	theta[9] = [Logit phi for space_time]
+	# 	theta[10] = [Group rho_intern for space_time]
+
+
+    # create polygons
+    redo_sppoly=FALSE
+    # redo_sppoly=TRUE 
+    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
+    ff = NULL
+    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey", verbose=TRUE )
+    plot(sppoly["AUID"], reset=FALSE)
+
+
   }
 
   # basic param set definitions END
   # --------------------------------  
 
-
-
-
-  # --------------------------------  
-  # create polygons
-  redo_sppoly=FALSE
-  # redo_sppoly=TRUE 
-
-  if (mf == "stratanl_design") {
-    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
-    ff = NULL
-    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), 
-      areal_units_to_drop=c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8"), redo=redo_sppoly  )
-    plot(sppoly["AUID"], reset=FALSE)
-    # no data in these areal units: remove .. they seem to be US locations
-    plot(sppoly[which(sppoly$AUID %in% c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8") ), "AUID"], col="green", add=TRUE )
-  }
-
-
-  if (mf == "tesselation") {
-    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
-    ff = NULL
-    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"),  redo=redo_sppoly , verbose=TRUE )
-    plot(sppoly["AUID"], reset=FALSE)
-    plot(sppoly[which(sppoly$AUID %in% c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",  
- "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32"  ,
- "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"  ,
- "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61", "62", "63", "64"  ,
- "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76", "77", "78", "79", "80"  ,
- "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96"  ,
- "97", "98", "99", "100", "1340", "1344", "1347" ) ), "AUID"], col="green", add=TRUE )
-  }
-  # these are US locations 
-
-
-  # create polygons END
-  # --------------------------------  
 
 
   # --------------------------------  

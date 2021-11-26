@@ -46,9 +46,9 @@
 # ----------------------------------------
 # process groundfish data 
 
-  groundfish_survey_db( DS="gscat.base.redo", yrs=p$yrs )
-  groundfish_survey_db( DS="gsdet.redo", yrs=p$yrs )
-  groundfish_survey_db( DS="gsinf.redo", yrs=p$yrs )
+  groundfish_survey_db( DS="gscat.base.redo", yrs=yrs )
+  groundfish_survey_db( DS="gsdet.redo", yrs=yrs )
+  groundfish_survey_db( DS="gsinf.redo", yrs=yrs )
 
 
   if (redo_historical_netmensuration_estimates ) {
