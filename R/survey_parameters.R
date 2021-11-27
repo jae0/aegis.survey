@@ -46,8 +46,12 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
   if (!exists("yrs", p ))  p$yrs = 1970:p$year.assessment
   
-  p = parameters_add_without_overwriting( p, timezone="America/Halifax" )  # default unless already provided
-  p = temporal_parameters(p=p)
+  p = parameters_add_without_overwriting( p, 
+    timezone="America/Halifax",
+    prediction_dyear = lubridate::decimal_date( lubridate::ymd("0000/Jul/01"))  # predict to a "summer" result (usually Jun-Aug) 
+  )  # default unless already provided
+
+  p = temporal_parameters(p=p)  
 
   if ( !exists("netmensuration.years", p) ) p$netmensuration.years = c(1990:1992, 2004:lubridate::year(lubridate::now())) # 2009 is the first year with set logs from scanmar available .. if more are found, alter this date
 

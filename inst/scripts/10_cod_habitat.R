@@ -72,6 +72,8 @@
  
 
 
+
+
   # --------------------------------  
   # choose design
 
@@ -134,6 +136,7 @@
     p$formula = formula( 
         pa ~ 1 
           + f( time, model="ar1",  hyper=H$ar1 ) 
+          + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic=TRUE, values=cyclic_values ) 
           + f( gear, model="iid",  hyper=H$iid ) 
           + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
@@ -196,6 +199,31 @@
     posterior_simulations_to_retain="predictions", scale_offsets=TRUE,
     control.family=list(control.link=list(model="logit"))
   ) 
+
+
+  names(  fith$summary.random)
+  i = 1
+  plot(inverse.logit(fith$summary.random[[i]]$mean) ~ fith$summary.random[[i]]$ID)
+
+
+  b0 = resh$summary$fixed_effects[["(Intercept)", "mean"]]
+
+  ts = data.frame(lapply( resh$random$time, function(x) Reduce(c, x)))
+  vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
+  ts[, vns] = ts[, vns] + b0 
+  plot( mean ~ ID, ts, type="b", ylim=c(-2,2)+b0, lwd=1.5, xlab="year")
+  lines( quant0.025 ~ ID, ts, col="gray", lty="dashed")
+  lines( quant0.975 ~ ID, ts, col="gray", lty="dashed")
+
+
+  ts = data.frame(lapply( resh$random$cyclic, function(x) Reduce(c, x)))
+  vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
+  ts[, vns] = ts[, vns] + b0
+  plot( mean ~ID, ts, type="b", ylim=c(-1.5, 1.5)+b0, lwd=1.5, xlab="fractional year")
+  lines( quant0.025 ~ID, ts, col="gray", lty="dashed")
+  lines( quant0.975 ~ID, ts, col="gray", lty="dashed")
+
+
 
   plot( fith,  plot.prior=TRUE,   plot.fixed.effects=TRUE,  plot.lincomb = TRUE,
                    plot.random.effects = TRUE,
@@ -290,7 +318,7 @@ if (!is.null(hh)) {
   oo = NULL
 
   RES[[mf]] = params
-   
+    
   save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
 
   # to reload:
@@ -305,6 +333,22 @@ if (!is.null(hh)) {
 
   # --------------------------------  
   # maps and plots
+
+
+
+  vn = "habitat"
+
+  units = attr( RES[[mf]][[vn]], "units")
+  plot( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
+  lines( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+
+
+  hist(  RES[[mf]][["habitat_simulations"]][1,] )  # posterior distributions
+
+
+  RES[[mf]][["habitat"]] # aggregate summaries 
+
+
 
   plot_crs = st_crs(sppoly)
 
@@ -333,18 +377,6 @@ if (!is.null(hh)) {
         title =paste( paste0(vn, collapse=" "), paste0(tmatch, collapse="-"), "probability"  )
     )
 
-
-  vn = "habitat"
-
-  units = attr( RES[[mf]][[vn]], "units")
-  plot( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
-  lines( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
-
-
-  hist(  RES[[mf]][["habitat_simulations"]][1,] )  # posterior distributions
-
-
-  RES[[mf]][["habitat"]] # aggregate summaries 
 
   # map it
   map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
