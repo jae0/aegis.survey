@@ -412,9 +412,12 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     APS$AUID = as.character( APS$AUID )
     APS$tag ="predictions"
-    APS$data_offset =  APS_data_offset   
 
-    APS = APS[ , c( "AUID", "tag", "data_offset" ) ]
+    if (exists("data_offset", M)) {
+      APS$data_offset =  APS_data_offset   
+      APS = APS[ , c( "AUID", "tag", "data_offset" ) ]
+    }
+    
     APS[, p$variabletomodel] = NA
    
   }
