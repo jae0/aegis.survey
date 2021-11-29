@@ -417,7 +417,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       APS$data_offset =  APS_data_offset   
       APS = APS[ , c( "AUID", "tag", "data_offset" ) ]
     }
-    
+
     APS[, p$variabletomodel] = NA
    
   }
@@ -692,8 +692,10 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
   
 
+
   # combined observations with prediction surface (for inla)
-  M = rbind( M[, names(APS), with=FALSE ], APS )
+  vvv = intersect( names(APS), names(M) )
+  M = rbind( M[, vvv, with=FALSE ], APS[, vvv, with=FALSE ] )
 
   APS = NULL; gc()
 
