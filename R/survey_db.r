@@ -342,7 +342,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
         return( xydata )
       }
     }
-    xydata = survey_db( p=p, DS="set.base"  )  #
+    xydata = survey_db( p=p, DS="filter"  )  #
     xydata = xydata[ , c("lon", "lat", "yr" )]
     xydata = st_as_sf ( xydata, coords= c('lon', 'lat') )
     st_crs(xydata) = st_crs(projection_proj4string("lonlat_wgs84"))

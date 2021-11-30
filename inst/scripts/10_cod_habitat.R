@@ -36,7 +36,7 @@
     survey=list(
       data.source = c("groundfish", "snowcrab"),
       yr = yrs,      # time frame for comparison specified above
-      months=6:8,  #"summer"
+      # months=6:8,  #"summer"
       # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       # ranged_data="dyear"
       settype = c(1,2,4,5,8),
@@ -84,6 +84,20 @@
     ## -- stratanal design-based polygons 
     p$label ="Atlantic cod summer standardtow habitat stratanal"
  
+    # limit to generic summer survey 
+    p$selection$survey$months = 6:8 # "summer"
+    p$selection$survey$settype = c(1,2)
+      # settype:
+      # 1=stratified random,
+      # 2=regular survey,
+      # 3=unrepresentative(net damage),
+      # 4=representative sp recorded(but only part of total catch),
+      # 5=comparative fishing experiment,
+      # 6=tagging,
+      # 7=mesh/gear studies,
+      # 8=explorartory fishing,
+      # 9=hydrography
+    
     p = parameters_add( p, list(
       areal_units_type = "stratanal_polygons_pre2014",
       areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
@@ -97,9 +111,6 @@
           + f( time, model="ar1",  hyper=H$ar1 ) 
           + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
           + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
     )
@@ -119,6 +130,7 @@
 
 
   if (mf == "tesselation") {
+   
     # tesselation-based solution
     p$label ="Atlantic cod summer standardtow habitat tesselation"
     p = parameters_add( p, list(
@@ -129,7 +141,7 @@
       areal_units_constraint_nmin = 10,  
       areal_units_overlay = "none",
       sa_threshold_km2 = 5,
-      fraction_cv = 0.7,   # ie. stop if sd/mean is less than 
+      fraction_cv = 0.5,   # ie. stop if sd/mean is less than 
       fraction_todrop = 0.1  # control frction dropped on each iteration: speed vs roughness 
     ) )
 
@@ -138,35 +150,19 @@
           + f( time, model="ar1",  hyper=H$ar1 ) 
           + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic=TRUE, values=cyclic_values ) 
           + f( gear, model="iid",  hyper=H$iid ) 
-          + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          #+ f( inla.group( pca1, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          #+ f( inla.group( pca2, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( t, method="quantile", n=13 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( z, method="quantile", n=13 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
           + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
     )
     p$family = "binomial" 
-
-    p$theta =  c(1.138, -0.000, -0.576, 0.545, -0.080, 3.210, -0.798, 1.929, 3.087, -0.674, -0.031)  # starting theta
- 	# theta[0] = [Log precision for time]
-	# 	theta[1] = [Rho_intern for time]
-	# 	theta[2] = [Log precision for gear]
-	# 	theta[3] = [Log precision for inla.group(t, method = "quantile", n = 11)]
-	# 	theta[4] = [Log precision for inla.group(z, method = "quantile", n = 11)]
-	# 	theta[5] = [Log precision for inla.group(substrate.grainsize, method = "quantile", n = 11)]
-	# 	theta[6] = [Log precision for space]
-	# 	theta[7] = [Logit phi for space]
-	# 	theta[8] = [Log precision for space_time]
-	# 	theta[9] = [Logit phi for space_time]
-	# 	theta[10] = [Group rho_intern for space_time]
-
-
+ 
     # create polygons
     redo_sppoly=FALSE
     # redo_sppoly=TRUE 
-    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
-    ff = NULL
+    
+    invisible( survey_db( p=p, DS="areal_units_input", redo=redo_sppoly) ) # update data file used for sppoly creation
+
     sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey", verbose=TRUE )
     plot(sppoly["AUID"], reset=FALSE)
 
@@ -186,7 +182,7 @@
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99 )
   
 
-  # average bottom temperature of prediction surface
+  # Figure 1. average bottom temperature of prediction surface (1 July)
   Mp  = data.table( M[which(M$tag=="predictions"),] )
   o = Mp[, list(mean=mean(t), lb025=quantile(t, probs=0.025), ub975=quantile(t, probs=0.975)), by=yr]
   trange = range( o[,c("mean","lb025", "ub975")]) * c(0.9, 1.1)
@@ -194,6 +190,7 @@
   lines (lb025~yr, o, col="darkgray", lty="dashed")
   lines (ub975~yr, o, col="darkgray", lty="dashed")
   
+
 
   fith = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
     posterior_simulations_to_retain="predictions", scale_offsets=TRUE,
@@ -206,9 +203,10 @@
   plot(inverse.logit(fith$summary.random[[i]]$mean) ~ fith$summary.random[[i]]$ID)
 
 
-  b0 = resh$summary$fixed_effects[["(Intercept)", "mean"]]
 
-  ts = data.frame(lapply( resh$random$time, function(x) Reduce(c, x)))
+  # Figure 2. Habitat vs time
+  b0 = resh$summary$fixed_effects["(Intercept)", "mean"]
+  ts = resh$random$time
   vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
   ts[, vns] = ts[, vns] + b0 
   plot( mean ~ ID, ts, type="b", ylim=c(-2,2)+b0, lwd=1.5, xlab="year")
@@ -216,7 +214,9 @@
   lines( quant0.975 ~ ID, ts, col="gray", lty="dashed")
 
 
-  ts = data.frame(lapply( resh$random$cyclic, function(x) Reduce(c, x)))
+  # Figure 2. Habitat vs season
+  b0 = resh$summary$fixed_effects["(Intercept)", "mean"]
+  ts = resh$random$cyclic
   vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
   ts[, vns] = ts[, vns] + b0
   plot( mean ~ID, ts, type="b", ylim=c(-1.5, 1.5)+b0, lwd=1.5, xlab="fractional year")
@@ -224,6 +224,11 @@
   lines( quant0.975 ~ID, ts, col="gray", lty="dashed")
 
 
+
+
+
+# to get priors ::
+# taken from INLA:::plot.inla
 
   plot( fith,  plot.prior=TRUE,   plot.fixed.effects=TRUE,  plot.lincomb = TRUE,
                    plot.random.effects = TRUE,
@@ -233,7 +238,6 @@
                    plot.cpo = TRUE
                )
 
-# taken from INLA:::plot.inla
 # fixed
 fix <- fith$marginals.fixed
 labels.fix <- names(fith$marginals.fixed)
@@ -269,6 +273,8 @@ if (!is.null(hh)) {
     my.lines(xy, col = "blue")
   }
 }
+
+
 
 
   resh = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
@@ -335,20 +341,20 @@ if (!is.null(hh)) {
   # maps and plots
 
 
-
+  # Figure timeseries of habitat
   vn = "habitat"
+  RES[[mf]][[vn]] # aggregate summaries 
 
   units = attr( RES[[mf]][[vn]], "units")
   plot( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
   lines( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
 
-
   hist(  RES[[mf]][["habitat_simulations"]][1,] )  # posterior distributions
 
 
-  RES[[mf]][["habitat"]] # aggregate summaries 
 
 
+  # maps
 
   plot_crs = st_crs(sppoly)
 
@@ -429,6 +435,36 @@ if (!is.null(hh)) {
 
   # --------------------------------  
   # other variations
+
+
+# Figure XX 3D plot of habitat vs temperature vs depth  
+ 
+
+b0 = resh$summary$fixed_effects["(Intercept)", "mean"]
+
+pt = resh$random$t
+pz = resh$random$z
+
+ptz = expand.grid( temp=pt$ID, depth =pz$ID ) 
+
+ptz = merge( ptz, pt, by.x=pt, by.y=ID, all.x=TRUE, all.y=FALSE )
+ptz = merge( ptz, pz, by.x=pz, by.y=ID, all.x=TRUE, all.y=FALSE, suffixes=c(".temp", ".depth") )
+
+ptz$prob = ptz$mean.temp * ptz$mean.depth * b0
+
+Z = mba.surf(ptz[,"mean.temp", "mean.depth", "prob"], no.X=100, no.Y=100, extend=TRUE) $xyz.est
+
+persp(Z, theta = 45, phi = 20, col = "green3", scale = FALSE,
+           ltheta = -120, shade = 0.75, expand = 10, border = NA, box = FALSE)
+ 
+
+library(plot3D)
+
+surf3D( X, Y, Z, colkey = TRUE,  
+       box = TRUE, bty = "b", phi = 20, theta = 45, contour=TRUE, ticktype = "detailed") 
+
+
+     
      
 -- zero-inflated binomial
 -- negative binomial ?
