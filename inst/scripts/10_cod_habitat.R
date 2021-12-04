@@ -137,11 +137,11 @@
       areal_units_type = "tesselation",
       areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
       areal_units_resolution_km = 1, # km  
-      areal_units_constraint_ntarget = 50,
+      areal_units_constraint_ntarget = 30,
       areal_units_constraint_nmin = 10,  
       areal_units_overlay = "none",
       sa_thresold_km2 = 5,
-      fraction_cv = 0.5,   # ie. stop if sd/mean is less than 
+      fraction_cv = 0.65,   # ie. stop if sd/mean is less than 
       fraction_todrop = 0.1  # control frction dropped on each iteration: speed vs roughness 
     ) )
 
@@ -165,6 +165,8 @@
 
     sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey", verbose=TRUE )
     plot(sppoly["AUID"], reset=FALSE)
+
+    # 1025 areal units.
 
 
   }
@@ -191,15 +193,16 @@
   lines (ub975~yr, o, col="darkgray", lty="dashed")
   
  
-  fit = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
+  fit = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=FALSE, 
     posterior_simulations_to_retain="predictions", 
     control.family=list(control.link=list(model="logit")), ## this is the default for binomial, just here to show wher to use it
-    theta = c(2.503, 1.867, 1.889, 0.925, 2.083, -0.390, -0.972, 1.948, -0.193, 2.432, 2.335), # 2021 solution
+    theta = c(0.773, 3.539, 1.854, 0.849, 1.791, 0.699, -0.676, 4.617, -0.314, 3.963, 2.988), # 2021 solution
+    toget = c("summary", "fixed_effects", "predictions" ), 
     # toget = c("summary", "fixed_effects", "random_other", "predictions"), 
     # mc.cores=2,
     num.threads="6:2"  # adjust for your machine
   ) 
-
+ 
  
 
   res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
@@ -385,7 +388,7 @@ require(tmap)
     vn=c( "random", "spacetime", "combined" )
     vn="predictions"  # numerical density (km^-2)
 
-    tmatch="2015"
+    tmatch="1985"
  
     carstm_map(  res=res, vn=vn, tmatch=tmatch, 
         palette="-RdYlBu",

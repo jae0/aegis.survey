@@ -68,6 +68,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
  
   }
    
+  nS = nrow(M)
 
   setDT(M)
 
@@ -89,6 +90,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   )
   M = M[!is.na(M$AUID),]
   M$AUID = as.character( M$AUID )  # match each datum to an area
+
+  nM = nrow(M)
 
   M_au = unique(M$AUID)
   sppoly_au = unique(sppoly$AUID)
@@ -121,9 +124,19 @@ carstm_prepare_inputdata = function( p, M, sppoly,
  
     if ( exists("spatial_domain", p)) {
         # need to be careful with extrapolation ...  filter depths
-        if (NA_remove)  M = M[ is.finite(M[[vn]] ) , ]
+        if (NA_remove)  {
+          ii = which(! is.finite(M[[vn]] ) )
+          if (length(ii) > 0 ) {
+            M = M[ -ii , ]
+            message( "Dropping observations due to spatial domain: ", length(ii))
+          }
+        }
         ii = geo_subset( spatial_domain=p$spatial_domain, Z=M )
-        if (length(ii)> 0 ) M = M[ ii , ] 
+        if (length(ii)> 0 ) {
+          nM = nrow(M)
+          M = M[ ii , ] 
+          message( "Dropping observations due to spatial domain and depth: ", (nM - length(ii)) )
+        }
     }
 
 
@@ -138,8 +151,11 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     for (vn in setdiff( vns, "z") ) M[[ vn]] = LU[ iML, vn ]
     LU =  iML = vns = NULL
     if (NA_remove) {
-      ii = which( is.finite( rowSums(M[, vns, with=FALSE] )  ))
-      if (length(ii) > 0 ) M = M[ ii, ]
+      ii = which( !is.finite( rowSums(M[, vns, with=FALSE] )  ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing depth lookup stats: ", length(ii))
+      }
     }
 
   }
@@ -188,8 +204,11 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       for (vn in vns  ) M[[ vn]] = LU[ iML, vn ]
       
       if (NA_remove) {
-        ii = which( is.finite( rowSums(M[, vns, with=FALSE] )  ))
-        if (length(ii) > 0 ) M = M[ ii, ]
+        ii = which( !is.finite( rowSums(M[, vns, with=FALSE] )  ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing substrate lookup stats: ", length(ii))
+        }
       }
       LU =  iML = vns = NULL
     
@@ -240,7 +259,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         )
       }
 
-      if (NA_remove) M = M[ is.finite(M[[ vn]]  ) , ]
+      if (NA_remove) {
+        ii = which( !is.finite( M[[ vn]] ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing temperatures: ", length(ii))
+        }
+
+      }
+
       M = M[ which( M[[ vn]]  < 16 ) , ]  #
 
       # to to:  add stmv/hybrid 
@@ -286,7 +313,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           returntype = "vector"
         ) 
       }
-      if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
+      if (NA_remove) {
+        ii = which( !is.finite( M[[ vn]] ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing pca1: ", length(ii))
+        }
+      }
     }
 
     if ("speciescomposition_pca2" %in% lookup_projects) {
@@ -324,7 +357,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           returntype = "vector"
         ) 
       }
-      if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
+      if (NA_remove) {
+        ii = which( !is.finite( M[[ vn]] ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing pca2: ", length(ii))
+        }
+      }
 
     }
 
@@ -363,7 +402,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           returntype = "vector"
         ) 
       }
-      if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
+      if (NA_remove) {
+        ii = which( !is.finite( M[[ vn]] ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing pca3: ", length(ii))
+        }
+      }
 
     }
 
@@ -403,7 +448,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         ) 
       }
         
-      if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
+      if (NA_remove) {
+        ii = which( !is.finite( M[[ vn]] ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing ca1: ", length(ii))
+        }
+      }
     }
 
     if ("speciescomposition_ca2" %in% lookup_projects) {
@@ -442,7 +493,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         ) 
       }
         
-      if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
+      if (NA_remove) {
+        ii = which( !is.finite( M[[ vn]] ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing ca2: ", length(ii))
+        }
+      }
 
     }
 
@@ -482,7 +539,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         ) 
       }
         
-      if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
+      if (NA_remove) {
+        ii = which( !is.finite( M[[ vn]] ))
+        if (length(ii) > 0 ) {
+          M = M[ -ii , ]
+          message( "Dropping observations due to missing ca3: ", length(ii))
+        }
+      }
 
     }
 
@@ -835,6 +898,11 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
   
   M$tiyr = NULL
- 
+
+    message( "Number of initial observations:  ", nS  )
+    message( "Number of observations in domain:  ", nM  )
+    message( "Number of observations final:  ", length(which(M$tag=="observations" )) )
+    message( "Number of predictions:  ", length(which(M$tag=="predictions" )) )
+
   return(M)
 }

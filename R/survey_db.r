@@ -1283,7 +1283,6 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
     
     set = survey_db( p=p, DS="filter" )
-    ns = nrow(set)
 
     p$selection$survey$strata_toremove = oo  
     
@@ -1378,9 +1377,6 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     M$vessel= as.numeric( factor( M$vessel, levels=vessels ) )
     attr( M$vessel, "levels" ) = vessels
 
-    message( "Number of initial observations:  ", ns  )
-    message( "Number of observations:  ", length(which(M$tag=="observations" )) )
-    message( "Number of predictions:  ", length(which(M$tag=="predictions" )) )
     
     save( M, file=fn, compress=TRUE )
 
