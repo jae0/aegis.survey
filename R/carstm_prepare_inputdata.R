@@ -221,9 +221,27 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           yrs=p$yrs
         )
       }
+  
+      iM = which(!is.finite( M[[vn]] ))
+      if (length(iM > 0)) {
+      
+        M[[ vn ]][iM] = aegis_lookup( 
+          parameters="temperature", 
+          LOCS=M[ iM , c("AUID", "timestamp")], 
+          LOCS_AU=sppoly,
+          project_class = "carstm", # lookup from modelled predictions from carstm
+          output_format = "areal_units",
+          variable_name=list("predictions"),
+          statvars=c("mean"),
+          raster_resolution=min(p$gridparams$res) /2,
+          tz="America/Halifax",
+          yrs=p$yrs,
+          returntype = "vector"
+        )
+      }
 
       if (NA_remove) M = M[ is.finite(M[[ vn]]  ) , ]
-      M = M[ which( M[[ vn]]  < 14 ) , ]  #
+      M = M[ which( M[[ vn]]  < 16 ) , ]  #
 
       # to to:  add stmv/hybrid 
     }
@@ -251,6 +269,23 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           yrs=p$yrs
         )
       }
+
+      iM = which(!is.finite( M[[vn]] ))
+      if (length(iM > 0)) {
+        M[[ vn ]][iM] = aegis_lookup( 
+          parameters="speciescomposition_pca1", 
+          LOCS=M[ iM , c("AUID", "timestamp")], 
+          LOCS_AU=sppoly, 
+          project_class = "carstm", # lookup from modelled predictions from carstm 
+          output_format = "areal_units",
+          variable_name=list("predictions"),
+          variabletomodel=vn ,
+          statvars=c("mean"),
+          raster_resolution=min(p$gridparams$res) /2,
+          yrs=p$yrs,
+          returntype = "vector"
+        ) 
+      }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
     }
 
@@ -272,6 +307,22 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            tz="America/Halifax" ,
            yrs=p$yrs
          )
+      }
+      iM = which(!is.finite( M[[vn]] ))
+      if (length(iM > 0)) {
+        M[[ vn ]][iM] = aegis_lookup( 
+          parameters="speciescomposition_pca2", 
+          LOCS=M[ iM , c("AUID", "timestamp")], 
+          LOCS_AU=sppoly, 
+          project_class = "carstm", # lookup from modelled predictions from carstm 
+          output_format = "areal_units",
+          variable_name=list("predictions"),
+          variabletomodel=vn ,
+          statvars=c("mean"),
+          raster_resolution=min(p$gridparams$res) /2,
+          yrs=p$yrs,
+          returntype = "vector"
+        ) 
       }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
 
@@ -296,6 +347,22 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            yrs=p$yrs
          )
       }
+      iM = which(!is.finite( M[[vn]] ))
+      if (length(iM > 0)) {
+        M[[ vn ]][iM] = aegis_lookup( 
+          parameters="speciescomposition_pca3", 
+          LOCS=M[ iM , c("AUID", "timestamp")], 
+          LOCS_AU=sppoly, 
+          project_class = "carstm", # lookup from modelled predictions from carstm 
+          output_format = "areal_units",
+          variable_name=list("predictions"),
+          variabletomodel=vn ,
+          statvars=c("mean"),
+          raster_resolution=min(p$gridparams$res) /2,
+          yrs=p$yrs,
+          returntype = "vector"
+        ) 
+      }
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
 
     }
@@ -319,6 +386,23 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           yrs=p$yrs
         )
       }
+      iM = which(!is.finite( M[[vn]] ))
+      if (length(iM > 0)) {
+        M[[ vn ]][iM] = aegis_lookup( 
+          parameters="speciescomposition_ca1", 
+          LOCS=M[ iM , c("AUID", "timestamp")], 
+          LOCS_AU=sppoly, 
+          project_class = "carstm", # lookup from modelled predictions from carstm 
+          output_format = "areal_units",
+          variable_name=list("predictions"),
+          variabletomodel=vn ,
+          statvars=c("mean"),
+          raster_resolution=min(p$gridparams$res) /2,
+          yrs=p$yrs,
+          returntype = "vector"
+        ) 
+      }
+        
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )), ]
     }
 
@@ -341,6 +425,23 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            yrs=p$yrs
          )
       }
+      iM = which(!is.finite( M[[vn]] ))
+      if (length(iM > 0)) {
+        M[[ vn ]][iM] = aegis_lookup( 
+          parameters="speciescomposition_ca2", 
+          LOCS=M[ iM , c("AUID", "timestamp")], 
+          LOCS_AU=sppoly, 
+          project_class = "carstm", # lookup from modelled predictions from carstm 
+          output_format = "areal_units",
+          variable_name=list("predictions"),
+          variabletomodel=vn ,
+          statvars=c("mean"),
+          raster_resolution=min(p$gridparams$res) /2,
+          yrs=p$yrs,
+          returntype = "vector"
+        ) 
+      }
+        
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
 
     }
@@ -364,6 +465,23 @@ carstm_prepare_inputdata = function( p, M, sppoly,
            yrs=p$yrs
          )
       }
+      iM = which(!is.finite( M[[vn]] ))
+      if (length(iM > 0)) {
+        M[[ vn ]][iM] = aegis_lookup( 
+          parameters="speciescomposition_ca3", 
+          LOCS=M[ iM , c("AUID", "timestamp")], 
+          LOCS_AU=sppoly, 
+          project_class = "carstm", # lookup from modelled predictions from carstm 
+          output_format = "areal_units",
+          variable_name=list("predictions"),
+          variabletomodel=vn ,
+          statvars=c("mean"),
+          raster_resolution=min(p$gridparams$res) /2,
+          yrs=p$yrs,
+          returntype = "vector"
+        ) 
+      }
+        
       if (NA_remove) M = M[ which(is.finite(M[[vn]] )),]
 
     }

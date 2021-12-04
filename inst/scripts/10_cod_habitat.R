@@ -36,10 +36,10 @@
     survey=list(
       data.source = c("groundfish", "snowcrab"),
       yr = yrs,      # time frame for comparison specified above
-      # months=6:8,  #"summer"
+      # months=6:11,   #"summer"
       # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       # ranged_data="dyear"
-      settype = c(1,2,4,5,8),
+      settype = c(1,2,5,8 ),
       # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
       # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
       polygon_enforce=TRUE
@@ -140,7 +140,7 @@
       areal_units_constraint_ntarget = 50,
       areal_units_constraint_nmin = 10,  
       areal_units_overlay = "none",
-      sa_threshold_km2 = 5,
+      sa_thresold_km2 = 5,
       fraction_cv = 0.5,   # ie. stop if sd/mean is less than 
       fraction_todrop = 0.1  # control frction dropped on each iteration: speed vs roughness 
     ) )
@@ -190,36 +190,47 @@
   lines (lb025~yr, o, col="darkgray", lty="dashed")
   lines (ub975~yr, o, col="darkgray", lty="dashed")
   
-
-
-  fith = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
-    posterior_simulations_to_retain="predictions", scale_offsets=TRUE,
-    control.family=list(control.link=list(model="logit"))
+ 
+  fit = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
+    posterior_simulations_to_retain="predictions", 
+    control.family=list(control.link=list(model="logit")), ## this is the default for binomial, just here to show wher to use it
+    theta = c(2.503, 1.867, 1.889, 0.925, 2.083, -0.390, -0.972, 1.948, -0.193, 2.432, 2.335), # 2021 solution
+    # toget = c("summary", "fixed_effects", "random_other", "predictions"), 
+    # mc.cores=2,
+    num.threads="6:2"  # adjust for your machine
   ) 
 
+ 
 
-  names(  fith$summary.random)
+  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
+
+  names(res[["random"]])
+  res[["random"]][["gear"]]
+
+
+
+  names(  fit$summary.random)
   i = 1
-  plot(inverse.logit(fith$summary.random[[i]]$mean) ~ fith$summary.random[[i]]$ID)
+  plot(inverse.logit(fit$summary.random[[i]]$mean) ~ fit$summary.random[[i]]$ID, ylab="probability", xlab=names(fit$summary.random)[i])
 
 
 
-  # Figure 2. Habitat vs time
-  b0 = resh$summary$fixed_effects["(Intercept)", "mean"]
-  ts = resh$random$time
+  # Figure 2. Habitat vs time - marginal
+  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
+  ts = res$random$time
   vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
-  ts[, vns] = ts[, vns] + b0 
-  plot( mean ~ ID, ts, type="b", ylim=c(-2,2)+b0, lwd=1.5, xlab="year")
+  ts[, vns] = ts[, vns] 
+  plot( mean ~ ID, ts, type="b", ylim=c(0,1) , lwd=1.5, xlab="year")
   lines( quant0.025 ~ ID, ts, col="gray", lty="dashed")
   lines( quant0.975 ~ ID, ts, col="gray", lty="dashed")
 
 
   # Figure 2. Habitat vs season
-  b0 = resh$summary$fixed_effects["(Intercept)", "mean"]
-  ts = resh$random$cyclic
+  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
+  ts = res$random$cyclic
   vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
-  ts[, vns] = ts[, vns] + b0
-  plot( mean ~ID, ts, type="b", ylim=c(-1.5, 1.5)+b0, lwd=1.5, xlab="fractional year")
+  ts[, vns] = ts[, vns] 
+  plot( mean ~ID, ts, type="b", ylim=c(0,1), lwd=1.5, xlab="fractional year")
   lines( quant0.025 ~ID, ts, col="gray", lty="dashed")
   lines( quant0.975 ~ID, ts, col="gray", lty="dashed")
 
@@ -230,7 +241,7 @@
 # to get priors ::
 # taken from INLA:::plot.inla
 
-  plot( fith,  plot.prior=TRUE,   plot.fixed.effects=TRUE,  plot.lincomb = TRUE,
+  plot( fit,  plot.prior=TRUE,   plot.fixed.effects=TRUE,  plot.lincomb = TRUE,
                    plot.random.effects = TRUE,
                    plot.hyperparameters = TRUE,
                    plot.predictor = TRUE,
@@ -239,15 +250,15 @@
                )
 
 # fixed
-fix <- fith$marginals.fixed
-labels.fix <- names(fith$marginals.fixed)
+fix <- fit$marginals.fixed
+labels.fix <- names(fit$marginals.fixed)
 
 i=1 # loop
 m <- inla.smarginal(fix[[i]])
 my.plot(m, type = "l", main = paste("PostDens [", 
 inla.nameunfix(labels.fix[i]), "]", sep = ""),  sub = sub, xlab = "", ylab = "")
 
-all.hyper <- inla.all.hyper.postprocess( fith$all.hyper)
+all.hyper <- inla.all.hyper.postprocess( fit$all.hyper)
 xy <- (inla.get.prior.xy(section = "fixed", hyperid = labels.fix[i], all.hyper = all.hyper, range = range(m$x), debug = debug))
 my.lines(xy, col = "blue")
 
@@ -277,22 +288,17 @@ if (!is.null(hh)) {
 
 
 
-  resh = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
-
-  names(resh[["random"]])
-  resh[["random"]][["gear"]]
-
   params = list()
   vars_to_copy = c(  "space", "time", "dyears" )  # needed for plotting 
-  for ( vn in vars_to_copy ) params[[vn]] = resh[[vn]]
+  for ( vn in vars_to_copy ) params[[vn]] = res[[vn]]
 
-  pa = resh[["predictions_posterior_simulations"]]
+  pa = res[["predictions_posterior_simulations"]]
   # pa = inverse.logit(pa)
   pa[!is.finite(pa)] = NA
  
   # create for mapping .. in probability
   oo = simplify2array(pa)
-  params[["predictions"]] = resh[[ "predictions" ]] * NA
+  params[["predictions"]] = res[[ "predictions" ]] * NA
   params[["predictions"]][,,1]  = apply( oo, c(1,2), mean, na.rm=TRUE ) 
   params[["predictions"]][,,2]  = apply( oo, c(1,2), sd, na.rm=TRUE ) 
   params[["predictions"]][,,3]  = apply( oo, c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
@@ -328,8 +334,8 @@ if (!is.null(hh)) {
   save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
 
   # to reload:
-  fith = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_fit", sppoly=sppoly )
-  resh = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_summary", sppoly=sppoly )
+  fit = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_fit", sppoly=sppoly )
+  res = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_summary", sppoly=sppoly )
 
 
   # analysis and output END
@@ -356,7 +362,13 @@ if (!is.null(hh)) {
 
   # maps
 
+  # map it
+  map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
+  map_zoom = 7
+  background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
+
   plot_crs = st_crs(sppoly)
+require(tmap)
 
     additional_features =  
       tm_shape( st_transform( maritimes_groundfish_strata(areal_units_timeperiod = p$areal_units_timeperiod), plot_crs ) ) + 
@@ -375,7 +387,7 @@ if (!is.null(hh)) {
 
     tmatch="2015"
  
-    carstm_map(  res=resh, vn=vn, tmatch=tmatch, 
+    carstm_map(  res=res, vn=vn, tmatch=tmatch, 
         palette="-RdYlBu",
         plot_elements=c(  "compass", "scale_bar", "legend" ),
         additional_features=additional_features,
@@ -383,11 +395,6 @@ if (!is.null(hh)) {
         title =paste( paste0(vn, collapse=" "), paste0(tmatch, collapse="-"), "probability"  )
     )
 
-
-  # map it
-  map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
-  map_zoom = 7
-  background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
 
 
   fn_root = "Predicted_habitat_probability"
@@ -440,10 +447,10 @@ if (!is.null(hh)) {
 # Figure XX 3D plot of habitat vs temperature vs depth  
  
 
-b0 = resh$summary$fixed_effects["(Intercept)", "mean"]
+b0 = res$summary$fixed_effects["(Intercept)", "mean"]
 
-pt = resh$random$t
-pz = resh$random$z
+pt = res$random$t
+pz = res$random$z
 
 ptz = expand.grid( temp=pt$ID, depth =pz$ID ) 
 

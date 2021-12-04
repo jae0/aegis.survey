@@ -402,19 +402,12 @@ glm methods here
       }
 
       # weight m
-      fitw = carstm_model( p=RES[[mf]]$pW, DS="carstm_modelled_fit", sppoly=sppoly  )  
-      fitn = carstm_model( p=RES[[mf]]$pN, DS="carstm_modelled_fit", sppoly=sppoly )
-      fith = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_fit", sppoly=sppoly )
-       
-       
-      resw = carstm_model( p=RES[[mf]]$pW, DS="carstm_modelled_summary", sppoly=sppoly )
-      resn = carstm_model( p=RES[[mf]]$pN, DS="carstm_modelled_summary", sppoly=sppoly )
-      resh = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_summary", sppoly=sppoly )
+      u = RES[[mf]]$pW
+      u = RES[[mf]]$pN
+      u = RES[[mf]]$pH
 
-  
-  
-
-
+      fit = carstm_model( p=u, DS="carstm_modelled_fit", sppoly=sppoly  )  
+      res = carstm_model( p=u, DS="carstm_modelled_summary", sppoly=sppoly )
 
 
   }
