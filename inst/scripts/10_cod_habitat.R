@@ -156,7 +156,7 @@
           + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
     )
     p$family = "binomial" 
- 
+   
     # create polygons
     redo_sppoly=FALSE
     # redo_sppoly=TRUE 
@@ -193,11 +193,11 @@
   lines (ub975~yr, o, col="darkgray", lty="dashed")
   
  
-  fit = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=FALSE, 
+  fit = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
     posterior_simulations_to_retain="predictions", 
-    control.family=list(control.link=list(model="logit")), ## this is the default for binomial, just here to show wher to use it
-    theta = c(0.773, 3.539, 1.854, 0.849, 1.791, 0.699, -0.676, 4.617, -0.314, 3.963, 2.988), # 2021 solution
-    toget = c("summary", "fixed_effects", "predictions" ), 
+    control.family=list( control.link=list(model="logit") ), ## this is the default for binomial, just here to show wher to use it
+    # theta = c(0.773, 3.539, 1.854, 0.849, 1.791, 0.699, -0.676, 4.617, -0.314, 3.963, 2.988), # 2021 solution
+    # toget = c("summary", "fixed_effects", "predictions" ), 
     # toget = c("summary", "fixed_effects", "random_other", "predictions"), 
     # mc.cores=2,
     num.threads="6:2"  # adjust for your machine
@@ -206,16 +206,29 @@
  
 
   res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
-
   names(res[["random"]])
-  res[["random"]][["gear"]]
-
-
-
   names(  fit$summary.random)
+
   i = 1
   plot(inverse.logit(fit$summary.random[[i]]$mean) ~ fit$summary.random[[i]]$ID, ylab="probability", xlab=names(fit$summary.random)[i])
 
+  i = "time"  
+  i = "cyclic" 
+  i = "gear" 
+  i = "inla.group(t, method = \"quantile\", n = 13)"
+  i = "inla.group(z, method = \"quantile\", n = 13)" "space"
+
+  dta = res$random[[i]]
+
+  plot( mean ~ ID , dta, type="b", ylim=c(0,1))
+  lines( quant0.025 ~ ID, dta, lty="dashed")
+  lines( quant0.975 ~ ID, dta, lty="dashed")
+
+
+  dta = fit$summary.random[[i]] 
+  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", ylim=c(0,1))
+  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dashed")
+  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dashed")
 
 
   # Figure 2. Habitat vs time - marginal
@@ -239,54 +252,6 @@
 
 
 
-
-
-# to get priors ::
-# taken from INLA:::plot.inla
-
-  plot( fit,  plot.prior=TRUE,   plot.fixed.effects=TRUE,  plot.lincomb = TRUE,
-                   plot.random.effects = TRUE,
-                   plot.hyperparameters = TRUE,
-                   plot.predictor = TRUE,
-                   plot.q = TRUE,
-                   plot.cpo = TRUE
-               )
-
-# fixed
-fix <- fit$marginals.fixed
-labels.fix <- names(fit$marginals.fixed)
-
-i=1 # loop
-m <- inla.smarginal(fix[[i]])
-my.plot(m, type = "l", main = paste("PostDens [", 
-inla.nameunfix(labels.fix[i]), "]", sep = ""),  sub = sub, xlab = "", ylab = "")
-
-all.hyper <- inla.all.hyper.postprocess( fit$all.hyper)
-xy <- (inla.get.prior.xy(section = "fixed", hyperid = labels.fix[i], all.hyper = all.hyper, range = range(m$x), debug = debug))
-my.lines(xy, col = "blue")
-
-
-# hypers
-hyper <- x$internal.marginals.hyperpar
-if (!is.null(hyper)) {
-
-# loop
-hh <- hyper[[i]]
-if (!is.null(hh)) {
-  label <- inla.nameunfix(names(hyper)[i])
-  m <- inla.smarginal(hh)
-  my.plot(m, type = "l", ylab = "", xlab = "")
-  my.title(main = paste("PostDens [", label, 
-    "]", sep = ""))
-
-
-  id <- unlist(strsplit(attr(hyper[[i]], "hyperid"),  "\\|"))
-  if (length(id) > 0) {
-    xy <- (inla.get.prior.xy(section = tolower(id[2]),  hyperid = id[1], all.hyper = all.hyper, 
-    range = range(m$x), intern = FALSE, debug = debug))
-    my.lines(xy, col = "blue")
-  }
-}
 
 
 
@@ -317,10 +282,6 @@ if (!is.null(hh)) {
 
   sims = colSums( pa * sa / sum(  sa ), na.rm=TRUE ) 
 
-  bb = apply( pa , c(2,3), function(u) u*sa )
-  params[["habitat_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
-  attr( params[["habitat_simulations"]], "units") = "probability"
-
   oo = simplify2array(sims)
   params[["habitat"]] = data.frame( cbind(
     mean = apply( oo, 1, mean, na.rm=TRUE ), 
@@ -350,15 +311,111 @@ if (!is.null(hh)) {
   # maps and plots
 
 
-  # Figure timeseries of habitat
+  # Figure timeseries of habitat -- predicted average timeseries aggregated from posterior samples
   vn = "habitat"
-  RES[[mf]][[vn]] # aggregate summaries 
+  ppa = RES[[mf]][[vn]] # aggregate summaries 
 
-  units = attr( RES[[mf]][[vn]], "units")
-  plot( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b", main=mf, ylab=units, xlab="year" )
-  lines( RES[[mf]][[vn]][["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="blue", type="b" )
+  units = attr( ppa, "units")
+  plot( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray", type="b", main=mf, ylab="Probability", xlab="Year", ylim=c(0.2,0.8), pch=19  )
+  lines( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray" )
+  lines( ppa[["q025"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+  lines( ppa[["q975"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+  abline( h=0.5, lty="dashed",  col="slategray" )
+ 
 
+  units = attr( ppa, "units")
+  plot( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray", type="b", main=mf, ylab="Probability", xlab="Year", ylim=c(0.2,0.8), pch=19, axes=FALSE  )
+  lines( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray" )
+  lines( ppa[["q025"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+  lines( ppa[["q975"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+  abline( h=0.5, lty="dashed",  col="slategray" )
+  axis(1)
+  axis(2)
+
+  # Figure 2. Habitat vs time - marginal
+  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
+  ts = res$random$time
+  vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
+  ts[, vns] = ts[, vns] 
+  plot( mean ~ ID, ts, type="b", ylim=c(0,1) , lwd=1.5, xlab="year", col="red")
+  lines( quant0.025 ~ ID, ts,  lty="dashed", col="orange")
+  lines( quant0.975 ~ ID, ts,  lty="dashed", col="orange")
+  abline( h=0.5, lty="dashed",  col="slategray" )
+  abline( v=1992, lty="dashed",  col="slategray")
+ 
+
+  i = "inla.group(t, method = \"quantile\", n = 13)"
+  dta = fit$summary.random[[i]] 
+  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0.2, 0.8), 
+    xlab="Bottom temperature (degrees Celcius)", ylab="Probability" )
+  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
+  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
+  abline( h=0.5, lty="dashed",  col="slategray" )
+
+
+  i = "inla.group(z, method = \"quantile\", n = 13)"
+  dta = fit$summary.random[[i]] 
+  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 0.8),
+    xlab="Depth (m)", ylab="Probability" )
+  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
+  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
+  abline( h=0.5, lty="dashed",  col="slategray" )
+
+
+ 
+
+  i = "time"
+  dta = fit$summary.random[[i]] 
+  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 1),
+    xlab="Time", ylab="Probability" )
+  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
+  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
+  abline( h=0.5, lty="dashed",  col="slategray" )
+
+
+ 
+
+
+  i = "cyclic"
+  dta = fit$summary.random[[i]] 
+  dta$ID = dta$ID /10 
+  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 1), xlim=c(0.1,1),
+    xlab="Season", ylab="Probability" )
+  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
+  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
+  abline( h=0.5, lty="dashed",  col="slategray" )
+
+
+
+  i = "gear"
+  dta = fit$summary.random[[i]] 
+ 
+  x = dta$ID
+  y = inverse.logit(dta$mean)
+  y0 = inverse.logit(dta[,4])
+  y1 = inverse.logit(dta[,6])
+
+  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )       
+
+  plot( y ~ x,  type="p", col="slategray", pch=19,   ylim=c(0, 1), axes=FALSE,
+    ylab="Probability", xlab="" )
+  arrows(x0=x, y0=y0, x1=x, y1=y1, code=3, angle=90, length=0.1)
+  axis(2 )
+  par(las=2, mgp=c(3,0,-4), mai=c(2,1,1,1) )
+  axis(1, at=x, labels=gears, lty="blank", lwd=0.2 )
+  abline( h=0.5, lty="dashed",  col="slategray" )
+
+
+
+ 
+
+
+  bb = apply( pa , c(2,3), function(u) u*sa )
+  params[["habitat_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
+  attr( params[["habitat_simulations"]], "units") = "probability"   
   hist(  RES[[mf]][["habitat_simulations"]][1,] )  # posterior distributions
+
+
 
 
 
@@ -371,7 +428,8 @@ if (!is.null(hh)) {
   background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
 
   plot_crs = st_crs(sppoly)
-require(tmap)
+  
+  require(tmap)
 
     additional_features =  
       tm_shape( st_transform( maritimes_groundfish_strata(areal_units_timeperiod = p$areal_units_timeperiod), plot_crs ) ) + 
@@ -383,20 +441,6 @@ require(tmap)
       #   tm_polygons( col="lightgray", alpha=0.5 , border.alpha =0.5)
 
     (additional_features)
-
-    vn=c( "random", "space", "combined" )
-    vn=c( "random", "spacetime", "combined" )
-    vn="predictions"  # numerical density (km^-2)
-
-    tmatch="1985"
- 
-    carstm_map(  res=res, vn=vn, tmatch=tmatch, 
-        palette="-RdYlBu",
-        plot_elements=c(  "compass", "scale_bar", "legend" ),
-        additional_features=additional_features,
-        tmap_zoom= c(map_centre, map_zoom),
-        title =paste( paste0(vn, collapse=" "), paste0(tmatch, collapse="-"), "probability"  )
-    )
 
 
 
@@ -415,24 +459,81 @@ require(tmap)
   
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
-  # attr( RES[[mf]][["predictions"]], "units")
 
-  for (y in res$year ){
+  # spatial only
+
+  vn=c( "random", "space", "iid" )
+  vn=c( "random", "space", "bym2" )
+  vn=c( "random", "space", "combined" )
+
+  tmatch = ""
+
+  fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse=" "),  "png", sep=".") )
+
+  carstm_map(  res=res, vn=vn, tmatch=tmatch, 
+      sppoly = sppoly, 
+      # palette="-RdYlBu",
+      plot_elements=c(  "compass", "scale_bar", "legend" ),
+      additional_features=additional_features,
+      outfilename=fn,
+      background = background,
+      tmap_zoom= c(map_centre, map_zoom),
+      title ="Probability"
+  )
+
+
+  # space_time
+
+  # attr( RES[[mf]][["predictions"]], "units")
+  vn=c( "random", "space_time", "iid" )
+  vn=c( "random", "space_time", "bym2" )
+  vn=c( "random", "space_time", "combined" )
+  vn="predictions" 
+  
+  tmatch="2000"
+
+  for (y in res$time ){
     time_match = as.character(y) 
     
-    fn = file.path( outputdir, paste(fn_root, "png", sep=".") )
-    carstm_map(  res=RES[[mf]], vn=vn, tmatch=time_match,
+    fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
+    carstm_map(  res=res, vn=vn, tmatch=time_match,
       sppoly = sppoly, 
       # breaks=brks,
       # palette="RdYlBu",
+      plot_elements=c(  "compass", "scale_bar", "legend" ),
+      additional_features=additional_features,
       title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
-      # outfilename=fn,
+      outfilename=fn,
       background = background,
       # vwidth = 1600,
       # vheight=1000,
       map_mode="view",
       tmap_zoom= c(map_centre, map_zoom)
-      #plot_elements=c( "isobaths",  "compass", "scale_bar", "legend" )
+    )
+  }
+
+
+
+  #preds from simulations
+  vn="predictions" 
+  
+  for (y in res$time ){
+    time_match = as.character(y) 
+    
+    fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
+    carstm_map(  res=RES[[mf]], vn=vn, tmatch=time_match,
+      sppoly = sppoly, 
+      # breaks=brks,
+      # palette="RdYlBu",
+      plot_elements=c(  "compass", "scale_bar", "legend" ),
+      additional_features=additional_features,
+      title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
+      outfilename=fn,
+      background = background,
+      # vwidth = 1600,
+      # vheight=1000,
+      map_mode="view",
+      tmap_zoom= c(map_centre, map_zoom)
     )
   }
 
@@ -452,26 +553,42 @@ require(tmap)
 
 b0 = res$summary$fixed_effects["(Intercept)", "mean"]
 
-pt = res$random$t
-pz = res$random$z
+pt = res$random$'inla.group(t, method = "quantile", n = 13)'
+pz = res$random$'inla.group(z, method = "quantile", n = 13)'
+ 
+
 
 ptz = expand.grid( temp=pt$ID, depth =pz$ID ) 
 
-ptz = merge( ptz, pt, by.x=pt, by.y=ID, all.x=TRUE, all.y=FALSE )
-ptz = merge( ptz, pz, by.x=pz, by.y=ID, all.x=TRUE, all.y=FALSE, suffixes=c(".temp", ".depth") )
+ptz = merge( ptz, pt, by.x="temp", by.y="ID", all.x=TRUE, all.y=FALSE )
+ptz = merge( ptz, pz, by.x="depth", by.y="ID", all.x=TRUE, all.y=FALSE, suffixes=c(".temp", ".depth") )
 
-ptz$prob = ptz$mean.temp * ptz$mean.depth * b0
+ptz$prob = ptz$mean.temp * ptz$mean.depth 
+ptz$depth = - ptz$depth
 
-Z = mba.surf(ptz[,"mean.temp", "mean.depth", "prob"], no.X=100, no.Y=100, extend=TRUE) $xyz.est
+require(MBA)
 
-persp(Z, theta = 45, phi = 20, col = "green3", scale = FALSE,
-           ltheta = -120, shade = 0.75, expand = 10, border = NA, box = FALSE)
- 
+nx = 100
+ny = 100
+
+layout( matrix(1:4, ncol=2, byrow=TRUE ))
+Z = mba.surf(ptz[, c("temp", "depth", "prob")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
+
+image(Z, col = rev(gray.colors(30, gamma=1.75)))
+contour(Z, add = TRUE, drawlabels = TRUE, lty="dotted")
+  
+plot( -ID ~ mean, pz, type="b")
+
+plot( mean ~ ID, pt, type="b")
+
 
 library(plot3D)
 
-surf3D( X, Y, Z, colkey = TRUE,  
-       box = TRUE, bty = "b", phi = 20, theta = 45, contour=TRUE, ticktype = "detailed") 
+xx = t(t(rep(1, ny))) %*% Z$x
+yy = t( t(t(rep(1, nx))) %*% Z$y )
+
+surf3D( x=xx, y=yy, z=Z$z, colkey = TRUE,  
+       box = TRUE, bty = "b", phi = 20, theta = 145, contour=TRUE, ticktype = "detailed") 
 
 
      
@@ -483,4 +600,73 @@ surf3D( X, Y, Z, colkey = TRUE,
 
 ### end
 
- 
+
+Fixed effects:
+             mean    sd 0.025quant 0.5quant 0.975quant  mode kld
+(Intercept) 0.729 0.835     -0.978    0.747      2.371 0.795   0
+
+Random effects:
+  Name	  Model
+    time AR1 model
+   cyclic RW2 model
+   gear IID model
+   inla.group(t, method = "quantile", n = 13) RW2 model
+   inla.group(z, method = "quantile", n = 13) RW2 model
+   space BYM2 model
+   space_time BYM2 model
+
+Model hyperparameters:
+                                                           mean    sd 0.025quant 0.5quant 0.975quant  mode
+Precision for time                                        2.199 0.880      0.906    2.062      4.304 1.794
+Rho for time                                              0.945 0.024      0.887    0.949      0.981 0.957
+Precision for cyclic                                     10.103 8.524      2.401    7.605     32.763 4.878
+Precision for gear                                        2.644 2.004      0.483    2.127      7.909 1.264
+Precision for inla.group(t, method = "quantile", n = 13)  7.771 5.083      2.226    6.440     21.173 4.608
+Precision for inla.group(z, method = "quantile", n = 13)  2.326 1.807      0.419    1.852      7.075 1.089
+Precision for space                                       0.527 0.057      0.432    0.521      0.656 0.505
+Phi for space                                             0.989 0.007      0.970    0.991      0.998 0.994
+Precision for space_time                                  0.715 0.079      0.563    0.714      0.872 0.719
+Phi for space_time                                        0.982 0.012      0.952    0.985      0.997 0.991
+GroupRho for space_time                                   0.909 0.016      0.877    0.909      0.940 0.909
+
+Deviance Information Criterion (DIC) ...............: 25510.73
+Deviance Information Criterion (DIC, saturated) ....: 106901.67
+Effective number of parameters .....................: 1658.90
+
+Watanabe-Akaike information criterion (WAIC) ...: 25434.74
+Effective number of parameters .................: 1472.26
+
+Marginal log-Likelihood:  -1141.71 
+Posterior summaries for the linear predictor and the fitted values are computed
+(Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')
+
+
+$fixed_effects
+                   mean          sd  quant0.025    quant0.5  quant0.975   parameter
+(Intercept) 0.654464715 0.167125766 0.274041987 0.678336145 0.914067629 (Intercept)
+
+$random_effects
+                                                     mean            sd  quant0.025    quant0.5  quant0.975
+SD time                                       0.714835151 0.14452594515 0.483034961 0.696046615 1.047932563
+SD cyclic                                     0.373905248 0.12061142173 0.175642553 0.362479958 0.641369826
+SD gear                                       0.740360979 0.27783853101 0.357064849 0.685181249 1.431460089
+SD inla.group(t, method = "quantile", n = 13) 0.406325879 0.11538559108 0.218217561 0.393915186 0.667154488
+SD inla.group(z, method = "quantile", n = 13) 0.793512013 0.30132877508 0.377062255 0.734272803 1.540128758
+SD space                                      1.382964318 0.07311068886 1.235213264 1.385268872 1.520898744
+SD space_time                                 1.188400262 0.06640993281 1.071841015 1.182958558 1.331733592
+Rho for time                                  0.944820325 0.02437687658 0.886948406 0.948377039 0.980350916
+GroupRho for space_time                       0.909349255 0.01638869404 0.876758925 0.909392291 0.940228027
+Phi for space                                 0.989074889 0.00748414658 0.969654713 0.990833583 0.997561253
+Phi for space_time                            0.982315562 0.01197440909 0.952050126 0.984901314 0.996778392
+                                                                                  parameter
+SD time                                                                             SD time
+SD cyclic                                                                         SD cyclic
+SD gear                                                                             SD gear
+SD inla.group(t, method = "quantile", n = 13) SD inla.group(t, method = "quantile", n = 13)
+SD inla.group(z, method = "quantile", n = 13) SD inla.group(z, method = "quantile", n = 13)
+SD space                                                                           SD space
+SD space_time                                                                 SD space_time
+Rho for time                                                                   Rho for time
+GroupRho for space_time                                             GroupRho for space_time
+Phi for space                                                                 Phi for space
+Phi for space_time                                                       Phi for space_time
