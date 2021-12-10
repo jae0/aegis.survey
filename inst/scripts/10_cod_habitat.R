@@ -120,9 +120,9 @@
     # create polygons
     redo_sppoly=FALSE
     # redo_sppoly=TRUE 
-    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE)
+    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE, fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs.rdata" )  )
     ff = NULL
-    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey"  )
+    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey"   )  # generic
     plot(sppoly["AUID"], reset=FALSE)
  
   }
@@ -137,7 +137,7 @@
       areal_units_type = "tesselation",
       areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
       areal_units_resolution_km = 1, # km  
-      areal_units_constraint_ntarget = 30,
+      areal_units_constraint_ntarget = 50,
       areal_units_constraint_nmin = 10,  
       areal_units_overlay = "none",
       sa_thresold_km2 = 5,
@@ -161,9 +161,9 @@
     redo_sppoly=FALSE
     # redo_sppoly=TRUE 
     
-    invisible( survey_db( p=p, DS="areal_units_input", redo=redo_sppoly) ) # update data file used for sppoly creation
+    invisible( survey_db( p=p, DS="areal_units_input", redo=redo_sppoly, fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs.rdata" ) ) ) # update data file used for sppoly creation
 
-    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey", verbose=TRUE )
+    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey", verbose=TRUE, areal_units_fn_full=file.path( p$modeldir, p$speciesname , mf, "sppoly.rdata" )  )
     plot(sppoly["AUID"], reset=FALSE)
 
     # 1025 areal units.
@@ -181,7 +181,8 @@
 
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
-  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99 )
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
+    fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs.rdata" )  )
   
 
   # Figure 1. average bottom temperature of prediction surface (1 July)

@@ -300,7 +300,9 @@ glm methods here
   redo_sppoly=FALSE
   # redo_sppoly=TRUE 
   sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), 
-    areal_units_to_drop=c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8"), redo=redo_sppoly  )
+    areal_units_to_drop=c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8"), redo=redo_sppoly, 
+    areal_units_fn_full=file.path( p$modeldir, p$speciesname , mf, "sppoly.rdata" )   
+  )
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
 
@@ -312,7 +314,8 @@ glm methods here
 
   redo_survey_data = FALSE
   # redo_survey_data = TRUE
-  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99 )
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
+    fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
 
   for ( mf in model_forms ) {
     if (0)    mf = model_forms[5]
