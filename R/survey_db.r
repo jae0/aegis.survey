@@ -1,5 +1,5 @@
 
-survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL, quantile_upper_limit=0.99 ) {
+survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL, quantile_upper_limit=0.99, fn=NULL ) {
   #\\ assimilation of all survey data into a coherent form
   surveydir = project.datadirectory( "aegis", "survey" )
 
@@ -1263,7 +1263,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
-    fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
+    if (is.null(fn))  fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
+    
     # inputs are shared across various secneario using the same polys
     #.. store at the modeldir level as default
     outputdir = dirname( fn )
