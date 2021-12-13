@@ -125,6 +125,12 @@
     sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey"   )  # generic
     plot(sppoly["AUID"], reset=FALSE)
  
+
+    redo_survey_data = FALSE
+    # redo_survey_data = TRUE
+    M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
+      fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs_stratanal.rdata" )  )
+
   }
 
 
@@ -169,6 +175,11 @@
     # 1025 areal units.
 
 
+    redo_survey_data = FALSE
+    # redo_survey_data = TRUE
+    M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
+      fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs_tesselation.rdata" )  )
+
   }
 
   # basic param set definitions END
@@ -178,11 +189,6 @@
 
   # --------------------------------  
   # analysis and output
-
-  redo_survey_data = FALSE
-  # redo_survey_data = TRUE
-  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
-    fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs.rdata" )  )
   
 
   # Figure 1. average bottom temperature of prediction surface (1 July)
@@ -217,7 +223,7 @@
   i = "cyclic" 
   i = "gear" 
   i = "inla.group(t, method = \"quantile\", n = 13)"
-  i = "inla.group(z, method = \"quantile\", n = 13)" "space"
+  i = "inla.group(z, method = \"quantile\", n = 13)"  
 
   dta = res$random[[i]]
 
@@ -323,15 +329,6 @@
   lines( ppa[["q975"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
   abline( h=0.5, lty="dashed",  col="slategray" )
  
-
-  units = attr( ppa, "units")
-  plot( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray", type="b", main=mf, ylab="Probability", xlab="Year", ylim=c(0.2,0.8), pch=19, axes=FALSE  )
-  lines( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray" )
-  lines( ppa[["q025"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
-  lines( ppa[["q975"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
-  abline( h=0.5, lty="dashed",  col="slategray" )
-  axis(1)
-  axis(2)
 
   # Figure 2. Habitat vs time - marginal
   b0 = res$summary$fixed_effects["(Intercept)", "mean"]
@@ -671,3 +668,139 @@ Rho for time                                                                   R
 GroupRho for space_time                                             GroupRho for space_time
 Phi for space                                                                 Phi for space
 Phi for space_time                                                       Phi for space_time
+
+
+
+names(res$random)
+[1] "time"                                         "cyclic"                                      
+[3] "gear"                                         "inla.group(t, method = \"quantile\", n = 13)"
+[5] "inla.group(z, method = \"quantile\", n = 13)" "space"                                       
+[7] "space_time"                                  
+
+res$random[[4]]
+res$random[[5]]
+
+temp_fn = splinefun(  res$random[[4]]$ID,  res$random[[4]]$mean )
+depth_fn = splinefun( res$random[[5]]$ID,  res$random[[5]]$mean )
+
+
+# bring in temperature surface
+
+
+  require(aegis.temperature)
+
+  year.assessment = 2021
+
+  pT = temperature_parameters( project_class="carstm", yrs=1970:year.assessment, carstm_model_label="1970_present", 
+      theta = c( -0.837, -0.264, -1.103, 2.394, -0.438, 4.916, -1.702, -0.466, 23.397, 0.770 ) ) 
+  sppolyT = areal_units( p=pT )
+
+  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT  ) # to load currently saved results
+
+  # choose only predictions in "summer"
+  i_summ = which( resT$data$tag=="predictions" & resT$data$dyri==0.65 )
+  head( resT$data ) 
+
+  rta = resT$data
+  
+  rta$habitat = temp_fn( rta$t ) * depth_fn( rta$z )
+
+  space = resT$space
+  time = resT$time
+  cyclic = resT$cyclic  
+
+  ipred = which( 
+    resT$data$tag=="predictions" & 
+    resT$data[,"space0"] %in% space  &  
+    resT$data[,"time0"] %in% time &  
+    resT$data[,"cyclic0"] %in% cyclic 
+  )  # ignoring U == predict at all seassonal components ..
+
+  V = resT$predictions[,,,1]
+  H = Z = T[]*NA
+
+  matchfrom = list( space=resT$data[ipred, "space"], time=resT$data[ipred, "time"], cyclic=resT$data[ipred, "cyclic0"] )
+  matchto = list( space=space, time=time, cyclic=cyclic  )
+
+  # expand Z to match time to make computations simpler
+  Z[,,] = reformat_to_array( input=resT$data[ipred,"z"], matchfrom=matchfrom, matchto=matchto )
+
+  for (i in 1:dim(Z)[2] ) {
+    for (j in 1:dim(Z)[3]) {
+      V[,i,j] = temp_fn(  V[,i,j] ) 
+      Z[,i,j] = depth_fn( Z[,i,j] )
+    }
+  }
+  
+  H[,i,j] = temp_fn( T[,i,j] ) * depth_fn( Z[,i,j] )
+
+  H[H<0] = 0
+  H[H>1] = 1
+  
+  m = colMeans(H[,,5], na.rm=TRUE)  # "summer = 0.65" 
+  m = colMeans(V[,,5], na.rm=TRUE)  # "summer = 0.65" 
+  m = colMeans(Z[,,5], na.rm=TRUE)  # "summer = 0.65" 
+
+  apply( H, 2, function(x) length(which(x>0.5)) )
+
+
+
+  # use highest resolution depths and temps
+
+  # depths aggregated (averaged) to 0.5 km X 0.5 km basis
+  Z = aegis.bathymetry::bathymetry_db( 
+    p = aegis.bathymetry::bathymetry_parameters( spatial_domain="canada.east.superhighres" ), 
+    DS ="aggregated_data" 
+  )  
+
+  Z = Z[ geo_subset("SSE", Z ) ,]
+
+
+  Z$depth_prob = depth_fn( Z$z.mean )
+  dr = seq(0,1, by=0.05)
+  dev.new(); levelplot( depth_prob ~ plon + plat, Z, aspect="iso", 
+    at=dr, col.regions=(color.code( "seis", dr)) ,
+    contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+  
+
+  pT = temperature_parameters( p=parameters_reset(p), project_class="carstm", year.assessment=p$year.assessment  )
+  
+
+  times = 1:p$ny + decimal_date( lubridate::ymd("1970-07-01")  )  
+  nt = length(times )
+  temp = matrix(NA, nrow=nrow(Z), ncol=nt )
+  for (i in 1:nt ) {
+    Z$timestamp = times[i]
+    temp[,i] = aegis_lookup( 
+      parameters="temperature", # defaults for lookup
+      LOCS=Z[, c("lon", "lat", "timestamp")], 
+      project_class="carstm", 
+      output_format="points", 
+      variable_name=list("predictions"),
+      statvars=c("mean"),
+      raster_resolution=min(p$gridparams$res) /2,
+      tz="America/Halifax", 
+      yrs=pT$yrs,
+      returntype = "vector"
+    )
+  }
+
+ 
+  temp_prob = temp_fn( temp )
+  dr = seq(0,1, by=0.05)
+  dev.new(); levelplot( temp_prob ~ plon + plat, Z, aspect="iso", 
+    at=dr, col.regions=(color.code( "seis", dr)) ,
+    contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+
+ 
+  Z$cod_habitat_probabilty = Z$temp_prob *    Z$depth_prob 
+  Z$cod_habitat_probabilty[ which(Z$cod_habitat_probabilty < 0) ] = 0
+  Z$cod_habitat_probabilty[ which(Z$cod_habitat_probabilty > 1) ] = 1
+  Z$cod_habitat_probabilty[ which(!is.finite(Z$cod_habitat_probabilty)) ] = 0
+
+  dr = seq(0,1, by=0.05)
+  dev.new(); levelplot( cod_habitat_probabilty ~ plon + plat, Z, aspect="iso", 
+    at=dr, col.regions=(color.code( "seis", dr)) ,
+    contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+
+ hist(Z$cod_habitat_probabilty)
