@@ -156,8 +156,9 @@
           + f( time, model="ar1",  hyper=H$ar1 ) 
           + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic=TRUE, values=cyclic_values ) 
           + f( gear, model="iid",  hyper=H$iid ) 
-          + f( inla.group( t, method="quantile", n=13 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( inla.group( z, method="quantile", n=13 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( t, method="quantile", n=17 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( z, method="quantile", n=17 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
+          + f( inla.group( log.substrate.grainsize, method="quantile", n=17 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
           + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
     )
@@ -179,6 +180,59 @@
     # redo_survey_data = TRUE
     M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
       fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs_tesselation.rdata" )  )
+
+    # dropping the gears with less than 300 stations
+    table( M$gear)
+    xtabs( ~ yr+gear, M[M$tag=="observations"])
+    #     1     2     3     4     5     6 
+    # 68086  1684   346    79   153  8369 
+    levels( M$gear)
+    # [1] "Western IIA trawl"               "Yankee #36 otter trawl"          "US 4 seam 3 bridle survey trawl"
+    # [4] "Engle (bottom) trawl"            "Campelen 1800 survey trawl"      "Nephrops trawl"                 
+
+    M = M[ M$gear %in% c(1, 2, 6 ),  ]
+    M$log.substrate.grainsize = log(M$substrate.grainsize )
+
+
+    if (0) {
+        # testing estimates if one uses each year as the distributional basis .. minimal change in results/interpretation
+        M$log.z = log(M$z )
+
+        M$pa0 = M$pa
+
+        M$pa = NA
+        p$habitat_quantile = 0.05
+
+        for (y in unique(M$yr)) {
+          yy = which( M$tag=="observations" & M$yr==y)
+          if (length(yy) > 0 ) M$pa[yy] = presence.absence( X=M$totno[yy] / M$data_offset[yy], px=p$habitat_quantile )$pa  # determine presence absence and weighting
+        }
+      
+        # "miscalassification" ~ 321 / 24941 = 0.0129 ... low due to time bias in abundance
+        xtabs( ~pa+pa0, M)
+
+        #           pa0
+        # pa      0     1
+        #   0 10574   134
+        #   1   187 14046
+
+        M$density = M$totwgt / M$data_offset
+        M$abundance = NA
+
+        for (i in unique(M$gear)) {
+          ii = which( M$gear==i & M$density > 0 & M$tag=="observations" )
+          if (length(ii) > 0 ) M$abundance[ii] = quantile_estimate( M$density[ii] ) 
+        }
+        
+        ab = M[, mean(abundance, na.rm=TRUE), by=yr ]
+        names(ab) = c("yr", "abundance_quantile")
+
+        M = merge(M, ab, by="yr")
+
+    }
+
+    hist(M$z)
+
 
   }
 
@@ -202,84 +256,88 @@
  
   fit = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
     posterior_simulations_to_retain="predictions", 
-    control.family=list( control.link=list(model="logit") ), ## this is the default for binomial, just here to show wher to use it
-    # theta = c(0.773, 3.539, 1.854, 0.849, 1.791, 0.699, -0.676, 4.617, -0.314, 3.963, 2.988), # 2021 solution
-    # toget = c("summary", "fixed_effects", "predictions" ), 
-    # toget = c("summary", "fixed_effects", "random_other", "predictions"), 
-    # mc.cores=2,
+    control.family=list( control.link=list(model="logit") ), ## this is the default for binomial, just here to show wher to use it 
+    theta = c( 0.158, 4.251, 1.954, 2.745, 1.831, 1.622, 5.499, -0.393, 4.635, -0.436, 3.954, 3.201 ), # 2021 solution
     num.threads="6:2"  # adjust for your machine
-  ) 
- 
- 
+  )  
 
+  if (0) {
+
+
+    # to reload:
+    # NOTE: fit contains estimates on link scale
+    fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
+
+
+    carstm_plotxy( fit, vn=c( "fit", "summary.random", "time" ), 
+      transf=inverse.logit, 
+      type="b", ylim=c(0,1), xlab="Year", ylab="Probability", h=0.5, v=1992   )
+
+    carstm_plotxy( fit, vn=c( "fit", "summary.random", "cyclic" ), 
+      transf=inverse.logit, 
+      type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0.35, 0.65),
+      xlab="Season", ylab="Probability", h=0.5  )
+
+    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(t, method = \"quantile\", n = 17)" ), 
+      transf=inverse.logit,   
+      type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0.2, 0.8) ,
+      xlab="Bottom temperature (degrees Celcius)", ylab="Probability", h=0.5  )
+
+    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(z, method = \"quantile\", n = 17)" ), 
+      transf=inverse.logit,  
+      type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 0.8) ,
+      xlab="Depth (m)", ylab="Probability", h=0.5  )
+
+    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 17)" ), 
+      transf=inverse.logit, ylim=c(0.35, 0.65), 
+      type="b", col="slategray", pch=19, lty=1, lwd=2.5,
+      xlab="Ln(grain size; mm)", ylab="Probability", h=0.5  )
+
+    gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
+    carstm_plotxy( fit, vn=c( "fit", "summary.random", "gear" ), subtype="errorbar", errorbar_labels=gears[c(1,2,6)],
+      type="p",
+      transf=inverse.logit, ylim=c(0.25, 0.75), 
+      col="slategray", pch=19, lty=1, lwd=2.5,
+      xlab="Gear type", ylab="Probability", h=0.5  )
+
+  }
+
+  # NOTE: res contains estimates on user scale
   res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
   names(res[["random"]])
   names(  fit$summary.random)
+  # "time"  
+  # "cyclic" 
+  # "gear" 
+  # "inla.group(t, method = \"quantile\", n = 13)"
+  # "inla.group(z, method = \"quantile\", n = 13)"  
+ 
 
-  i = 1
-  plot(inverse.logit(fit$summary.random[[i]]$mean) ~ fit$summary.random[[i]]$ID, ylab="probability", xlab=names(fit$summary.random)[i])
+  # Figure: Habitat vs time - marginal
+  carstm_plotxy( res, vn=c("res", "random", "time"),   type="b", ylim=c(0, 1) , lwd=1.5, xlab="year" )
 
-  i = "time"  
-  i = "cyclic" 
-  i = "gear" 
-  i = "inla.group(t, method = \"quantile\", n = 13)"
-  i = "inla.group(z, method = \"quantile\", n = 13)"  
+  # Figure: Habitat vs season
+  carstm_plotxy( res, vn=c("res", "random", "cyclic"),  type="b", ylim=c(0.35, 0.65) , lwd=1.5, xlab="fractional year" )
+   
+ 
+  sims = list( p=p )
 
-  dta = res$random[[i]]
-
-  plot( mean ~ ID , dta, type="b", ylim=c(0,1))
-  lines( quant0.025 ~ ID, dta, lty="dashed")
-  lines( quant0.975 ~ ID, dta, lty="dashed")
-
-
-  dta = fit$summary.random[[i]] 
-  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", ylim=c(0,1))
-  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dashed")
-  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dashed")
-
-
-  # Figure 2. Habitat vs time - marginal
-  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-  ts = res$random$time
-  vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
-  ts[, vns] = ts[, vns] 
-  plot( mean ~ ID, ts, type="b", ylim=c(0,1) , lwd=1.5, xlab="year")
-  lines( quant0.025 ~ ID, ts, col="gray", lty="dashed")
-  lines( quant0.975 ~ ID, ts, col="gray", lty="dashed")
-
-
-  # Figure 2. Habitat vs season
-  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-  ts = res$random$cyclic
-  vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
-  ts[, vns] = ts[, vns] 
-  plot( mean ~ID, ts, type="b", ylim=c(0,1), lwd=1.5, xlab="fractional year")
-  lines( quant0.025 ~ID, ts, col="gray", lty="dashed")
-  lines( quant0.975 ~ID, ts, col="gray", lty="dashed")
-
-
-
-
-
-
-
-  params = list()
-  vars_to_copy = c(  "space", "time", "dyears" )  # needed for plotting 
-  for ( vn in vars_to_copy ) params[[vn]] = res[[vn]]
+  vars_to_copy = c(  "space", "time", "dyears",  "predictions" )  # needed for plotting 
+  for ( vn in vars_to_copy ) sims[[vn]] = res[[vn]]
 
   pa = res[["predictions_posterior_simulations"]]
-  # pa = inverse.logit(pa)
+
   pa[!is.finite(pa)] = NA
  
   # create for mapping .. in probability
   oo = simplify2array(pa)
-  params[["predictions"]] = res[[ "predictions" ]] * NA
-  params[["predictions"]][,,1]  = apply( oo, c(1,2), mean, na.rm=TRUE ) 
-  params[["predictions"]][,,2]  = apply( oo, c(1,2), sd, na.rm=TRUE ) 
-  params[["predictions"]][,,3]  = apply( oo, c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
-  params[["predictions"]][,,4]  = apply( oo, c(1,2), median, na.rm=TRUE )
-  params[["predictions"]][,,5]  = apply( oo, c(1,2), quantile, probs=0.975, na.rm=TRUE ) 
-  attr( params[["predictions"]], "units") = "probability"
+  sims[["predictions"]] = sims[[ "predictions" ]] * NA
+  sims[["predictions"]][,,1]  = apply( oo, c(1,2), mean, na.rm=TRUE ) 
+  sims[["predictions"]][,,2]  = apply( oo, c(1,2), sd, na.rm=TRUE ) 
+  sims[["predictions"]][,,3]  = apply( oo, c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
+  sims[["predictions"]][,,4]  = apply( oo, c(1,2), median, na.rm=TRUE )
+  sims[["predictions"]][,,5]  = apply( oo, c(1,2), quantile, probs=0.975, na.rm=TRUE ) 
+  attr( sims[["predictions"]], "units") = "probability"
   oo = NULL
 
   # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
@@ -287,26 +345,26 @@
   sa = sppoly[[au_sa]] 
   attributes( sa ) = NULL
 
-  sims = colSums( pa * sa / sum(  sa ), na.rm=TRUE ) 
+  sims_aggregated = colSums( pa * sa / sum(  sa ), na.rm=TRUE ) 
 
-  oo = simplify2array(sims)
-  params[["habitat"]] = data.frame( cbind(
+  oo = simplify2array(sims_aggregated)
+  sims[["habitat"]] = data.frame( cbind(
     mean = apply( oo, 1, mean, na.rm=TRUE ), 
     sd   = apply( oo, 1, sd , na.rm=TRUE), 
     median = apply( oo, 1, median, na.rm=TRUE ), 
-    q025 = apply( oo, 1, quantile, probs=0.025, na.rm=TRUE ),
-    q975 = apply( oo, 1, quantile, probs=0.975, na.rm=TRUE ) 
+    quant0.025 = apply( oo, 1, quantile, probs=0.025, na.rm=TRUE ),
+    quant0.975 = apply( oo, 1, quantile, probs=0.975, na.rm=TRUE ) 
   ))
-  attr( params[["habitat"]], "units") = "probability"
+
+  sims[["habitat"]]$ID = as.numeric( sims$time )
+  attr( sims[["habitat"]], "units") = "probability"
   oo = NULL
 
-  RES[[mf]] = params
+  RES[[mf]] = sims
     
   save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
-
-  # to reload:
-  fit = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_fit", sppoly=sppoly )
-  res = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_summary", sppoly=sppoly )
+  # load( results_file )
+  
 
 
   # analysis and output END
@@ -317,104 +375,18 @@
   # --------------------------------  
   # maps and plots
 
-
   # Figure timeseries of habitat -- predicted average timeseries aggregated from posterior samples
-  vn = "habitat"
-  ppa = RES[[mf]][[vn]] # aggregate summaries 
+  carstm_plotxy( sims, vn=c("sims", "habitat"),  type="b", ylim=c(0.2, 0.8) , 
+    lwd=1.5, col="slategray", 
+    ylab="Probability", xlab="Year", pch=19, h=0.5,  )
 
-  units = attr( ppa, "units")
-  plot( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray", type="b", main=mf, ylab="Probability", xlab="Year", ylim=c(0.2,0.8), pch=19  )
-  lines( ppa[["mean"]] ~ RES$yr, lty=1, lwd=2.5, col="slategray" )
-  lines( ppa[["q025"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
-  lines( ppa[["q975"]] ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
-  abline( h=0.5, lty="dashed",  col="slategray" )
- 
-
-  # Figure 2. Habitat vs time - marginal
-  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-  ts = res$random$time
-  vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
-  ts[, vns] = ts[, vns] 
-  plot( mean ~ ID, ts, type="b", ylim=c(0,1) , lwd=1.5, xlab="year", col="red")
-  lines( quant0.025 ~ ID, ts,  lty="dashed", col="orange")
-  lines( quant0.975 ~ ID, ts,  lty="dashed", col="orange")
-  abline( h=0.5, lty="dashed",  col="slategray" )
-  abline( v=1992, lty="dashed",  col="slategray")
- 
-
-  i = "inla.group(t, method = \"quantile\", n = 13)"
-  dta = fit$summary.random[[i]] 
-  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0.2, 0.8), 
-    xlab="Bottom temperature (degrees Celcius)", ylab="Probability" )
-  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
-  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
-  abline( h=0.5, lty="dashed",  col="slategray" )
-
-
-  i = "inla.group(z, method = \"quantile\", n = 13)"
-  dta = fit$summary.random[[i]] 
-  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 0.8),
-    xlab="Depth (m)", ylab="Probability" )
-  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
-  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
-  abline( h=0.5, lty="dashed",  col="slategray" )
-
-
- 
-
-  i = "time"
-  dta = fit$summary.random[[i]] 
-  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 1),
-    xlab="Time", ylab="Probability" )
-  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
-  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
-  abline( h=0.5, lty="dashed",  col="slategray" )
-
-
- 
-
-
-  i = "cyclic"
-  dta = fit$summary.random[[i]] 
-  dta$ID = dta$ID /10 
-  plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 1), xlim=c(0.1,1),
-    xlab="Season", ylab="Probability" )
-  lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
-  lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
-  abline( h=0.5, lty="dashed",  col="slategray" )
-
-
-
-  i = "gear"
-  dta = fit$summary.random[[i]] 
- 
-  x = dta$ID
-  y = inverse.logit(dta$mean)
-  y0 = inverse.logit(dta[,4])
-  y1 = inverse.logit(dta[,6])
-
-  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )       
-
-  plot( y ~ x,  type="p", col="slategray", pch=19,   ylim=c(0, 1), axes=FALSE,
-    ylab="Probability", xlab="" )
-  arrows(x0=x, y0=y0, x1=x, y1=y1, code=3, angle=90, length=0.1)
-  axis(2 )
-  par(las=2, mgp=c(3,0,-4), mai=c(2,1,1,1) )
-  axis(1, at=x, labels=gears, lty="blank", lwd=0.2 )
-  abline( h=0.5, lty="dashed",  col="slategray" )
-
-
-
- 
 
 
   bb = apply( pa , c(2,3), function(u) u*sa )
-  params[["habitat_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
-  attr( params[["habitat_simulations"]], "units") = "probability"   
+  sims[["habitat_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
+  attr( sims[["habitat_simulations"]], "units") = "probability"   
+
   hist(  RES[[mf]][["habitat_simulations"]][1,] )  # posterior distributions
-
-
-
 
 
 
@@ -543,53 +515,91 @@
 
 
   # --------------------------------  
-  # other variations
-
-
-# Figure XX 3D plot of habitat vs temperature vs depth  
- 
-
-b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-
-pt = res$random$'inla.group(t, method = "quantile", n = 13)'
-pz = res$random$'inla.group(z, method = "quantile", n = 13)'
- 
-
-
-ptz = expand.grid( temp=pt$ID, depth =pz$ID ) 
-
-ptz = merge( ptz, pt, by.x="temp", by.y="ID", all.x=TRUE, all.y=FALSE )
-ptz = merge( ptz, pz, by.x="depth", by.y="ID", all.x=TRUE, all.y=FALSE, suffixes=c(".temp", ".depth") )
-
-ptz$prob = ptz$mean.temp * ptz$mean.depth 
-ptz$depth = - ptz$depth
-
-require(MBA)
-
-nx = 100
-ny = 100
-
-layout( matrix(1:4, ncol=2, byrow=TRUE ))
-Z = mba.surf(ptz[, c("temp", "depth", "prob")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
-
-image(Z, col = rev(gray.colors(30, gamma=1.75)))
-contour(Z, add = TRUE, drawlabels = TRUE, lty="dotted")
+  # Figure XX 3D plot of habitat vs temperature vs depth  via splines
   
-plot( -ID ~ mean, pz, type="b")
+  tvar = "inla.group(t, method = \"quantile\", n = 17)"
+  temp_fn = carstm_spline( res, vn=c("random", tvar), statvar="mean" ) 
+  temp_fn_lb = carstm_spline( res, vn=c("random", tvar), statvar="quant0.025" ) 
+  temp_fn_ub = carstm_spline( res, vn=c("random", tvar), statvar="quant0.975" ) 
 
-plot( mean ~ ID, pt, type="b")
+  zvar = "inla.group(z, method = \"quantile\", n = 17)"
+  depth_fn = carstm_spline( res, vn=c("random", zvar), statvar="mean" ) 
+  depth_fn_lb = carstm_spline( res, vn=c("random", zvar), statvar="quant0.025" ) 
+  depth_fn_ub = carstm_spline( res, vn=c("random", zvar), statvar="quant0.975" ) 
+
+  svar = "inla.group(log.substrate.grainsize, method = \"quantile\", n = 17)"
+  substrate_fn = carstm_spline( res, vn=c("random", svar), statvar="mean" ) 
+  substrate_fn_lb = carstm_spline( res, vn=c("random", svar), statvar="quant0.025" ) 
+  substrate_fn_ub = carstm_spline( res, vn=c("random", svar), statvar="quant0.975" ) 
+
+  psz = expand.grid( substrate=seq( log(0.001), log(90.5 ), by=0.1 ), depth=seq(0,500, by=50))
+  psz$prob_s = substrate_fn( psz$substrate )
+  psz$prob_s_lb = substrate_fn_lb( psz$substrate )
+  psz$prob_s_ub = substrate_fn_ub( psz$substrate )
+
+  psz$depth = - psz$depth
+  plot( prob_s ~ substrate, psz[which(psz$depth==-100),], type="b", pch=19, xlab="substrate", ylab="probability", ylim=c(0.35, 0.7) )
+  lines( prob_s_lb ~ substrate, psz[which(psz$depth==-100),], lty="dashed" )
+  lines( prob_s_ub ~ substrate, psz[which(psz$depth==-100),], lty="dashed" )
 
 
-library(plot3D)
 
-xx = t(t(rep(1, ny))) %*% Z$x
-yy = t( t(t(rep(1, nx))) %*% Z$y )
+  ptz = expand.grid( temp=seq(-1, 12, by=0.5), depth=seq(0,500, by=50))
+  ptz$prob_t = temp_fn(ptz$temp) 
+  ptz$prob_t_lb = temp_fn_lb(ptz$temp) 
+  ptz$prob_t_ub = temp_fn_ub(ptz$temp) 
 
-surf3D( x=xx, y=yy, z=Z$z, colkey = TRUE,  
-       box = TRUE, bty = "b", phi = 20, theta = 145, contour=TRUE, ticktype = "detailed") 
+  ptz$prob_z = depth_fn(ptz$depth)
+  ptz$prob_z_lb = depth_fn_lb(ptz$depth)
+  ptz$prob_z_ub = depth_fn_ub(ptz$depth)
+
+  ptz$depth = - ptz$depth
 
 
-     
+  for (i in c("prob_t", "prob_z", "prob_t_lb", "prob_z_lb", "prob_t_ub", "prob_z_ub") ) {
+    o = which( ptz[,i] < 0) 
+    if (length(o) > 0) ptz[o,i] = 0
+    o = which( ptz[,i] > 1) 
+    if (length(o) > 0) ptz[o,i] = 1
+  }
+
+  ptz$prob = ptz$prob_t * ptz$prob_z
+  ptz$prob_lb = ptz$prob_t_lb * ptz$prob_z_lb
+  ptz$prob_ub = ptz$prob_t_ub * ptz$prob_z_ub
+
+
+  par(mai=c(0.7, 0.7, 0.4, 0.4)) 
+  layout( matrix(1:4, ncol=2, byrow=TRUE ))
+  nx = 100
+  ny = 100
+  require(MBA)
+  Z = mba.surf(ptz[, c("temp", "depth", "prob")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
+
+  image(Z, col = rev(gray.colors(30, gamma=1.75)))
+  contour(Z, add = TRUE, drawlabels = TRUE, lty="dotted")
+  plot( depth ~ prob_z, ptz[which(ptz$temp==4),], type="b", pch=19, xlab="probability", ylab="depth", xlim=c(0,0.8))
+  lines( depth ~ prob_z_lb, ptz[which(ptz$temp==4),], lty="dashed")
+  lines( depth ~ prob_z_ub, ptz[which(ptz$temp==4),], lty="dashed")
+
+  plot( prob_t ~ temp, ptz[which(ptz$depth==-100),], type="b", pch=19, xlab="temperature", ylab="probability")
+  lines( prob_t_lb ~ temp, ptz[which(ptz$depth==-100),], lty="dashed" )
+  lines( prob_t_ub ~ temp, ptz[which(ptz$depth==-100),], lty="dashed" )
+
+  library(plot3D)
+  # reduce res to see texture in 3D
+  nx = 30
+  ny = 30
+  Z = mba.surf(ptz[, c("temp", "depth", "prob")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
+  xx = t(t(rep(1, ny))) %*% Z$x
+  yy = t( t(t(rep(1, nx))) %*% Z$y )
+  surf3D( x=xx, y=yy, z=Z$z, colkey = TRUE,  
+        box = TRUE, bty = "b", phi = 15, theta = 235, contour=TRUE, ticktype = "detailed") 
+
+
+
+
+
+ 
      
 -- zero-inflated binomial
 -- negative binomial ?
@@ -669,104 +679,131 @@ GroupRho for space_time                                             GroupRho for
 Phi for space                                                                 Phi for space
 Phi for space_time                                                       Phi for space_time
 
-
-
-names(res$random)
-[1] "time"                                         "cyclic"                                      
-[3] "gear"                                         "inla.group(t, method = \"quantile\", n = 13)"
-[5] "inla.group(z, method = \"quantile\", n = 13)" "space"                                       
-[7] "space_time"                                  
-
-res$random[[4]]
-res$random[[5]]
-
-temp_fn = splinefun(  res$random[[4]]$ID,  res$random[[4]]$mean )
-depth_fn = splinefun( res$random[[5]]$ID,  res$random[[5]]$mean )
-
+ 
 
 # bring in temperature surface
 
 
-  require(aegis.temperature)
-
-  year.assessment = 2021
-
-  pT = temperature_parameters( project_class="carstm", yrs=1970:year.assessment, carstm_model_label="1970_present", 
-      theta = c( -0.837, -0.264, -1.103, 2.394, -0.438, 4.916, -1.702, -0.466, 23.397, 0.770 ) ) 
-  sppolyT = areal_units( p=pT )
-
-  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT  ) # to load currently saved results
-
-  # choose only predictions in "summer"
-  i_summ = which( resT$data$tag=="predictions" & resT$data$dyri==0.65 )
-  head( resT$data ) 
-
-  rta = resT$data
-  
-  rta$habitat = temp_fn( rta$t ) * depth_fn( rta$z )
-
-  space = resT$space
-  time = resT$time
-  cyclic = resT$cyclic  
-
-  ipred = which( 
-    resT$data$tag=="predictions" & 
-    resT$data[,"space0"] %in% space  &  
-    resT$data[,"time0"] %in% time &  
-    resT$data[,"cyclic0"] %in% cyclic 
-  )  # ignoring U == predict at all seassonal components ..
-
-  V = resT$predictions[,,,1]
-  H = Z = T[]*NA
-
-  matchfrom = list( space=resT$data[ipred, "space"], time=resT$data[ipred, "time"], cyclic=resT$data[ipred, "cyclic0"] )
-  matchto = list( space=space, time=time, cyclic=cyclic  )
-
-  # expand Z to match time to make computations simpler
-  Z[,,] = reformat_to_array( input=resT$data[ipred,"z"], matchfrom=matchfrom, matchto=matchto )
-
-  for (i in 1:dim(Z)[2] ) {
-    for (j in 1:dim(Z)[3]) {
-      V[,i,j] = temp_fn(  V[,i,j] ) 
-      Z[,i,j] = depth_fn( Z[,i,j] )
-    }
-  }
-  
-  H[,i,j] = temp_fn( T[,i,j] ) * depth_fn( Z[,i,j] )
-
-  H[H<0] = 0
-  H[H>1] = 1
-  
-  m = colMeans(H[,,5], na.rm=TRUE)  # "summer = 0.65" 
-  m = colMeans(V[,,5], na.rm=TRUE)  # "summer = 0.65" 
-  m = colMeans(Z[,,5], na.rm=TRUE)  # "summer = 0.65" 
-
-  apply( H, 2, function(x) length(which(x>0.5)) )
-
-
-
-  # use highest resolution depths and temps
+  # use highest resolution depths and aggregate temps
 
   # depths aggregated (averaged) to 0.5 km X 0.5 km basis
   Z = aegis.bathymetry::bathymetry_db( 
     p = aegis.bathymetry::bathymetry_parameters( spatial_domain="canada.east.superhighres" ), 
     DS ="aggregated_data" 
   )  
+  crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
+  inside = st_points_in_polygons(
+    pts = st_as_sf( Z[, c("lon", "lat")], coords=c("lon","lat"), crs=crs_lonlat ),
+    polys = st_transform( st_union(sppoly), crs_lonlat )
+  )
 
-  Z = Z[ geo_subset("SSE", Z ) ,]
+  Z = Z[which(is.finite(inside)), ]
 
+  Z = lonlat2planar(Z, proj.type=p$aegis_proj4string_planar_km ) 
 
-  Z$depth_prob = depth_fn( Z$z.mean )
+  Z$prob_depth = depth_fn( Z$z.mean )
+  Z$prob_depth[ which(Z$prob_depth < 0) ] = 0
+  Z$prob_depth[ which(Z$prob_depth > 1) ] = 1
+
   dr = seq(0,1, by=0.05)
-  dev.new(); levelplot( depth_prob ~ plon + plat, Z, aspect="iso", 
-    at=dr, col.regions=(color.code( "seis", dr)) ,
-    contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+  aegis_map( xyz=Z[, c("plon", "plat", "prob_depth")], depthcontours=TRUE, pts=NULL,
+    annot="Cod habitat depth", annot.cex=1,
+    at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain )
+
+  sppoly$corearea = res$random$space$combined[, "mean"] - 1.96 * res$random$space$combined[, "sd"] 
+
+  plot(sppoly["corearea"])
   
 
-  pT = temperature_parameters( p=parameters_reset(p), project_class="carstm", year.assessment=p$year.assessment  )
-  
+  # add pure spatial effect 
+  AU = st_cast(sppoly, "MULTIPOLYGON" )
+  AU = sf::st_transform( AU, crs=st_crs(p$aegis_proj4string_planar_km) )
+  bm = match( AU$AUID, res$space )  
 
-  times = 1:p$ny + decimal_date( lubridate::ymd("1970-07-01")  )  
+  LOCS = sf::st_as_sf( Z, coords=c("lon", "lat") )
+  st_crs(LOCS) = st_crs( projection_proj4string("lonlat_wgs84") )
+  LOCS = sf::st_transform( LOCS, crs=st_crs(p$aegis_proj4string_planar_km) )
+  LOCS$AUID = st_points_in_polygons( pts=LOCS, polys = AU[, "AUID"], varname= "AUID" )   
+
+  raster_resolution=1  #km
+  raster_template = raster::raster( AU, res=raster_resolution, crs=st_crs( p$aegis_proj4string_planar_km ) )
+  gridparams = p$gridparams 
+  gridparams$res = c(raster_resolution, raster_resolution)
+  # prep-pass with a au_index variable to get index
+  AU$au_index = 1:nrow(AU)
+  LL = fasterize::fasterize( AU, raster_template, field="au_index" )
+  o = sf::st_as_sf( as.data.frame( raster::rasterToPoints(LL)), coords=c("x", "y") )
+  st_crs(o) = st_crs( AU )
+  ii = match(
+    array_map( "xy->1", st_coordinates(LOCS), gridparams=gridparams ),
+    array_map( "xy->1", st_coordinates(o), gridparams=gridparams )
+  )
+
+  LL = o = NULL 
+  gc()
+  statvars =   c("mean", "sd", "quant0.025", "quant0.5", "quant0.975")
+  for (g in 1:length(statvars)) {
+    stat_var = statvars[g]
+    vnm = paste( "spatial_effect",  stat_var, sep="_" )
+    AU[[vnm]] = res$random$space$combined[ bm, stat_var ]
+    LL = fasterize::fasterize( AU, raster_template, field=vnm )
+    o = sf::st_as_sf( as.data.frame( raster::rasterToPoints(LL)), coords=c("x", "y") )
+    st_crs(o) = st_crs( AU )
+    LOCS[[vnm]] = o[["layer"]][ ii ]
+  }
+
+  # this is the pure spatial effect discretized to Z
+  Z$prob_core = LOCS[["spatial_effect_mean"]] 
+  aegis_map( xyz=Z[, c("plon", "plat", "prob_core")], depthcontours=TRUE, pts=NULL,
+    annot="Cod habitat pure space", annot.cex=1.25,
+    at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain 
+  )
+
+
+  # add substrate
+  require(aegis.substrate)
+  # pS = substrate_parameters( project_class="carstm"   ) 
+
+  Z$substrate = aegis_lookup( 
+      parameters="substrate", # defaults for lookup
+      LOCS=Z[, c("lon", "lat" )], 
+      project_class="stmv", 
+      output_format="points", 
+      variable_name="substrate.grainsize",
+      # variable_name=list("predictions"),
+      statvars=c("mean"),
+      raster_resolution=min(p$gridparams$res) /2,
+      returntype = "vector"
+    )
+
+  Z$log.substrate = log(Z$substrate)
+  Z$log.substrate[ !is.finite(Z$log.substrate) ] = mean( Z$log.substrate, na.rm=TRUE )
+  Z$prob_substrate = substrate_fn( Z$log.substrate )
+  Z$prob_substrate[ which(Z$prob_substrate < 0) ] = 0
+  Z$prob_substrate[ which(Z$prob_substrate > 1) ] = 1
+
+ 
+  dr = seq(0.3, 0.75, by=0.05)
+  aegis_map( xyz=Z[, c("plon", "plat", "prob_substrate")], depthcontours=TRUE, pts=NULL,
+    annot="Cod habitat substrate", annot.cex=1,
+    at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain )
+
+
+
+
+
+
+
+  # ------------
+  # add temperature
+  require(aegis.temperature)
+
+  year.assessment = 2021
+
+  pT = temperature_parameters( project_class="carstm", yrs=1970:year.assessment, carstm_model_label="1970_present"  ) 
+  
+  # Compute temperature-related compenent
+  times = 0:(p$ny-1) + decimal_date( lubridate::ymd("1970-07-01")  )  
   nt = length(times )
   temp = matrix(NA, nrow=nrow(Z), ncol=nt )
   for (i in 1:nt ) {
@@ -785,22 +822,224 @@ depth_fn = splinefun( res$random[[5]]$ID,  res$random[[5]]$mean )
     )
   }
 
+  i=which(is.na(temp[,1]))
+  temp=temp[-i,]
+  Z=Z[-i,]
+
+  temp_prob = temp[]* NA
+  for (i in 1:nt ) {
+    temp_prob[,i] = temp_fn( temp[,i] )
+  }
+  temp_prob[ which(temp_prob < 0) ] = 0
+  temp_prob[ which(temp_prob > 1) ] = 1
+
+  dev.new(); 
+  for (i in 1:ncol(temp_prob)) {
+    # i = 1
+    Z$prob_temp = temp_prob[,i] 
+    print(
+      aegis_map( xyz=Z[, c("plon", "plat", "prob_temp")], depthcontours=TRUE, pts=NULL,
+        annot=paste("Cod habitat temperature", p$yrs[i]), annot.cex=1.25,
+        at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain 
+      )
+    )
+  }
+
+
+
+  if (0) {
+    # using aggegrate depths and tmps
+      resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=areal_units( p=pT )  ) # to load currently saved results
+
+      # choose only predictions in "summer"
+      i_summ = which( resT$data$tag=="predictions" & resT$data$dyri==0.65 )
+      head( resT$data ) 
+    
+      space = resT$space
+      time = resT$time
+      cyclic = resT$cyclic  
+
+      ipred = which( 
+        resT$data$tag=="predictions" & 
+        resT$data[,"space0"] %in% space  &  
+        resT$data[,"time0"] %in% time &  
+        resT$data[,"cyclic0"] %in% cyclic 
+      )  # ignoring U == predict at all seassonal components ..
+
+      V = resT$predictions[,,,1]  # means
+      H = Z = T[]*NA
+
+      matchfrom = list( space=resT$data[ipred, "space"], time=resT$data[ipred, "time"], cyclic=resT$data[ipred, "cyclic0"] )
+      matchto = list( space=space, time=time, cyclic=cyclic  )
+
+      # expand Z to match time to make computations simpler
+      Z  = reformat_to_array( input=resT$data[ipred,"z"], matchfrom=matchfrom, matchto=matchto )
+
+      for (i in 1:dim(Z)[2] ) {
+        for (j in 1:dim(Z)[3]) {
+          V[,i,j] = temp_fn(  V[,i,j] ) 
+          Z[,i,j] = depth_fn( Z[,i,j] )
+        }
+      }
+      
+      H[,i,j] = temp_fn( T[,i,j] ) * depth_fn( Z[,i,j] )
+
+      H[H<0] = 0
+      H[H>1] = 1
+      
+      m = colMeans(H[,,5], na.rm=TRUE)  # "summer = 0.65" 
+      m = colMeans(V[,,5], na.rm=TRUE)  # "summer = 0.65" 
+      m = colMeans(Z[,,5], na.rm=TRUE)  # "summer = 0.65" 
+
+      apply( H, 2, function(x) length(which(x>0.5)) )
+
+  }
+
+
+
+
+  ############
+  # this is the static component = pure space + depth + substrate
+
+  Z$prob_static = Z$prob_core * Z$prob_depth
+  aegis_map( xyz=Z[, c("plon", "plat", "prob_static")], depthcontours=TRUE, pts=NULL,
+    annot="Cod habitat static", annot.cex=1.25,
+    at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain 
+  )
+
+
+  # static (core area + depth) + temmperaure
+
+  cod_hab = temp_prob * Z$prob_static 
+  cod_hab[ which(cod_hab < 0) ] = 0
+  cod_hab[ which(cod_hab > 1) ] = 1
+  cod_hab[ which(!is.finite(cod_hab)) ] = 0
+
+  dev.new(); hist(cod_hab, "fd")
+
+  dr = seq(0,0.6, by=0.05)
+  
+  dev.new(); 
+  for (i in 1:ncol(temp_prob)) {
+    Z$prob_cod = cod_hab[,i]
+    print(
+      aegis_map( xyz=Z[, c("plon", "plat", "prob_cod")], depthcontours=TRUE, pts=NULL,
+        annot=paste( "Cod habitat temp+depth", p$yrs[i] ), annot.cex=1.25,
+        at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain 
+      )
+    )
+  }
+
+  ic = which(Z$prob_static > 0.25 )
+
+  g = colMeans(cod_hab[ic,], na.rm=TRUE)
+  plot(g, type="b")
+
+  count_hab = function(x) length(which(x > 0.25))
+
+  o= apply( cod_hab[ic,], 2, count_hab )
+  plot(o ~ p$yrs, type="b", ylim=c(0, max(o)))
+
+  o= apply( cod_hab[ic,], 2, median )
+  plot(o, type="b")
+
+  Z$prob_cod = Z$prob_space * Z$prob_temp
+
+  aegis_map( xyz=Z[ic, c("plon", "plat", "prob_cod")], depthcontours=TRUE, pts=NULL,
+    annot="Cod habitat ", annot.cex=1.25,
+    at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain 
+  )
+  
+
+# ---------------------------
+np = 5000
+psims = inla.posterior.sample( np, fit  ) 
+
+
+# order of effects gets messed up .. must use names
+psims_rn = gsub( "[:].*$", "", rownames(psims[[1]]$latent) )
+i_b0 = grep("\\(Intercept\\)", psims_rn )
+i_temp = grep( "inla.group\\(t", psims_rn )
+i_depth = grep( "inla.group\\(z", psims_rn )
+i_cyclic = grep( "^cyclic$", psims_rn )
+i_gear = grep( "^gear$", psims_rn )
+i_time = grep( "^time$", psims_rn )
  
-  temp_prob = temp_fn( temp )
-  dr = seq(0,1, by=0.05)
-  dev.new(); levelplot( temp_prob ~ plon + plat, Z, aspect="iso", 
-    at=dr, col.regions=(color.code( "seis", dr)) ,
-    contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
 
- 
-  Z$cod_habitat_probabilty = Z$temp_prob *    Z$depth_prob 
-  Z$cod_habitat_probabilty[ which(Z$cod_habitat_probabilty < 0) ] = 0
-  Z$cod_habitat_probabilty[ which(Z$cod_habitat_probabilty > 1) ] = 1
-  Z$cod_habitat_probabilty[ which(!is.finite(Z$cod_habitat_probabilty)) ] = 0
+ns = length( res$space )
 
-  dr = seq(0,1, by=0.05)
-  dev.new(); levelplot( cod_habitat_probabilty ~ plon + plat, Z, aspect="iso", 
-    at=dr, col.regions=(color.code( "seis", dr)) ,
-    contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
+iid = 1:ns
+bym = (ns+1) : (2*ns)
+i_space = grep( "^space$", psims_rn )
+i_space_iid = i_space[iid]
+i_space_bym = i_space[bym]
 
- hist(Z$cod_habitat_probabilty)
+
+sti = expand.grid( space=res$space, type = c("iid", "bym"), time=res$time, stringsAsFactors =FALSE ) # bym2 effect: bym and iid with annual results
+iid = which(sti$type=="iid") #  spatiotemporal interaction effects  iid
+bym = which(sti$type=="bym") #  spatiotemporal interaction effects bym
+
+i_space_time = grep( "^space_time$", psims_rn )
+i_space_time_iid = i_space_time[iid]
+i_space_time_bym = i_space_time[bym]
+
+tempsQ  = res$random[[4]]$ID
+depthsQ = res$random[[5]]$ID
+
+matchto   = list( space=res$space, time=res$time  )
+matchfrom = list( space=sti[["space"]][iid], time=sti[["time"]][iid]  )
+
+
+
+pred_func = function(x, threshold =NULL) {
+  Y = x$latent
+  yrr = matrix(  Y[i_time], ncol=length(res$time), nrow=length(res$space), byrow=TRUE )
+  depth_fn = splinefun( depthsQ,  Y[i_depth], method="monoH.FC" )
+  temp_fn  = splinefun( tempsQ,   Y[i_temp], method="monoH.FC"  )
+  depths = depth_fn( res$data$z[which(res$data$tag=="predictions")] )
+  temps = temp_fn(  res$data$t[which(res$data$tag=="predictions")] )
+  depths = reformat_to_array(  input =depths , matchfrom = matchfrom, matchto = matchto )
+  temps = reformat_to_array(  input =temps, matchfrom = matchfrom, matchto = matchto )
+  Wbym = Wiid = array( NA, dim=c( length( res$space), length(res$time) ), dimnames=list( space=res$space, time=res$time ) )
+  Wiid = reformat_to_array(  input = unlist(Y[i_space_time_iid]), matchfrom = matchfrom, matchto = matchto )
+  Wbym = reformat_to_array(  input = unlist(Y[i_space_time_bym]), matchfrom = matchfrom, matchto = matchto )
+  # pred = Y[i_b0]  + yrr+ Y[i_cyclic[7]]  + Y[i_space_iid] + Y[i_space_bym]  + temps + depths 
+  # pred = Y[i_b0] + yrr + Y[i_cyclic[7]]  + Y[i_space_iid] + Y[i_space_bym]  + Wbym + Wiid + temps + depths 
+  pred =   Y[i_b0] + Y[i_cyclic[7]]  + Y[i_space_iid] + Y[i_space_bym] + Wbym + Wiid + temps + depths 
+  
+  if (!is.null(threshold)) {
+    il = which( pred <= threshold )
+    iu = which( pred > threshold )
+    pred[ il ] = 0
+    pred[ iu ] = 1
+  }
+  pred
+} 
+
+oo =  ( simplify2array( lapply( psims, pred_func ) ) )
+gg = apply( inverse.logit(oo)*sppoly$au_sa_km2, 2, mean, na.rm=TRUE ) 
+plot( gg ~ res$time, type="b")
+abline(v=1990)
+
+
+oo = simplify2array( lapply( psims, pred_func, threshold = 0 ) )
+gg = apply( oo*sppoly$au_sa_km2, 2, sum, na.rm=TRUE ) /  sum(sppoly$au_sa_km2)/ np
+plot(gg ~ res$time, type="b")
+abline(v=1990)
+
+gg = apply( oo, 2, median, na.rm=TRUE )
+lines(gg ~ res$time, col="green")
+gg = apply( oo, 2, quantile, probs=0.025, na.rm=TRUE )
+lines(gg ~ res$time, col="red")
+
+
+gg = inverse.logit( apply( oo, 2, mean, na.rm=TRUE )) 
+
+
+g = invlink( g ) 
+
+lnk_function = inla.link.logit
+lnk_function_predictions = inla.link.identity  # binomial seems to be treated differently by INLA
+
+
+
