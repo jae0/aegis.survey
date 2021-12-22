@@ -98,7 +98,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   missing_au = setdiff( sppoly_au, M_au )
   if (length(missing_au) > 0 )  {
-    warning("Areal units with no data found, this will likely cause problems:\n", paste0(missing_au, sep=", "))
+    warning("Areal units with no data found, this will likely cause problems:\n", paste0(missing_au, sep=" "))
     print("Areal units with no data found, this will likely cause problems:")
     print( paste0(missing_au, sep=", "))
   }

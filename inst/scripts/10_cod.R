@@ -247,7 +247,7 @@ glm methods here
       months=6:8,
       # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
       # ranged_data="dyear"
-      settype = c(1,2,4,5,8),
+      settype = c(1,2,5,8),
       # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
       # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
       polygon_enforce=TRUE
@@ -256,7 +256,7 @@ glm methods here
   p = survey_parameters(
     project_class = "carstm",
     project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
-    label ="Atlantic cod summer",
+    label ="Atlantic cod summer stranal",
     speciesname = "Atlantic_cod",
     trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
     carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present 
@@ -271,6 +271,30 @@ glm methods here
     areal_units_overlay = "none",
     areal_units_timeperiod = "pre2014",    # "pre2014" for older
   )
+
+  p = survey_parameters(
+    project_class = "carstm",
+    project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
+    label ="Atlantic cod tesselation",
+    speciesname = "Atlantic_cod",
+    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
+    carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present 
+    runtype=runtype,
+    yrs = yrs,
+    selection = selection,
+    variabletomodel = "totno",
+    vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id"),  # to compute mean size, etc
+    areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
+    areal_units_type = "tesselation",
+    areal_units_resolution_km = 1, # km  
+    areal_units_constraint_ntarget = 30,
+    areal_units_constraint_nmin = 10,  
+    areal_units_overlay = "none",
+    sa_thresold_km2 = 5,
+    fraction_cv = 0.65,   # ie. stop if sd/mean is less than 
+    fraction_todrop = 0.1  # control frction dropped on each iteration: speed vs roughness 
+  )
+
 
   results_file = file.path( p$modeldir, p$speciesname , "RES_basic_carstm.rdata" )
 
@@ -296,12 +320,12 @@ glm methods here
     "H.full_model"
   )
 
-
+  
   redo_sppoly=FALSE
   # redo_sppoly=TRUE 
   sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), 
     areal_units_to_drop=c("5Z3","5Z4","5Z5","5Z6","5Z7","5Z8"), redo=redo_sppoly, 
-    areal_units_fn_full=file.path( p$modeldir, p$speciesname , mf, "sppoly.rdata" )   
+    areal_units_fn_full=file.path( p$modeldir, p$speciesname , paste0(p$label, sep="_"), "sppoly.rdata" )   
   )
   # sppoly$strata_to_keep = ifelse( as.character(sppoly$AUID) %in% strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ), FALSE,  TRUE )
       # plot(  sppoly["AUID"])
@@ -318,7 +342,7 @@ glm methods here
     fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
 
   for ( mf in model_forms ) {
-    if (0)    mf = model_forms[5]
+    #  mf =  "A.full_model"
     RES[[mf]] = survey_parameter_list( mf=mf,  p=p )
     RES[[mf]] = survey_index( params=RES[[mf]], M=M, sppoly=sppoly, redo_model=TRUE, extrapolation_limit=c(0.025, 0.975) )
   }
