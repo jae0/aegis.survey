@@ -131,6 +131,8 @@
     M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
       fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs_stratanal.rdata" )  )
 
+    M$log.substrate.grainsize = log( M$substrate.grainsize )
+
   }
 
 
@@ -263,7 +265,6 @@
 
   if (0) {
 
-
     # to reload:
     # NOTE: fit contains estimates on link scale
     fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
@@ -318,51 +319,10 @@
 
   # Figure: Habitat vs season
   carstm_plotxy( res, vn=c("res", "random", "cyclic"),  type="b", ylim=c(0.35, 0.65) , lwd=1.5, xlab="fractional year" )
-   
- 
-  sims = list( p=p )
-
-  vars_to_copy = c(  "space", "time", "dyears",  "predictions" )  # needed for plotting 
-  for ( vn in vars_to_copy ) sims[[vn]] = res[[vn]]
-
-  pa = res[["predictions_posterior_simulations"]]
-
-  pa[!is.finite(pa)] = NA
- 
-  # create for mapping .. in probability
-  oo = simplify2array(pa)
-  sims[["predictions"]] = sims[[ "predictions" ]] * NA
-  sims[["predictions"]][,,1]  = apply( oo, c(1,2), mean, na.rm=TRUE ) 
-  sims[["predictions"]][,,2]  = apply( oo, c(1,2), sd, na.rm=TRUE ) 
-  sims[["predictions"]][,,3]  = apply( oo, c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
-  sims[["predictions"]][,,4]  = apply( oo, c(1,2), median, na.rm=TRUE )
-  sims[["predictions"]][,,5]  = apply( oo, c(1,2), quantile, probs=0.975, na.rm=TRUE ) 
-  attr( sims[["predictions"]], "units") = "probability"
-  oo = NULL
-
-  # if subsetting then use appropriate SA other than total sa (is. sa associated with a given management unit)
-  au_sa="au_sa_km2"
-  sa = sppoly[[au_sa]] 
-  attributes( sa ) = NULL
-
-  sims_aggregated = colSums( pa * sa / sum(  sa ), na.rm=TRUE ) 
-
-  oo = simplify2array(sims_aggregated)
-  sims[["habitat"]] = data.frame( cbind(
-    mean = apply( oo, 1, mean, na.rm=TRUE ), 
-    sd   = apply( oo, 1, sd , na.rm=TRUE), 
-    median = apply( oo, 1, median, na.rm=TRUE ), 
-    quant0.025 = apply( oo, 1, quantile, probs=0.025, na.rm=TRUE ),
-    quant0.975 = apply( oo, 1, quantile, probs=0.975, na.rm=TRUE ) 
-  ))
-
-  sims[["habitat"]]$ID = as.numeric( sims$time )
-  attr( sims[["habitat"]], "units") = "probability"
-  oo = NULL
-
-  RES[[mf]] = sims
     
-  save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
+  sims = survey_estimates ( pH=params$pH, sppoly=sppoly )  # aggregate simulations and summarize 
+    
+  save( sims, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
   # load( results_file )
   
 
@@ -386,7 +346,7 @@
   sims[["habitat_simulations"]]  = apply( bb, c(2,3), sum, na.rm=TRUE )
   attr( sims[["habitat_simulations"]], "units") = "probability"   
 
-  hist(  RES[[mf]][["habitat_simulations"]][1,] )  # posterior distributions
+  hist(  sims[["habitat_simulations"]][1,] )  # posterior distributions
 
 
 
@@ -423,7 +383,7 @@
       
 
   vn = "predictions"
-  brks = pretty(  quantile( RES[[mf]][[vn]], probs=c(0.025,0.975), na.rm=TRUE )  )
+  brks = pretty(  quantile( sims[[vn]], probs=c(0.025,0.975), na.rm=TRUE )  )
 
   outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted.habitat" )
   
@@ -454,7 +414,7 @@
 
   # space_time
 
-  # attr( RES[[mf]][["predictions"]], "units")
+  # attr( res[["predictions"]], "units")
   vn=c( "random", "space_time", "iid" )
   vn=c( "random", "space_time", "bym2" )
   vn=c( "random", "space_time", "combined" )
@@ -491,7 +451,7 @@
     time_match = as.character(y) 
     
     fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
-    carstm_map(  res=RES[[mf]], vn=vn, tmatch=time_match,
+    carstm_map(  res=res, vn=vn, tmatch=time_match,
       sppoly = sppoly, 
       # breaks=brks,
       # palette="RdYlBu",
@@ -783,7 +743,7 @@ Phi for space_time                                                       Phi for
   Z$prob_substrate[ which(Z$prob_substrate > 1) ] = 1
 
  
-  dr = seq(0.3, 0.75, by=0.05)
+  dr = seq(0.35, 0.75, by=0.05)
   aegis_map( xyz=Z[, c("plon", "plat", "prob_substrate")], depthcontours=TRUE, pts=NULL,
     annot="Cod habitat substrate", annot.cex=1,
     at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain )
@@ -901,7 +861,9 @@ Phi for space_time                                                       Phi for
   ############
   # this is the static component = pure space + depth + substrate
 
-  Z$prob_static = Z$prob_core * Z$prob_depth
+  dr = seq(0, 0.35, by=0.05)
+
+  Z$prob_static = Z$prob_core * Z$prob_depth * Z$prob_substrate
   aegis_map( xyz=Z[, c("plon", "plat", "prob_static")], depthcontours=TRUE, pts=NULL,
     annot="Cod habitat static", annot.cex=1.25,
     at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain 
@@ -917,7 +879,7 @@ Phi for space_time                                                       Phi for
 
   dev.new(); hist(cod_hab, "fd")
 
-  dr = seq(0,0.6, by=0.05)
+  dr = seq(0,0.18, by=0.01)
   
   dev.new(); 
   for (i in 1:ncol(temp_prob)) {

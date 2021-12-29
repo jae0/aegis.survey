@@ -1285,6 +1285,16 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     
     set = survey_db( p=p, DS="filter" )
 
+
+    crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
+    inside = st_points_in_polygons(
+      pts = st_as_sf( set[, c("lon", "lat")], coords=c("lon","lat"), crs=crs_lonlat ),
+      polys = st_transform( st_union(sppoly), crs_lonlat )
+    )
+
+    set = set[which(is.finite(inside)), ]
+
+
     p$selection$survey$strata_toremove = oo  
     
     set$totno0 = set$totno 
