@@ -1348,8 +1348,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       M=set,
       sppoly=sppoly,
       APS_data_offset=1,
-      vars_to_retain= p$vars_to_retain,
-      lookup_parameters= p$carstm_lookup_parameters
+      vars_to_retain= p$vars_to_retain
     )
 
     # these vars being missing means zero-valued

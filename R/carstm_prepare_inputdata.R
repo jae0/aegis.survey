@@ -1,10 +1,10 @@
 
 carstm_prepare_inputdata = function( p, M, sppoly, 
-  lookup_parameters = NULL, APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE
+  lookup_parameters = NULL, 
+  lookup_projects=c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" ), 
+  APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE
 ) {
 
-  # lookup_parameters  are for observation data (not prediction surface)
-   
   # covariates only with stmv
   # covars = c("t", "tsd", "tmax", "tmin", "degreedays", "z",  "dZ", "ddZ", "substrate.grainsize" ) ;;
 
@@ -24,49 +24,33 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   # degreedays = number of degree days in a given year – annual
 
 
-  if (!is.null(lookup_parameters)) {
-    
-    if ( !is.list(lookup_parameters)) {
-      # character vector
-      lookup_projects = lookup_parameters
-      lookup_parameters = NULL ## forces defaults below
-    } else  {
-      # full param list
-      lookup_projects = names(lookup_parameters)
-    }
-
-  } else {
-
-    # generic defaults:
-    lookup_projects = c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" )
-    # lookup_parameters = NULL ## forces defaults below .. already null
-  }
-
-  # load libs
-  if ("bathymetry"  %in% lookup_projects) require(aegis.bathymetry)
-  if ("substrate"   %in% lookup_projects) require(aegis.substrate)
-  if ("temperature" %in% lookup_projects) require(aegis.temperature)
-  if (any( grepl("speciescomposition", lookup_projects)) ) require(aegis.speciescomposition)
- 
-
+  if ( is.null(lookup_parameters)) {
+    if (exists("carstm_lookup_parameters", p)) lookup_parameters = p$carstm_lookup_parameters
+  }  
+  
+  if ( is.null(lookup_parameters)) {
+    if (exists("lookup_parameters", p)) lookup_parameters = p$lookup_parameters
+  }  
+  
   if ( is.null(lookup_parameters)) {
     # these params are for observation data
     lookup_parameters = list()
 
-    if ("bathymetry"  %in% lookup_projects) lookup_parameters[["bathymetry"]] = bathymetry_parameters( project_class="carstm" )  # full default
-    if ("substrate"   %in% lookup_projects) lookup_parameters[["substrate"]] = substrate_parameters(  project_class="carstm" )
-    if ("temperature" %in% lookup_projects) lookup_parameters[["temperature"]] =  temperature_parameters(  project_class="carstm", yrs=p$yrs )
+    if ("bathymetry"  %in% lookup_projects) lookup_parameters[["bathymetry"]] = aegis.bathymetry::bathymetry_parameters( project_class="carstm" )  # full default
+    if ("substrate"   %in% lookup_projects) lookup_parameters[["substrate"]] = aegis.substrate::substrate_parameters(  project_class="carstm" )
+    if ("temperature" %in% lookup_projects) lookup_parameters[["temperature"]] =  aegis.temperature::temperature_parameters(  project_class="carstm", yrs=p$yrs )
     if (any( grepl("speciescomposition", lookup_projects)) ) {
-      lookup_parameters[["speciescomposition_pca1"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_pca2"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_pca3"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_ca1"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_ca2"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_ca3"]] = speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
-
+      lookup_parameters[["speciescomposition_pca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_pca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_pca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_ca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_ca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  )
+      lookup_parameters[["speciescomposition_ca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
     }
  
   }
+
+  lookup_parameters_names = names(lookup_parameters)
    
   nS = nrow(M)
 
@@ -74,9 +58,11 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   if (!is.null(vars_to_retain)) {
     vv = setdiff(  vars_to_retain, names(M) ) 
-    if (length(vv) > 0) stop( "Variables to retain not found:", vv )
+    if (length(vv) > 0) {
+      print( "Some variables to retain not found:")
+      print( paste0(vv, sep=" ") )
+    }
   }
-
 
   M$tag = "observations"
  
@@ -104,7 +90,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
   
       
-  if ("bathymetry" %in% lookup_projects) {
+  if ("bathymetry" %in% lookup_parameters_names) {
+    require(aegis.bathymetry)
     message( "lookup: bathymetry observations")
     vn = lookup_parameters[["bathymetry"]]$variabletomodel
 
@@ -161,418 +148,426 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-    # --------------------------
+  # --------------------------
 
 
-    if ("substrate" %in% lookup_projects) {
-      message( "lookup: substrate observations")
+  if ("substrate" %in% lookup_parameters_names) {
+    require(aegis.substrate)
 
-      vn = lookup_parameters[["substrate"]]$variabletomodel
+    message( "lookup: substrate observations")
 
-      if (!(exists(vn, M ))) M[[vn]] = NA
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[vn]][iM]  = aegis_lookup( 
-          parameters=lookup_parameters["substrate"], 
-          LOCS=M[iM, c("lon", "lat")], 
-          project_class="core", 
-          output_format="points", 
-          DS="aggregated_data", 
-          variable_name="substrate.grainsize.mean" 
-        )  
-      }   
-      
-      # due to limited spatial range, resort to using some of the modelled results as well to fill in some gaps
+    vn = lookup_parameters[["substrate"]]$variabletomodel
 
-      # yes substrate source coordinate system is same as for bathy .. to match substrate source for the data
-      lookup_parameters[["bathymetry_stmv"]] = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
-
-      LUB = bathymetry_db( p=lookup_parameters[["bathymetry_stmv"]], DS="baseline", varnames="all" )
-      iML = match( 
-        array_map( "xy->1", M[, c("plon","plat")],  gridparams=p$gridparams ), 
-        array_map( "xy->1", LUB[,c("plon","plat")], gridparams=p$gridparams ) 
-      )
-
-      lookup_parameters[["substrate_stmv"]] = substrate_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
-      LU = substrate_db( p=lookup_parameters[["substrate_stmv"]], DS="complete"  )
-
-      vns = intersect(  c( 
-          "substrate.grainsize", "substrate.grainsize.lb", "substrate.grainsize.ub", 
-          "s.sdTotal", "s.sdSpatial", "s.sdObs", "s.phi", "s.nu", "s.localrange" 
-        ), names(LU) )
-
-      for (vn in vns  ) M[[ vn]] = LU[ iML, vn ]
-      
-      if (NA_remove) {
-        ii = which( !is.finite( rowSums(M[, vns, with=FALSE] )  ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing substrate lookup stats: ", length(ii))
-        }
-      }
-      LU =  iML = vns = NULL
+    if (!(exists(vn, M ))) M[[vn]] = NA
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[vn]][iM]  = aegis_lookup( 
+        parameters=lookup_parameters["substrate"], 
+        LOCS=M[iM, c("lon", "lat")], 
+        project_class="core", 
+        output_format="points", 
+        DS="aggregated_data", 
+        variable_name="substrate.grainsize.mean" 
+      )  
+    }   
     
+    # due to limited spatial range, resort to using some of the modelled results as well to fill in some gaps
 
- 
-    }
+    # yes substrate source coordinate system is same as for bathy .. to match substrate source for the data
+    lookup_parameters[["bathymetry_stmv"]] = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
 
+    LUB = bathymetry_db( p=lookup_parameters[["bathymetry_stmv"]], DS="baseline", varnames="all" )
+    iML = match( 
+      array_map( "xy->1", M[, c("plon","plat")],  gridparams=p$gridparams ), 
+      array_map( "xy->1", LUB[,c("plon","plat")], gridparams=p$gridparams ) 
+    )
 
-    # --------------------------
+    lookup_parameters[["substrate_stmv"]] = substrate_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
+    LU = substrate_db( p=lookup_parameters[["substrate_stmv"]], DS="complete"  )
 
+    vns = intersect(  c( 
+        "substrate.grainsize", "substrate.grainsize.lb", "substrate.grainsize.ub", 
+        "s.sdTotal", "s.sdSpatial", "s.sdObs", "s.phi", "s.nu", "s.localrange" 
+      ), names(LU) )
 
-    if ("temperature" %in% lookup_projects) {
-      message( "lookup: temperature observations")
-
-      vn = lookup_parameters[["temperature"]]$variabletomodel
-
-      if (!(exists(vn, M ))) M[[vn]] = NA
-      iM = which(!is.finite( M[[vn]] ))
-     
-      if (length(iM > 0)) {
-        M[[vn]][iM] = aegis_lookup(  
-          parameters=lookup_parameters["temperature"], 
-          LOCS=M[ iM, c("lon", "lat", "timestamp")],
-          project_class="core", 
-          DS="aggregated_data", 
-          output_format="points", 
-          variable_name="t.mean", 
-          tz="America/Halifax",
-          yrs=p$yrs
-        )
+    for (vn in vns  ) M[[ vn]] = LU[ iML, vn ]
+    
+    if (NA_remove) {
+      ii = which( !is.finite( rowSums(M[, vns, with=FALSE] )  ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing substrate lookup stats: ", length(ii))
       }
+    }
+    LU =  iML = vns = NULL
   
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-      
-        M[[ vn ]][iM] = aegis_lookup( 
-          parameters="temperature", 
-          LOCS=M[ iM , c("AUID", "timestamp")], 
-          LOCS_AU=sppoly,
-          project_class = "carstm", # lookup from modelled predictions from carstm
-          output_format = "areal_units",
-          variable_name=list("predictions"),
-          statvars=c("mean"),
-          raster_resolution=min(p$gridparams$res) /2,
-          tz="America/Halifax",
-          yrs=p$yrs,
-          returntype = "vector"
-        )
-      }
-
-      if (NA_remove) {
-        ii = which( !is.finite( M[[ vn]] ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing temperatures: ", length(ii))
-        }
-
-      }
-
-      M = M[ which( M[[ vn]]  < 16 ) , ]  #
-
-      # to to:  add stmv/hybrid 
-    }
+  }
 
 
-    # --------------------------
+  # --------------------------
 
 
-    if ("speciescomposition_pca1" %in% lookup_projects) {
-      message( "lookup: speciescomposition pca1 observations")
- 
-      vn = lookup_parameters[["speciescomposition_pca1"]]$variabletomodel
+  if ("temperature" %in% lookup_parameters_names) {
+    require(aegis.temperature)
 
-      if (!(exists(vn, M ))) M[[vn]] = NA
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[vn]][iM] = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition_pca1"], 
-          LOCS=M[ iM, c("lon", "lat", "timestamp")],
-          project_class="core", 
-          DS="speciescomposition", 
-          output_format="points", 
-          variable_name="pca1", 
-          tz="America/Halifax" ,
-          yrs=p$yrs
-        )
-      }
+    message( "lookup: temperature observations")
 
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[ vn ]][iM] = aegis_lookup( 
-          parameters="speciescomposition_pca1", 
-          LOCS=M[ iM , c("AUID", "timestamp")], 
-          LOCS_AU=sppoly, 
-          project_class = "carstm", # lookup from modelled predictions from carstm 
-          output_format = "areal_units",
-          variable_name=list("predictions"),
-          variabletomodel=vn ,
-          statvars=c("mean"),
-          raster_resolution=min(p$gridparams$res) /2,
-          yrs=p$yrs,
-          returntype = "vector"
-        ) 
-      }
-      if (NA_remove) {
-        ii = which( !is.finite( M[[ vn]] ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing pca1: ", length(ii))
-        }
-      }
-    }
+    vn = lookup_parameters[["temperature"]]$variabletomodel
 
-    if ("speciescomposition_pca2" %in% lookup_projects) {
-      message( "lookup: speciescomposition pca2 observations")
-
-      vn = lookup_parameters[["speciescomposition_pca2"]]$variabletomodel
-
-      if (!(exists(vn, M ))) M[,vn] = NA
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-         M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition_pca2"], 
-           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
-           project_class="core", 
-           DS="speciescomposition", 
-           output_format="points", 
-           variable_name="pca2", 
-           tz="America/Halifax" ,
-           yrs=p$yrs
-         )
-      }
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[ vn ]][iM] = aegis_lookup( 
-          parameters="speciescomposition_pca2", 
-          LOCS=M[ iM , c("AUID", "timestamp")], 
-          LOCS_AU=sppoly, 
-          project_class = "carstm", # lookup from modelled predictions from carstm 
-          output_format = "areal_units",
-          variable_name=list("predictions"),
-          variabletomodel=vn ,
-          statvars=c("mean"),
-          raster_resolution=min(p$gridparams$res) /2,
-          yrs=p$yrs,
-          returntype = "vector"
-        ) 
-      }
-      if (NA_remove) {
-        ii = which( !is.finite( M[[ vn]] ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing pca2: ", length(ii))
-        }
-      }
-
-    }
-
-    if ("speciescomposition_pca3" %in% lookup_projects) {
-      message( "lookup: speciescomposition pca3 observations")
-
-      vn = lookup_parameters[["speciescomposition_pca3"]]$variabletomodel
-
-      if (!(exists(vn, M ))) M[,vn] = NA
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-         M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition_pca3"], 
-           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
-           project_class="core", 
-           DS="speciescomposition", 
-           output_format="points", 
-           variable_name="pca2", 
-           tz="America/Halifax" ,
-           yrs=p$yrs
-         )
-      }
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[ vn ]][iM] = aegis_lookup( 
-          parameters="speciescomposition_pca3", 
-          LOCS=M[ iM , c("AUID", "timestamp")], 
-          LOCS_AU=sppoly, 
-          project_class = "carstm", # lookup from modelled predictions from carstm 
-          output_format = "areal_units",
-          variable_name=list("predictions"),
-          variabletomodel=vn ,
-          statvars=c("mean"),
-          raster_resolution=min(p$gridparams$res) /2,
-          yrs=p$yrs,
-          returntype = "vector"
-        ) 
-      }
-      if (NA_remove) {
-        ii = which( !is.finite( M[[ vn]] ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing pca3: ", length(ii))
-        }
-      }
-
-    }
-
-    if ("speciescomposition_ca1" %in% lookup_projects) {
-      message( "lookup: speciescomposition ca1 observations")
- 
-      vn = lookup_parameters[["speciescomposition_ca1"]]$variabletomodel
-
-      if (!(exists(vn, M ))) M[[vn]] = NA
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[vn]][iM] = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition_ca1"], 
-          LOCS=M[ iM, c("lon", "lat", "timestamp")],
-          project_class="core", 
-          DS="speciescomposition", 
-          output_format="points", 
-          variable_name="pca1", 
-          tz="America/Halifax" ,
-          yrs=p$yrs
-        )
-      }
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[ vn ]][iM] = aegis_lookup( 
-          parameters="speciescomposition_ca1", 
-          LOCS=M[ iM , c("AUID", "timestamp")], 
-          LOCS_AU=sppoly, 
-          project_class = "carstm", # lookup from modelled predictions from carstm 
-          output_format = "areal_units",
-          variable_name=list("predictions"),
-          variabletomodel=vn ,
-          statvars=c("mean"),
-          raster_resolution=min(p$gridparams$res) /2,
-          yrs=p$yrs,
-          returntype = "vector"
-        ) 
-      }
-        
-      if (NA_remove) {
-        ii = which( !is.finite( M[[ vn]] ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing ca1: ", length(ii))
-        }
-      }
-    }
-
-    if ("speciescomposition_ca2" %in% lookup_projects) {
-      message( "lookup: speciescomposition ca2 observations")
-
-      vn = lookup_parameters[["speciescomposition_ca2"]]$variabletomodel
-
-      if (!(exists(vn, M ))) M[,vn] = NA
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-         M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition_ca2"], 
-           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
-           project_class="core", 
-           DS="speciescomposition", 
-           output_format="points", 
-           variable_name="pca2", 
-           tz="America/Halifax" ,
-           yrs=p$yrs
-         )
-      }
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[ vn ]][iM] = aegis_lookup( 
-          parameters="speciescomposition_ca2", 
-          LOCS=M[ iM , c("AUID", "timestamp")], 
-          LOCS_AU=sppoly, 
-          project_class = "carstm", # lookup from modelled predictions from carstm 
-          output_format = "areal_units",
-          variable_name=list("predictions"),
-          variabletomodel=vn ,
-          statvars=c("mean"),
-          raster_resolution=min(p$gridparams$res) /2,
-          yrs=p$yrs,
-          returntype = "vector"
-        ) 
-      }
-        
-      if (NA_remove) {
-        ii = which( !is.finite( M[[ vn]] ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing ca2: ", length(ii))
-        }
-      }
-
-    }
-
-    if ("speciescomposition_ca3" %in% lookup_projects) {
-      message( "lookup: speciescomposition ca3 observations")
-
-      vn = lookup_parameters[["speciescomposition_ca3"]]$variabletomodel
-
-      if (!(exists(vn, M ))) M[,vn] = NA
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-         M[[vn]][iM]  = aegis_lookup(  
-           parameters=lookup_parameters["speciescomposition_ca3"], 
-           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
-           project_class="core", 
-           DS="speciescomposition", 
-           output_format="points", 
-           variable_name="pca2", 
-           tz="America/Halifax" ,
-           yrs=p$yrs
-         )
-      }
-      iM = which(!is.finite( M[[vn]] ))
-      if (length(iM > 0)) {
-        M[[ vn ]][iM] = aegis_lookup( 
-          parameters="speciescomposition_ca3", 
-          LOCS=M[ iM , c("AUID", "timestamp")], 
-          LOCS_AU=sppoly, 
-          project_class = "carstm", # lookup from modelled predictions from carstm 
-          output_format = "areal_units",
-          variable_name=list("predictions"),
-          variabletomodel=vn ,
-          statvars=c("mean"),
-          raster_resolution=min(p$gridparams$res) /2,
-          yrs=p$yrs,
-          returntype = "vector"
-        ) 
-      }
-        
-      if (NA_remove) {
-        ii = which( !is.finite( M[[ vn]] ))
-        if (length(ii) > 0 ) {
-          M = M[ -ii , ]
-          message( "Dropping observations due to missing ca3: ", length(ii))
-        }
-      }
-
-    }
-
-    M$plon = M$plat = M$lon = M$lat = NULL
-
-    if (any( grepl("offset", as.character(p$formula)))){
-      if (!exists("data_offset", M)) {
-        if (exists("data_offset", sppoly)) {
-          message("data_offset not defined, using data_offset from sppoly")
-          M$data_offset = sppoly$data_offset[ match(  M$AUID,  sppoly$AUID ) ]
-        }
-      }
-    }
+    if (!(exists(vn, M ))) M[[vn]] = NA
+    iM = which(!is.finite( M[[vn]] ))
     
+    if (length(iM > 0)) {
+      M[[vn]][iM] = aegis_lookup(  
+        parameters=lookup_parameters["temperature"], 
+        LOCS=M[ iM, c("lon", "lat", "timestamp")],
+        project_class="core", 
+        DS="aggregated_data", 
+        output_format="points", 
+        variable_name="t.mean", 
+        tz="America/Halifax",
+        yrs=p$yrs
+      )
+    }
 
-    if ( grepl( "year", p$aegis_dimensionality ) ) {
-      if (!exists("year", M)) {
-        if (exists("yr", M)) names(M)[which(names(M)=="yr") ] = "year"
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+    
+      M[[ vn ]][iM] = aegis_lookup( 
+        parameters="temperature", 
+        LOCS=M[ iM , c("AUID", "timestamp")], 
+        LOCS_AU=sppoly,
+        project_class = "carstm", # lookup from modelled predictions from carstm
+        output_format = "areal_units",
+        variable_name=list("predictions"),
+        statvars=c("mean"),
+        raster_resolution=min(p$gridparams$res) /2,
+        tz="America/Halifax",
+        yrs=p$yrs,
+        returntype = "vector"
+      )
+    }
+
+    if (NA_remove) {
+      ii = which( !is.finite( M[[ vn]] ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing temperatures: ", length(ii))
       }
-      # though dyear is required for seasonal models, it can also be used in annual as well 
-      # that is, if not predicting the full seasonal array but only A GIVEN time slice 
-      if (!exists("dyear", M)) {
-        if (exists("tiyr", M )) M$dyear = M$tiyr - M$year 
+
+    }
+
+    M = M[ which( M[[ vn]]  < 16 ) , ]  #
+
+    # to to:  add stmv/hybrid 
+  }
+
+
+  # --------------------------
+
+
+  if ("speciescomposition_pca1" %in% lookup_parameters_names) {
+    require(aegis.speciescomposition)
+    message( "lookup: speciescomposition pca1 observations")
+
+    vn = lookup_parameters[["speciescomposition_pca1"]]$variabletomodel
+
+    if (!(exists(vn, M ))) M[[vn]] = NA
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[vn]][iM] = aegis_lookup(  
+        parameters=lookup_parameters["speciescomposition_pca1"], 
+        LOCS=M[ iM, c("lon", "lat", "timestamp")],
+        project_class="core", 
+        DS="speciescomposition", 
+        output_format="points", 
+        variable_name="pca1", 
+        tz="America/Halifax" ,
+        yrs=p$yrs
+      )
+    }
+
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[ vn ]][iM] = aegis_lookup( 
+        parameters="speciescomposition_pca1", 
+        LOCS=M[ iM , c("AUID", "timestamp")], 
+        LOCS_AU=sppoly, 
+        project_class = "carstm", # lookup from modelled predictions from carstm 
+        output_format = "areal_units",
+        variable_name=list("predictions"),
+        variabletomodel=vn ,
+        statvars=c("mean"),
+        raster_resolution=min(p$gridparams$res) /2,
+        yrs=p$yrs,
+        returntype = "vector"
+      ) 
+    }
+    if (NA_remove) {
+      ii = which( !is.finite( M[[ vn]] ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing pca1: ", length(ii))
+      }
+    }
+  }
+
+  if ("speciescomposition_pca2" %in% lookup_parameters_names) {
+    require(aegis.speciescomposition)
+    message( "lookup: speciescomposition pca2 observations")
+
+    vn = lookup_parameters[["speciescomposition_pca2"]]$variabletomodel
+
+    if (!(exists(vn, M ))) M[,vn] = NA
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+        M[[vn]][iM]  = aegis_lookup(  
+          parameters=lookup_parameters["speciescomposition_pca2"], 
+          LOCS=M[ iM, c("lon", "lat", "timestamp")], 
+          project_class="core", 
+          DS="speciescomposition", 
+          output_format="points", 
+          variable_name="pca2", 
+          tz="America/Halifax" ,
+          yrs=p$yrs
+        )
+    }
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[ vn ]][iM] = aegis_lookup( 
+        parameters="speciescomposition_pca2", 
+        LOCS=M[ iM , c("AUID", "timestamp")], 
+        LOCS_AU=sppoly, 
+        project_class = "carstm", # lookup from modelled predictions from carstm 
+        output_format = "areal_units",
+        variable_name=list("predictions"),
+        variabletomodel=vn ,
+        statvars=c("mean"),
+        raster_resolution=min(p$gridparams$res) /2,
+        yrs=p$yrs,
+        returntype = "vector"
+      ) 
+    }
+    if (NA_remove) {
+      ii = which( !is.finite( M[[ vn]] ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing pca2: ", length(ii))
       }
     }
 
-    # to to:  add st,v/hybrid 
+  }
+
+  if ("speciescomposition_pca3" %in% lookup_parameters_names) {
+    require(aegis.speciescomposition)
+    message( "lookup: speciescomposition pca3 observations")
+
+    vn = lookup_parameters[["speciescomposition_pca3"]]$variabletomodel
+
+    if (!(exists(vn, M ))) M[,vn] = NA
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+        M[[vn]][iM]  = aegis_lookup(  
+          parameters=lookup_parameters["speciescomposition_pca3"], 
+          LOCS=M[ iM, c("lon", "lat", "timestamp")], 
+          project_class="core", 
+          DS="speciescomposition", 
+          output_format="points", 
+          variable_name="pca2", 
+          tz="America/Halifax" ,
+          yrs=p$yrs
+        )
+    }
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[ vn ]][iM] = aegis_lookup( 
+        parameters="speciescomposition_pca3", 
+        LOCS=M[ iM , c("AUID", "timestamp")], 
+        LOCS_AU=sppoly, 
+        project_class = "carstm", # lookup from modelled predictions from carstm 
+        output_format = "areal_units",
+        variable_name=list("predictions"),
+        variabletomodel=vn ,
+        statvars=c("mean"),
+        raster_resolution=min(p$gridparams$res) /2,
+        yrs=p$yrs,
+        returntype = "vector"
+      ) 
+    }
+    if (NA_remove) {
+      ii = which( !is.finite( M[[ vn]] ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing pca3: ", length(ii))
+      }
+    }
+
+  }
+
+  if ("speciescomposition_ca1" %in% lookup_parameters_names) {
+    require(aegis.speciescomposition)
+    message( "lookup: speciescomposition ca1 observations")
+
+    vn = lookup_parameters[["speciescomposition_ca1"]]$variabletomodel
+
+    if (!(exists(vn, M ))) M[[vn]] = NA
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[vn]][iM] = aegis_lookup(  
+        parameters=lookup_parameters["speciescomposition_ca1"], 
+        LOCS=M[ iM, c("lon", "lat", "timestamp")],
+        project_class="core", 
+        DS="speciescomposition", 
+        output_format="points", 
+        variable_name="pca1", 
+        tz="America/Halifax" ,
+        yrs=p$yrs
+      )
+    }
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[ vn ]][iM] = aegis_lookup( 
+        parameters="speciescomposition_ca1", 
+        LOCS=M[ iM , c("AUID", "timestamp")], 
+        LOCS_AU=sppoly, 
+        project_class = "carstm", # lookup from modelled predictions from carstm 
+        output_format = "areal_units",
+        variable_name=list("predictions"),
+        variabletomodel=vn ,
+        statvars=c("mean"),
+        raster_resolution=min(p$gridparams$res) /2,
+        yrs=p$yrs,
+        returntype = "vector"
+      ) 
+    }
+      
+    if (NA_remove) {
+      ii = which( !is.finite( M[[ vn]] ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing ca1: ", length(ii))
+      }
+    }
+  }
+
+  if ("speciescomposition_ca2" %in% lookup_parameters_names) {
+    require(aegis.speciescomposition)
+    message( "lookup: speciescomposition ca2 observations")
+
+    vn = lookup_parameters[["speciescomposition_ca2"]]$variabletomodel
+
+    if (!(exists(vn, M ))) M[,vn] = NA
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+        M[[vn]][iM]  = aegis_lookup(  
+          parameters=lookup_parameters["speciescomposition_ca2"], 
+          LOCS=M[ iM, c("lon", "lat", "timestamp")], 
+          project_class="core", 
+          DS="speciescomposition", 
+          output_format="points", 
+          variable_name="pca2", 
+          tz="America/Halifax" ,
+          yrs=p$yrs
+        )
+    }
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[ vn ]][iM] = aegis_lookup( 
+        parameters="speciescomposition_ca2", 
+        LOCS=M[ iM , c("AUID", "timestamp")], 
+        LOCS_AU=sppoly, 
+        project_class = "carstm", # lookup from modelled predictions from carstm 
+        output_format = "areal_units",
+        variable_name=list("predictions"),
+        variabletomodel=vn ,
+        statvars=c("mean"),
+        raster_resolution=min(p$gridparams$res) /2,
+        yrs=p$yrs,
+        returntype = "vector"
+      ) 
+    }
+      
+    if (NA_remove) {
+      ii = which( !is.finite( M[[ vn]] ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing ca2: ", length(ii))
+      }
+    }
+
+  }
+
+  if ("speciescomposition_ca3" %in% lookup_parameters_names) {
+    require(aegis.speciescomposition)
+    message( "lookup: speciescomposition ca3 observations")
+
+    vn = lookup_parameters[["speciescomposition_ca3"]]$variabletomodel
+
+    if (!(exists(vn, M ))) M[,vn] = NA
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+        M[[vn]][iM]  = aegis_lookup(  
+          parameters=lookup_parameters["speciescomposition_ca3"], 
+          LOCS=M[ iM, c("lon", "lat", "timestamp")], 
+          project_class="core", 
+          DS="speciescomposition", 
+          output_format="points", 
+          variable_name="pca2", 
+          tz="America/Halifax" ,
+          yrs=p$yrs
+        )
+    }
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[ vn ]][iM] = aegis_lookup( 
+        parameters="speciescomposition_ca3", 
+        LOCS=M[ iM , c("AUID", "timestamp")], 
+        LOCS_AU=sppoly, 
+        project_class = "carstm", # lookup from modelled predictions from carstm 
+        output_format = "areal_units",
+        variable_name=list("predictions"),
+        variabletomodel=vn ,
+        statvars=c("mean"),
+        raster_resolution=min(p$gridparams$res) /2,
+        yrs=p$yrs,
+        returntype = "vector"
+      ) 
+    }
+      
+    if (NA_remove) {
+      ii = which( !is.finite( M[[ vn]] ))
+      if (length(ii) > 0 ) {
+        M = M[ -ii , ]
+        message( "Dropping observations due to missing ca3: ", length(ii))
+      }
+    }
+
+  }
+
+  M$plon = M$plat = M$lon = M$lat = NULL
+
+  if (any( grepl("offset", as.character(p$formula)))){
+    if (!exists("data_offset", M)) {
+      if (exists("data_offset", sppoly)) {
+        message("data_offset not defined, using data_offset from sppoly")
+        M$data_offset = sppoly$data_offset[ match(  M$AUID,  sppoly$AUID ) ]
+      }
+    }
+  }
+  
+
+  if ( grepl( "year", p$aegis_dimensionality ) ) {
+    if (!exists("year", M)) {
+      if (exists("yr", M)) names(M)[which(names(M)=="yr") ] = "year"
+    }
+    # though dyear is required for seasonal models, it can also be used in annual as well 
+    # that is, if not predicting the full seasonal array but only A GIVEN time slice 
+    if (!exists("dyear", M)) {
+      if (exists("tiyr", M )) M$dyear = M$tiyr - M$year 
+    }
+  }
+
+  # to to:  add st,v/hybrid 
 
 
   # end observations
@@ -603,7 +598,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
    
   }
 
-  if ( "bathymetry" %in% lookup_projects ) {
+  if ( "bathymetry" %in% lookup_parameters_names ) {
+    require(aegis.bathymetry)
     message( "lookup: bathymetry predictions")
 
     vn = lookup_parameters[["bathymetry"]]$variabletomodel
@@ -658,7 +654,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   }
 
-  if ( "substrate" %in% lookup_projects ) {
+  if ( "substrate" %in% lookup_parameters_names ) {
+    require(aegis.substrate)
+
     message( "lookup: substrate predictions")
 
     vn = lookup_parameters[["substrate"]]$variabletomodel
@@ -709,7 +707,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
 
   # ---------------------
-  if ( "temperature" %in% lookup_projects ) {
+  if ( "temperature" %in% lookup_parameters_names ) {
+    require(aegis.temperature)
     message( "lookup: temperature predictions")
 
     vn = lookup_parameters[["temperature"]]$variabletomodel
@@ -731,7 +730,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-  if ( "speciescomposition_pca1" %in% lookup_projects ) {
+  if ( "speciescomposition_pca1" %in% lookup_parameters_names ) {
+    require(aegis.speciescomposition)
     message( "lookup: speciescomposition pca1 predictions")
 
     vn = lookup_parameters[["speciescomposition_pca1"]]$variabletomodel
@@ -752,7 +752,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-  if ( "speciescomposition_pca2" %in% lookup_projects ) {
+  if ( "speciescomposition_pca2" %in% lookup_parameters_names ) {
+    require(aegis.speciescomposition)
     message( "lookup: speciescomposition pca2 predictions")
     vn = lookup_parameters[["speciescomposition_pca2"]]$variabletomodel
 
@@ -772,7 +773,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     ) 
   }
 
-  if ( "speciescomposition_pca3" %in% lookup_projects ) {
+  if ( "speciescomposition_pca3" %in% lookup_parameters_names ) {
+    require(aegis.speciescomposition)
     message( "lookup: speciescomposition pca3 predictions")
     vn = lookup_parameters[["speciescomposition_pca3"]]$variabletomodel
 
@@ -792,7 +794,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-  if ( "speciescomposition_ca1" %in% lookup_projects ) {
+  if ( "speciescomposition_ca1" %in% lookup_parameters_names ) {
+    require(aegis.speciescomposition)
     message( "lookup: speciescomposition ca1 predictions")
 
     vn = lookup_parameters[["speciescomposition_ca1"]]$variabletomodel
@@ -813,7 +816,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
 
-  if ( "speciescomposition_ca2" %in% lookup_projects ) {
+  if ( "speciescomposition_ca2" %in% lookup_parameters_names ) {
+    require(aegis.speciescomposition)
     message( "lookup: speciescomposition ca2 predictions")
     vn = lookup_parameters[["speciescomposition_ca2"]]$variabletomodel
 
@@ -832,7 +836,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     ) 
  }
 
-  if ( "speciescomposition_ca3" %in% lookup_projects ) {
+  if ( "speciescomposition_ca3" %in% lookup_parameters_names ) {
+    require(aegis.speciescomposition)
     message( "lookup: speciescomposition ca3 predictions")
     vn = lookup_parameters[["speciescomposition_ca3"]]$variabletomodel
 
