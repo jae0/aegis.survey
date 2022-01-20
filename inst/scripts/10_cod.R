@@ -309,7 +309,6 @@ glm methods here
   # redo_survey_data = TRUE
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
     fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
-  M$log.substrate.grainsize = log( M$substrate.grainsize )
   
   ip = which(M$tag == "predictions")
   io = which(M$tag == "observations")
@@ -327,7 +326,8 @@ glm methods here
   pH = survey_parameter_list( mf=mf, p=p, type="habitat" )
 
 
-  redo_model = TRUE
+  # redo_model = TRUE
+  redo_model = FALSE
 
   # size model
   fit = carstm_model( p=pW, data=M, sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
@@ -335,7 +335,9 @@ glm methods here
     # redo_fit = FALSE,  # only to redo sims and extractions 
     # toget="predictions",  # this updates a specific subset of calc
     theta= c( 0.088, 2.950, 0.943, 3.230, 3.676, 4.382, 3.781, 3.952, 3.313, 2.603, -0.044, 2.566, 3.194),
-    control.inla = list( strategy='adaptive' ), num.threads="4:2", mc.cores=2 )  
+    control.inla = list( strategy='adaptive' ), 
+    num.threads="4:2", mc.cores=2 
+  )  
   fit = NULL; gc()
 
   # numerical model
@@ -345,22 +347,21 @@ glm methods here
     # toget="predictions",  # this updates a specific subset of calc
     theta=c(1.131, 0.767, 2.593, -0.659, -1.411, -1.689, -0.254, -2.234, 3.394, -2.381, -1.399, 0.371) ,
     control.inla = list( strategy='adaptive' ), 
-    num.threads="4:2", mc.cores=2 )  
+    num.threads="4:2", mc.cores=2 
+  )  
 
-    # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
+  # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
   fit = NULL; gc()
 
- 
-  
   # habitat model
   fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain="predictions", 
     redo_fit=redo_model,
     # redo_fit = FALSE,  # only to redo sims and extractions 
     # toget="predictions",  # this updates a specific subset of calc
-    theta = c( 0.158, 4.251, 1.954, 2.745, 1.831, 1.622, 5.499, -0.393, 4.635, -0.436, 3.954, 3.201 ),
+    # theta = c( 0.158, 4.251, 1.954, 2.745, 1.831, 1.622, 5.499, -0.393, 4.635, -0.436, 3.954, 3.201 ),
     control.inla = list( strategy='adaptive' ), 
-    control.family = list(control.link=list(model="logit"), 
-    num.threads="4:2", mc.cores=2 )   
+    control.family = list(control.link=list(model="logit") ), 
+    num.threads="4:2", mc.cores=2   
   ) 
   # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
   fit = NULL; gc()

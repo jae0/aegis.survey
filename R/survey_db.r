@@ -1360,6 +1360,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       }
     }
 
+    if ( exists("substrate.grainsize", M)) M$log.substrate.grainsize = log( M$substrate.grainsize )
+
     if (!exists("yr", M)) M$yr = M$year  # req for meanweights
 
     # IMPERATIVE:
