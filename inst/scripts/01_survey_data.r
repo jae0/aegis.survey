@@ -13,13 +13,7 @@
 
 # ----------------------------------------
 # absorb groundfish data -- requires DFO oracle database connectivity
-
-  if ( data_dump_with_minimal_dependencies ) {
-    # to manually extract data for a few years from Oracle on MSWindows: (use R - 3.6.3 in virutalbox ..)
-    # the following uses minimal libraries and parameter settings  
-    groundfish_survey_db( yrs=2020:year.assessment, DS="download_from_oracle_as_raw_tables_locally", outdir = getwd() )
-  }
-
+ 
   if ( data_dump_from_a_full_installation ) {
     # full data dump of all years in correct locations
     # rawdata data dump of aegis tables
@@ -52,6 +46,9 @@
 
 
   if (redo_historical_netmensuration_estimates ) {
+    
+    DO NOT RUN
+
     # only relevent for a short window of time .. no need to rerun
     # source ( file.path( find.package(package="bio.snowcrab"), "scripts", "99_netmensuration_historical_data.R" ) )  # in aegis_survey:: scripts directory
 
@@ -119,16 +116,12 @@
 # ----------------------------------------
 # prepare snow crab data -- requires DFO oracle database connectivity
 
-  if ( data_dump_with_minimal_dependencies ) {
-    # to manually extract data for a few years from Oracle on MSWindows: (use R - 3.6.3 in virutalbox ..)
-    # the following uses minimal libraries and parameter settings  
-    ## NOTE not yet implemented :
-    snowcrab_db( yrs=2020:year.assessment, DS="download_from_oracle_as_raw_tables_locally", outdir = getwd() )
-  }
-
   if ( data_dump_from_a_full_installation ) {
     # full data dump of all years in correct locations
-    source( file.path( find.package(package="bio.snowcrab"), "scripts", "01.snowcrab.r") )
+    run relevant  items in: 
+     
+     file.path( find.package(package="bio.snowcrab"), "scripts", "01.snowcrab.r") 
+
   }
 
 
