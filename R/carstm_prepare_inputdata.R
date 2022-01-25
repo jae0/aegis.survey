@@ -99,7 +99,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters["bathymetry"], 
+        parameters=lookup_parameters["bathymetry"],  # yes single square brackets 
         LOCS=M[ iM, c("lon", "lat")],  
         project_class="core", 
         output_format="points" , 
@@ -162,7 +162,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[vn]][iM]  = aegis_lookup( 
-        parameters=lookup_parameters["substrate"], 
+        parameters=lookup_parameters["substrate"], # yes single square brackets 
         LOCS=M[iM, c("lon", "lat")], 
         project_class="core", 
         output_format="points", 
@@ -219,7 +219,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     
     if (length(iM > 0)) {
       M[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters["temperature"], 
+        parameters=lookup_parameters["temperature"], # yes single square brackets 
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         project_class="core", 
         DS="aggregated_data", 
@@ -234,7 +234,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM > 0)) {
     
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="temperature", 
+        parameters=lookup_parameters["temperature"], # yes single square brackets 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm
@@ -276,7 +276,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters["speciescomposition_pca1"], 
+        parameters=lookup_parameters["speciescomposition_pca1"], # yes single square brackets 
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         project_class="core", 
         DS="speciescomposition", 
@@ -290,7 +290,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="speciescomposition_pca1", 
+        parameters=lookup_parameters["speciescomposition_pca1"], # yes single square brackets 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly, 
         project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -322,7 +322,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
         M[[vn]][iM]  = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition_pca2"], 
+          parameters=lookup_parameters["speciescomposition_pca2"], # yes single square brackets 
           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
           project_class="core", 
           DS="speciescomposition", 
@@ -335,7 +335,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="speciescomposition_pca2", 
+        parameters=lookup_parameters["speciescomposition_pca2"], # yes single square brackets 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly, 
         project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -368,7 +368,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
         M[[vn]][iM]  = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition_pca3"], 
+          parameters=lookup_parameters["speciescomposition_pca3"], # yes single square brackets 
           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
           project_class="core", 
           DS="speciescomposition", 
@@ -381,7 +381,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="speciescomposition_pca3", 
+        parameters=lookup_parameters["speciescomposition_pca3"], # yes single square brackets
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly, 
         project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -414,7 +414,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[vn]][iM] = aegis_lookup(  
-        parameters=lookup_parameters["speciescomposition_ca1"], 
+        parameters=lookup_parameters["speciescomposition_ca1"], # yes single square brackets 
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         project_class="core", 
         DS="speciescomposition", 
@@ -427,7 +427,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="speciescomposition_ca1", 
+        parameters=lookup_parameters["speciescomposition_ca1"], # yes single square brackets
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly, 
         project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -460,7 +460,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
         M[[vn]][iM]  = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition_ca2"], 
+          parameters=lookup_parameters["speciescomposition_ca2"], # yes single square brackets
           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
           project_class="core", 
           DS="speciescomposition", 
@@ -473,7 +473,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="speciescomposition_ca2", 
+        parameters=lookup_parameters["speciescomposition_ca2"], # yes single square brackets
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly, 
         project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -507,7 +507,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
         M[[vn]][iM]  = aegis_lookup(  
-          parameters=lookup_parameters["speciescomposition_ca3"], 
+          parameters=lookup_parameters["speciescomposition_ca3"], # yes single square brackets 
           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
           project_class="core", 
           DS="speciescomposition", 
@@ -520,7 +520,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="speciescomposition_ca3", 
+        parameters=lookup_parameters["speciescomposition_ca3"], # yes single square brackets 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly, 
         project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -605,7 +605,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["bathymetry"]]$variabletomodel
  
     APS[[vn]] = aegis_lookup( 
-      parameters="bathymetry", 
+      parameters=lookup_parameters["bathymetry"], # yes single square brackets
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -622,7 +622,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         if (length(iM) > 0 ) {
           # depth is very important
           APS[[vn]][iM] = aegis_lookup(  
-            parameters="bathymetry", 
+            parameters=lookup_parameters["bathymetry"], # yes single square brackets 
             LOCS=APS$AUID,
             LOCS_AU=sppoly,
             project_class = "stmv", # lookup from modelled predictions from stmv
@@ -638,7 +638,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         if (length(iM) > 0 ) {
           # depth is very important
           APS[[vn]][iM] = aegis_lookup(  
-            parameters="bathymetry", 
+            parameters=lookup_parameters["bathymetry"], # yes single square brackets
             LOCS=APS$AUID,
             LOCS_AU=sppoly,
             project_class = "core", # lookup from aggregated data
@@ -662,7 +662,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["substrate"]]$variabletomodel
 
     APS[[vn]]  = aegis_lookup( 
-      parameters="substrate", 
+      parameters=lookup_parameters["substrate"], # yes single square brackets 
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -679,7 +679,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       if (length(iM) > 0 ) {
 
         APS[[vn]][iM] = aegis_lookup(  
-          parameters="substrate", 
+          parameters=lookup_parameters["substrate"], # yes single square brackets
           LOCS=APS$AUID,
           LOCS_AU=sppoly,
           project_class = "stmv", # lookup from modelled predictions from stmv
@@ -714,7 +714,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["temperature"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters="temperature", 
+      parameters=lookup_parameters["temperature"],  # yes single square brackets 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -737,7 +737,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_pca1"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters="speciescomposition_pca1", 
+      parameters=lookup_parameters["speciescomposition_pca1"],  # yes single square brackets 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
       project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -759,7 +759,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters="speciescomposition_pca2", 
+      parameters=lookup_parameters["speciescomposition_pca2"], # yes single square brackets
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -779,7 +779,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_pca3"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters="speciescomposition_pca3", 
+      parameters=lookup_parameters["speciescomposition_pca3"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -801,7 +801,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_ca1"]]$variabletomodel
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters="speciescomposition_ca1", 
+      parameters=lookup_parameters["speciescomposition_ca1"], # yes single square brackets 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
       project_class = "carstm", # lookup from modelled predictions from carstm 
@@ -822,7 +822,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_ca2"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters="speciescomposition_ca2", 
+      parameters=lookup_parameters["speciescomposition_ca2"], # yes single square brackets 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
@@ -842,7 +842,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vn = lookup_parameters[["speciescomposition_ca3"]]$variabletomodel
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters="speciescomposition_ca3", 
+      parameters=lookup_parameters["speciescomposition_ca3"], # yes single square brackets 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
       project_class = "carstm", # lookup from modelled predictions from carstm
