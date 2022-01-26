@@ -615,27 +615,31 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (lookup_exhaustive) {
 
         iM = which(!is.finite( APS[[vn]] )) 
-        if (length(iM) > 0 ) {
-          # depth is very important
-          APS[[vn]][iM] = aegis_lookup(  
-            parameters="bathymetry",  
-            LOCS=APS$AUID,
-            LOCS_AU=sppoly,
-            project_class = "stmv", # lookup from modelled predictions from stmv
-            output_format = "areal_units",
-            variable_name="z", 
-            raster_resolution=min(p$gridparams$res) /2,
-            returntype = "vector"
-          ) 
+
+        if (pc != "stmv") {
+          if (length(iM) > 0 ) {
+            # depth is very important
+            APS[[vn]][iM] = aegis_lookup(  
+              parameters="bathymetry",  
+              LOCS=APS$AUID[iM],
+              LOCS_AU=sppoly,
+              project_class = "stmv", # lookup from modelled predictions from stmv
+              output_format = "areal_units",
+              variable_name="z", 
+              raster_resolution=min(p$gridparams$res) /2,
+              returntype = "vector"
+            ) 
+
+          }
         }
 
 
         iM = which(!is.finite( APS[[vn]] )) 
         if (length(iM) > 0 ) {
-          # depth is very important
-          APS[[vn]][iM] = aegis_lookup(  
+          # depth is very important so try again
+          APS[[vn]][iM]  = aegis_lookup(  
             parameters="bathymetry", 
-            LOCS=APS$AUID,
+            LOCS=APS$AUID[iM],
             LOCS_AU=sppoly,
             project_class = "core", # lookup from aggregated data
             output_format = "areal_units",
@@ -670,24 +674,27 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       returntype = "vector"
     )  
 
+
     if (lookup_exhaustive) {
 
-      iM = which(!is.finite( APS[[vn]] )) 
-      if (length(iM) > 0 ) {
+      if (pc != "stmv") {
+        iM = which(!is.finite( APS[[vn]] )) 
+        if (length(iM) > 0 ) {
 
-        APS[[vn]][iM] = aegis_lookup(  
-          parameters="substrate", 
-          LOCS=APS$AUID,
-          LOCS_AU=sppoly,
-          project_class = "stmv", # lookup from modelled predictions from stmv
-          output_format = "areal_units",
-          variable_name = "substrate.grainsize", 
-          raster_resolution=min(p$gridparams$res) /2,
-          returntype = "vector"
-        ) 
+          APS[[vn]][iM] = aegis_lookup(  
+            parameters="substrate", 
+            LOCS=APS$AUID[iM],
+            LOCS_AU=sppoly,
+            project_class = "stmv", # lookup from modelled predictions from stmv
+            output_format = "areal_units",
+            variable_name = "substrate.grainsize", 
+            raster_resolution=min(p$gridparams$res) /2,
+            returntype = "vector"
+          ) 
+        }
       }
-
     }
+
   }
 
   # prediction surface in time
