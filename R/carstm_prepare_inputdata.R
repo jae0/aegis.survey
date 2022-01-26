@@ -1,6 +1,6 @@
 
 carstm_prepare_inputdata = function( p, M, sppoly, 
-  lookup_parameters = NULL, 
+  carstm_prediction_surface_parameters = NULL, 
   lookup_projects=c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" ), 
   APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE
 ) {
@@ -24,33 +24,29 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   # degreedays = number of degree days in a given year – annual
 
 
-  if ( is.null(lookup_parameters)) {
-    if (exists("carstm_lookup_parameters", p)) lookup_parameters = p$carstm_lookup_parameters
+  if ( is.null(carstm_prediction_surface_parameters)) {
+    if (exists("carstm_prediction_surface_parameters", p)) carstm_prediction_surface_parameters = p$carstm_prediction_surface_parameters
   }  
   
-  if ( is.null(lookup_parameters)) {
-    if (exists("lookup_parameters", p)) lookup_parameters = p$lookup_parameters
-  }  
-  
-  if ( is.null(lookup_parameters)) {
+  if ( is.null(carstm_prediction_surface_parameters)) {
     # these params are for observation data
-    lookup_parameters = list()
+    carstm_prediction_surface_parameters = list()
 
-    if ("bathymetry"  %in% lookup_projects) lookup_parameters[["bathymetry"]] = aegis.bathymetry::bathymetry_parameters( project_class="carstm" )  # full default
-    if ("substrate"   %in% lookup_projects) lookup_parameters[["substrate"]] = aegis.substrate::substrate_parameters(  project_class="carstm" )
-    if ("temperature" %in% lookup_projects) lookup_parameters[["temperature"]] =  aegis.temperature::temperature_parameters(  project_class="carstm", yrs=p$yrs )
+    if ("bathymetry"  %in% lookup_projects) carstm_prediction_surface_parameters[["bathymetry"]] = aegis.bathymetry::bathymetry_parameters( project_class="carstm" )  # full default
+    if ("substrate"   %in% lookup_projects) carstm_prediction_surface_parameters[["substrate"]] = aegis.substrate::substrate_parameters(  project_class="carstm" )
+    if ("temperature" %in% lookup_projects) carstm_prediction_surface_parameters[["temperature"]] =  aegis.temperature::temperature_parameters(  project_class="carstm", yrs=p$yrs )
     if (any( grepl("speciescomposition", lookup_projects)) ) {
-      lookup_parameters[["speciescomposition_pca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_pca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_pca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_ca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_ca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  )
-      lookup_parameters[["speciescomposition_ca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
+      carstm_prediction_surface_parameters[["speciescomposition_pca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  )
+      carstm_prediction_surface_parameters[["speciescomposition_pca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
+      carstm_prediction_surface_parameters[["speciescomposition_pca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  )
+      carstm_prediction_surface_parameters[["speciescomposition_ca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  )
+      carstm_prediction_surface_parameters[["speciescomposition_ca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  )
+      carstm_prediction_surface_parameters[["speciescomposition_ca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
     }
  
   }
 
-  lookup_parameters_names = names(lookup_parameters)
+  lookup_parameters_names = names(carstm_prediction_surface_parameters)
    
   nS = nrow(M)
 
@@ -602,14 +598,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: bathymetry predictions")
 
     vn = "z"
- 
+    pc = carstm_prediction_surface_parameters[["bathymetry"]][["project_class"]]
+
     APS[[vn]] = aegis_lookup( 
-      parameters=lookup_parameters["bathymetry"], 
+      parameters=carstm_prediction_surface_parameters["bathymetry"], 
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
-      project_class = "carstm", # lookup from modelled predictions from carstm
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name= list("predictions"),
+      variable_name= ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
       returntype = "vector"
@@ -659,14 +656,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: substrate predictions")
 
     vn = "substrate.grainsize"
+    pc = carstm_prediction_surface_parameters[["substrate"]][["project_class"]]
 
     APS[[vn]]  = aegis_lookup( 
-      parameters=lookup_parameters["substrate"],  
+      parameters=carstm_prediction_surface_parameters["substrate"],  
       LOCS=sppoly$AUID,
       LOCS_AU=sppoly,
-      project_class = "carstm", # lookup from modelled predictions from carstm
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name = list("predictions"),
+      variable_name = ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars = c("mean"),
       raster_resolution = min(p$gridparams$res) /2,
       returntype = "vector"
@@ -711,14 +709,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: temperature predictions")
 
     vn = "t"
- 
+    pc = carstm_prediction_surface_parameters[["temperature"]][["project_class"]]
+
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["temperature"],   
+      parameters=carstm_prediction_surface_parameters["temperature"],   
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
-      project_class = "carstm", # lookup from modelled predictions from carstm
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name=list("predictions"),
+      variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
       tz="America/Halifax",
@@ -734,14 +733,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: speciescomposition pca1 predictions")
 
     vn = "pca1"
+    pc = carstm_prediction_surface_parameters[["speciescomposition_pca1"]][["project_class"]]
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition_pca1"],   
+      parameters=carstm_prediction_surface_parameters["speciescomposition_pca1"],   
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
-      project_class = "carstm", # lookup from modelled predictions from carstm 
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name=list("predictions"),
+      variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
@@ -755,14 +755,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     require(aegis.speciescomposition)
     message( "lookup: speciescomposition pca2 predictions")
     vn = "pca2"
+    pc = carstm_prediction_surface_parameters[["speciescomposition_pca2"]][["project_class"]]
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition_pca2"], 
+      parameters=carstm_prediction_surface_parameters["speciescomposition_pca2"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
-      project_class = "carstm", # lookup from modelled predictions from carstm
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name=list("predictions"),
+      variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
@@ -775,14 +776,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     require(aegis.speciescomposition)
     message( "lookup: speciescomposition pca3 predictions")
     vn = "pca3"
+    pc = carstm_prediction_surface_parameters[["speciescomposition_pca3"]][["project_class"]]
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition_pca3"], 
+      parameters=carstm_prediction_surface_parameters["speciescomposition_pca3"], 
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
-      project_class = "carstm", # lookup from modelled predictions from carstm
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name=list("predictions"),
+      variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
@@ -797,14 +799,16 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: speciescomposition ca1 predictions")
 
     vn = "ca1"
+    pc = carstm_prediction_surface_parameters[["speciescomposition_ca1"]][["project_class"]]
+
  
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition_ca1"],  
+      parameters=carstm_prediction_surface_parameters["speciescomposition_ca1"],  
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly, 
-      project_class = "carstm", # lookup from modelled predictions from carstm 
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name=list("predictions"),
+      variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
@@ -818,14 +822,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     require(aegis.speciescomposition)
     message( "lookup: speciescomposition ca2 predictions")
     vn = "ca2"
+    pc = carstm_prediction_surface_parameters[["speciescomposition_ca2"]][["project_class"]]
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition_ca2"],  
+      parameters=carstm_prediction_surface_parameters["speciescomposition_ca2"],  
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
-      project_class = "carstm", # lookup from modelled predictions from carstm
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name=list("predictions"),
+      variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
@@ -838,14 +843,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     require(aegis.speciescomposition)
     message( "lookup: speciescomposition ca3 predictions")
     vn = "ca3"
+    pc = carstm_prediction_surface_parameters[["speciescomposition_ca3"]][["project_class"]]
 
     APS[[ vn ]] = aegis_lookup( 
-      parameters=lookup_parameters["speciescomposition_ca3"],  
+      parameters=carstm_prediction_surface_parameters["speciescomposition_ca3"],  
       LOCS=APS[ , c("AUID", "timestamp")], 
       LOCS_AU=sppoly,
-      project_class = "carstm", # lookup from modelled predictions from carstm
+      project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
-      variable_name=list("predictions"),
+      variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       variabletomodel=vn ,
       statvars=c("mean"),
       raster_resolution=min(p$gridparams$res) /2,
