@@ -228,9 +228,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
-    
+  
       M[[ vn ]][iM] = aegis_lookup( 
-        parameters="temperature",  
+        parameters=carstm_prediction_surface_parameters["temperature"],  
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LOCS_AU=sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm
@@ -281,7 +281,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         yrs=p$yrs
       )
     }
-browser()
+
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[ vn ]][iM] = aegis_lookup( 
@@ -736,7 +736,6 @@ browser()
 
   if ( "speciescomposition_pca1" %in% lookup_parameters_names ) {
 
-browser()
 
     require(aegis.speciescomposition)
     message( "lookup: speciescomposition pca1 predictions")
