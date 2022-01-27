@@ -228,7 +228,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
-  
+
       M[[ vn ]][iM] = aegis_lookup( 
         parameters=carstm_prediction_surface_parameters["temperature"],  
         LOCS=M[ iM , c("AUID", "timestamp")], 
