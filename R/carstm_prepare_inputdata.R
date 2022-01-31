@@ -34,14 +34,14 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     if ("bathymetry"  %in% lookup_projects) carstm_prediction_surface_parameters[["bathymetry"]] = aegis.bathymetry::bathymetry_parameters( project_class="carstm" )  # full default
     if ("substrate"   %in% lookup_projects) carstm_prediction_surface_parameters[["substrate"]] = aegis.substrate::substrate_parameters(  project_class="carstm" )
-    if ("temperature" %in% lookup_projects) carstm_prediction_surface_parameters[["temperature"]] =  aegis.temperature::temperature_parameters(  project_class="carstm", yrs=p$yrs )
+    if ("temperature" %in% lookup_projects) carstm_prediction_surface_parameters[["temperature"]] =  aegis.temperature::temperature_parameters(  project_class="carstm" )
     if (any( grepl("speciescomposition", lookup_projects)) ) {
-      carstm_prediction_surface_parameters[["speciescomposition_pca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1", yrs=p$yrs  )
-      carstm_prediction_surface_parameters[["speciescomposition_pca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2", yrs=p$yrs  )
-      carstm_prediction_surface_parameters[["speciescomposition_pca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3", yrs=p$yrs  )
-      carstm_prediction_surface_parameters[["speciescomposition_ca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1", yrs=p$yrs  )
-      carstm_prediction_surface_parameters[["speciescomposition_ca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2", yrs=p$yrs  )
-      carstm_prediction_surface_parameters[["speciescomposition_ca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3", yrs=p$yrs  )
+      carstm_prediction_surface_parameters[["speciescomposition_pca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca1"  )
+      carstm_prediction_surface_parameters[["speciescomposition_pca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca2"  )
+      carstm_prediction_surface_parameters[["speciescomposition_pca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="pca3"  )
+      carstm_prediction_surface_parameters[["speciescomposition_ca1"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca1"  )
+      carstm_prediction_surface_parameters[["speciescomposition_ca2"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca2"  )
+      carstm_prediction_surface_parameters[["speciescomposition_ca3"]] = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", variabletomodel="ca3"  )
     }
  
   }
@@ -215,20 +215,18 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     
     if (length(iM > 0)) {
       M[[vn]][iM] = aegis_lookup(  
-        parameters="temperature", # aggregTED DATA TAKES text as param 
+        parameters="temperature", # aggregated data takes text as param 
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         project_class="core", 
         DS="aggregated_data", 
         output_format="points", 
         variable_name="t.mean", 
-        tz="America/Halifax",
-        yrs=p$yrs
+        tz="America/Halifax"
       )
     }
 
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
-
       M[[ vn ]][iM] = aegis_lookup( 
         parameters=carstm_prediction_surface_parameters["temperature"],  
         LOCS=M[ iM , c("AUID", "timestamp")], 
@@ -237,9 +235,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         output_format = "areal_units",
         variable_name=list("predictions"),
         statvars=c("mean"),
-        raster_resolution=min(p$gridparams$res) /2,
+        space_resolution = p$pres * 2,
+        time_resolution = 2/12 ,  # fraction of year (2 months)
         tz="America/Halifax",
-        yrs=p$yrs,
         returntype = "vector"
       )
     }
@@ -277,8 +275,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         DS="speciescomposition", 
         output_format="points", 
         variable_name="pca1", 
-        tz="America/Halifax" ,
-        yrs=p$yrs
+        tz="America/Halifax" 
       )
     }
 
@@ -291,10 +288,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm 
         output_format = "areal_units",
         variable_name=list("predictions"),
-        variabletomodel=vn ,
         statvars=c("mean"),
-        raster_resolution=min(p$gridparams$res) /2,
-        yrs=p$yrs,
+        space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
     }
@@ -323,8 +318,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           DS="speciescomposition", 
           output_format="points", 
           variable_name="pca2", 
-          tz="America/Halifax" ,
-          yrs=p$yrs
+          tz="America/Halifax" 
         )
     }
     iM = which(!is.finite( M[[vn]] ))
@@ -336,10 +330,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm 
         output_format = "areal_units",
         variable_name=list("predictions"),
-        variabletomodel=vn ,
         statvars=c("mean"),
-        raster_resolution=min(p$gridparams$res) /2,
-        yrs=p$yrs,
+        space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
     }
@@ -369,8 +361,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           DS="speciescomposition", 
           output_format="points", 
           variable_name="pca2", 
-          tz="America/Halifax" ,
-          yrs=p$yrs
+          tz="America/Halifax" 
         )
     }
     iM = which(!is.finite( M[[vn]] ))
@@ -382,10 +373,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm 
         output_format = "areal_units",
         variable_name=list("predictions"),
-        variabletomodel=vn ,
         statvars=c("mean"),
-        raster_resolution=min(p$gridparams$res) /2,
-        yrs=p$yrs,
+        space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
     }
@@ -415,8 +404,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         DS="speciescomposition", 
         output_format="points", 
         variable_name="pca1", 
-        tz="America/Halifax" ,
-        yrs=p$yrs
+        tz="America/Halifax" 
       )
     }
     iM = which(!is.finite( M[[vn]] ))
@@ -428,10 +416,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm 
         output_format = "areal_units",
         variable_name=list("predictions"),
-        variabletomodel=vn ,
         statvars=c("mean"),
-        raster_resolution=min(p$gridparams$res) /2,
-        yrs=p$yrs,
+        space_resolution=p$pres * 2,
         returntype = "vector"
       )     }
       
@@ -460,8 +446,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           DS="speciescomposition", 
           output_format="points", 
           variable_name="pca2", 
-          tz="America/Halifax" ,
-          yrs=p$yrs
+          tz="America/Halifax" 
         )
     }
     iM = which(!is.finite( M[[vn]] ))
@@ -473,10 +458,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm 
         output_format = "areal_units",
         variable_name=list("predictions"),
-        variabletomodel=vn ,
         statvars=c("mean"),
-        raster_resolution=min(p$gridparams$res) /2,
-        yrs=p$yrs,
+        space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
     }
@@ -507,8 +490,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           DS="speciescomposition", 
           output_format="points", 
           variable_name="pca2", 
-          tz="America/Halifax" ,
-          yrs=p$yrs
+          tz="America/Halifax" 
         )
     }
     iM = which(!is.finite( M[[vn]] ))
@@ -520,10 +502,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         project_class = "carstm", # lookup from modelled predictions from carstm 
         output_format = "areal_units",
         variable_name=list("predictions"),
-        variabletomodel=vn ,
         statvars=c("mean"),
-        raster_resolution=min(p$gridparams$res) /2,
-        yrs=p$yrs,
+        space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
     }
@@ -607,7 +587,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       output_format = "areal_units",
       variable_name= ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
+      space_resolution=p$pres * 2,
       returntype = "vector"
     ) 
 
@@ -625,7 +605,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
               project_class = "stmv", # lookup from modelled predictions from stmv
               output_format = "areal_units",
               variable_name="z", 
-              raster_resolution=min(p$gridparams$res) /2,
+              space_resolution=p$pres * 2,
               returntype = "vector"
             ) 
 
@@ -644,7 +624,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
             output_format = "areal_units",
             DS = "aggregated_data",  # needed for core 
             variable_name = "z.mean", 
-            raster_resolution=min(p$gridparams$res) /2,
+            space_resolution=p$pres * 2,
             returntype = "vector"
           ) 
         }
@@ -669,7 +649,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       output_format = "areal_units",
       variable_name = ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars = c("mean"),
-      raster_resolution = min(p$gridparams$res) /2,
+      space_resolution = p$pres * 2,
       returntype = "vector"
     )  
 
@@ -687,7 +667,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
             project_class = "stmv", # lookup from modelled predictions from stmv
             output_format = "areal_units",
             variable_name = "substrate.grainsize", 
-            raster_resolution=min(p$gridparams$res) /2,
+            space_resolution=p$pres * 2,
             returntype = "vector"
           ) 
         }
@@ -725,9 +705,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       output_format = "areal_units",
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
+      space_resolution=p$pres * 2,
       tz="America/Halifax",
-      yrs=p$yrs,
       returntype = "vector"
     )
   
@@ -750,10 +729,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
-      variabletomodel=vn ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
-      yrs=p$yrs,
+      space_resolution=p$pres * 2,
       returntype = "vector"
     ) 
   }
@@ -772,10 +749,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
-      variabletomodel=vn ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
-      yrs=p$yrs,
+      space_resolution=p$pres * 2,
       returntype = "vector"
     ) 
   }
@@ -793,10 +768,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
-      variabletomodel=vn ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
-      yrs=p$yrs,
+      space_resolution=p$pres * 2,
       returntype = "vector"
     ) 
   }
@@ -817,10 +790,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
-      variabletomodel=vn ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
-      yrs=p$yrs,
+      space_resolution=p$pres * 2,
       returntype = "vector"
     ) 
   }
@@ -839,10 +810,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
-      variabletomodel=vn ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
-      yrs=p$yrs,
+      space_resolution=p$pres * 2,
       returntype = "vector"
     ) 
  }
@@ -860,10 +829,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       project_class = pc, # lookup from modelled predictions from carstm
       output_format = "areal_units",
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
-      variabletomodel=vn ,
       statvars=c("mean"),
-      raster_resolution=min(p$gridparams$res) /2,
-      yrs=p$yrs,
+      space_resolution=p$pres * 2,
       returntype = "vector"
     ) 
  }
