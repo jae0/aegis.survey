@@ -230,6 +230,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         DS="aggregated_data", 
         output_format="points", 
         variable_name="t.mean", 
+        space_resolution = p$pres*2 ,
+        time_resolution = 1/10 ,   
         tz="America/Halifax",
         year.assessment=p$year.assessment
       )
@@ -245,9 +247,10 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         output_format = "areal_units",
         variable_name=list("predictions"),
         statvars=c("mean"),
-        space_resolution = p$pres * 2,
-        time_resolution = 2/12 ,  # fraction of year (2 months)
+        space_resolution = p$pres  ,
+        time_resolution = 1/10 ,  # fraction of year (2 months)
         tz="America/Halifax",
+        space_resolution=p$pres*2,
         returntype = "vector"
       )
     }
