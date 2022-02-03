@@ -377,7 +377,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           project_class="core", 
           DS="speciescomposition", 
           output_format="points", 
-          variable_name="pca2", 
+          variable_name="pca3", 
           tz="America/Halifax" 
         )
     }
@@ -422,7 +422,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         DS="speciescomposition", 
         output_format="points", 
         year.assessment=p$year.assessment,
-        variable_name="pca1", 
+        variable_name="ca1", 
         tz="America/Halifax" 
       )
     }
@@ -465,7 +465,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           project_class="core", 
           DS="speciescomposition", 
           output_format="points", 
-          variable_name="pca2", 
+          variable_name="ca2", 
           year.assessment=p$year.assessment,
           tz="America/Halifax" 
         )
@@ -511,7 +511,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           project_class="core", 
           DS="speciescomposition", 
           output_format="points", 
-          variable_name="pca2", 
+          variable_name="ca3", 
           year.assessment=p$year.assessment,
           tz="America/Halifax" 
         )
