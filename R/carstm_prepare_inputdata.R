@@ -247,10 +247,10 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         output_format = "areal_units",
         variable_name=list("predictions"),
         statvars=c("mean"),
-        space_resolution = p$pres  ,
+        year.assessment=p$year.assessment,
+        space_resolution = p$pres*2  ,
         time_resolution = 1/10 ,  # fraction of year (2 months)
-        tz="America/Halifax",
-        space_resolution=p$pres*2,
+        tz="America/Halifax", 
         returntype = "vector"
       )
     }
@@ -303,6 +303,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         output_format = "areal_units",
         variable_name=list("predictions"),
         statvars=c("mean"),
+        year.assessment=p$year.assessment,
         space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
@@ -321,7 +322,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     message( "lookup: speciescomposition pca2 observations")
 
     vn = "pca2"
-    
+
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
@@ -332,6 +333,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           DS="speciescomposition", 
           output_format="points", 
           variable_name="pca2", 
+          year.assessment=p$year.assessment,
           tz="America/Halifax" 
         )
     }
@@ -345,6 +347,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         output_format = "areal_units",
         variable_name=list("predictions"),
         statvars=c("mean"),
+        year.assessment=p$year.assessment,
         space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
@@ -388,6 +391,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         output_format = "areal_units",
         variable_name=list("predictions"),
         statvars=c("mean"),
+        year.assessment=p$year.assessment,
         space_resolution=p$pres * 2,
         returntype = "vector"
       ) 
@@ -417,6 +421,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         project_class="core", 
         DS="speciescomposition", 
         output_format="points", 
+        year.assessment=p$year.assessment,
         variable_name="pca1", 
         tz="America/Halifax" 
       )
@@ -432,6 +437,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         variable_name=list("predictions"),
         statvars=c("mean"),
         space_resolution=p$pres * 2,
+        year.assessment=p$year.assessment,
         returntype = "vector"
       )     }
       
@@ -460,6 +466,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           DS="speciescomposition", 
           output_format="points", 
           variable_name="pca2", 
+          year.assessment=p$year.assessment,
           tz="America/Halifax" 
         )
     }
@@ -474,6 +481,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         variable_name=list("predictions"),
         statvars=c("mean"),
         space_resolution=p$pres * 2,
+        year.assessment=p$year.assessment,
         returntype = "vector"
       ) 
     }
@@ -504,6 +512,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
           DS="speciescomposition", 
           output_format="points", 
           variable_name="pca2", 
+          year.assessment=p$year.assessment,
           tz="America/Halifax" 
         )
     }
@@ -518,6 +527,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         variable_name=list("predictions"),
         statvars=c("mean"),
         space_resolution=p$pres * 2,
+        year.assessment=p$year.assessment,
         returntype = "vector"
       ) 
     }
@@ -720,6 +730,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
       space_resolution=p$pres * 2,
+      year.assessment=p$year.assessment,
       tz="America/Halifax",
       returntype = "vector"
     )
@@ -745,6 +756,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
       space_resolution=p$pres * 2,
+      year.assessment=p$year.assessment,
       returntype = "vector"
     ) 
   }
@@ -765,6 +777,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
       space_resolution=p$pres * 2,
+      year.assessment=p$year.assessment,
       returntype = "vector"
     ) 
   }
@@ -784,6 +797,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
       space_resolution=p$pres * 2,
+      year.assessment=p$year.assessment,
       returntype = "vector"
     ) 
   }
@@ -806,6 +820,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       variable_name=ifelse( pc=="carstm", list("predictions"), vn ) ,
       statvars=c("mean"),
       space_resolution=p$pres * 2,
+      year.assessment=p$year.assessment,
       returntype = "vector"
     ) 
   }
