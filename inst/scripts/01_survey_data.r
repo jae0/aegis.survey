@@ -49,7 +49,7 @@
 
   if (redo_historical_netmensuration_estimates ) {
     
-    DO NOT RUN
+    WARNING::: DO NOT RUN THIS PART 
 
     # only relevent for a short window of time .. no need to rerun
     # source ( file.path( find.package(package="bio.snowcrab"), "scripts", "99_netmensuration_historical_data.R" ) )  # in aegis_survey:: scripts directory

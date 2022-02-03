@@ -221,7 +221,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         DS="aggregated_data", 
         output_format="points", 
         variable_name="t.mean", 
-        tz="America/Halifax"
+        tz="America/Halifax",
+        year.assessment=p$year.assessment
       )
     }
 
@@ -275,7 +276,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         DS="speciescomposition", 
         output_format="points", 
         variable_name="pca1", 
-        tz="America/Halifax" 
+        tz="America/Halifax",
+        year.assessment=p$year.assessment
       )
     }
 
