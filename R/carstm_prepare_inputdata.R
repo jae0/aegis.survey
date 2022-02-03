@@ -81,8 +81,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   missing_au = setdiff( sppoly_au, M_au )
   if (length(missing_au) > 0 )  {
-    warning("Areal units with no data found, this will likely cause problems:\n", paste0(missing_au, sep=" "))
-    print("Areal units with no data found, this will likely cause problems:")
+    print("Areal units with no data found, this will likely cause problems if there are too many:\n")
     print( missing_au )
   }
   
@@ -102,28 +101,25 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         output_format="points" , 
         DS="aggregated_data", 
         variable_name="z.mean", 
+        space_resolution=p$pres,
+        returntype="vector"
+      ) 
+    }
+
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+      M[[vn]][iM] = aegis_lookup(  
+        parameters="bathymetry",    
+        LOCS=M[ iM, c("lon", "lat")],  
+        project_class="stmv", 
+        output_format="points" , 
+        DS="complete", 
+        variable_name="z",
+        space_resolution=p$pres, 
         returntype="vector" 
       ) 
     }
  
-    if ( exists("spatial_domain", p)) {
-        # need to be careful with extrapolation ...  filter depths
-        if (NA_remove)  {
-          ii = which(! is.finite(M[[vn]] ) )
-          if (length(ii) > 0 ) {
-            M = M[ -ii , ]
-            message( "Dropping observations due to spatial domain: ", length(ii))
-          }
-        }
-        ii = geo_subset( spatial_domain=p$spatial_domain, Z=M )
-        if (length(ii)> 0 ) {
-          nM = nrow(M)
-          M = M[ ii , ] 
-          message( "Dropping observations due to spatial domain and depth: ", (nM - length(ii)) )
-        }
-    }
-
-
     p_bathymetry_stmv = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
 
     LU = bathymetry_db( p=p_bathymetry_stmv, DS="baseline", varnames="all" )
@@ -134,6 +130,18 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vns = intersect(  c( "z", "dZ", "ddZ", "b.sdSpatial", "b.sdObs", "b.phi", "b.nu", "b.localrange" ), names(LU) )
     for (vn in setdiff( vns, "z") ) M[[ vn]] = LU[ iML, vn ]
     LU =  iML = vns = NULL
+    
+    
+    if ( exists("spatial_domain", p)) {
+      # need to be careful with extrapolation ...  filter depths
+      ii = geo_subset( spatial_domain=p$spatial_domain, Z=M )
+      if (length(ii)> 0 ) {
+        nM = nrow(M)
+        M = M[ ii , ] 
+        message( "Dropping observations due to spatial domain and depth: ", (nM - length(ii)) )
+      }
+    }
+
     if (NA_remove) {
       ii = which( !is.finite( rowSums(M[, vns, with=FALSE] )  ))
       if (length(ii) > 0 ) {
