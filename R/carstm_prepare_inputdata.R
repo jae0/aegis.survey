@@ -193,15 +193,16 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if (length(iM > 0)) {
 
       M[[ vn ]][iM] = aegis_lookup( 
-      parameters=carstm_prediction_surface_parameters["substrate"],  
-      LOCS=sppoly$AUID,
-      LOCS_AU=sppoly,
-      project_class = pc, # lookup from modelled predictions from carstm
-      output_format = "areal_units",
-      variable_name = ifelse( pc=="carstm", list("predictions"), vn ) ,
-      statvars = c("mean"),
-      space_resolution = p$pres * 2,
-      returntype = "vector"
+        parameters=carstm_prediction_surface_parameters["substrate"],  
+        LOCS=sppoly$AUID,
+        LOCS_AU=sppoly,
+        project_class = pc, # lookup from modelled predictions from carstm
+        output_format = "areal_units",
+        variable_name = ifelse( pc=="carstm", list("predictions"), vn ) ,
+        statvars = c("mean"),
+        space_resolution = p$pres * 2,
+        returntype = "vector"
+      )
      }
  
     # due to limited spatial range, resort to using some of the modelled results as well to fill in some gaps
