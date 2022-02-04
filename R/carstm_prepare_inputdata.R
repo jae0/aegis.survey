@@ -71,21 +71,23 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     polys = sppoly[, "AUID"],
     varname = "AUID"
   )
-  M = M[!is.na(M$AUID),]
+
+  ooo = which( is.na(M$AUID ) )
+  if (length(ooo) > 0 )  {
+    print("Dropping data with no associated areal units (probably need to alter sppoly):\n")
+    print( M[ooo,] )
+    plot(sppoly["AUID"], reset=FALSE)
+    plot(st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ), add=TRUE ) 
+    plot(st_as_sf( M[ooo,], coords=c("lon","lat"), crs=crs_lonlat ), col="red", add=TRUE ) 
+    # message( "If dropping these locations, in red, is OK, then press 'c' to continue.")
+    # browser() 
+  }
+
+  M = M[ - ooo, ]
   M$AUID = as.character( M$AUID )  # match each datum to an area
 
   nM = nrow(M)
 
-  M_au = unique(M$AUID)
-  sppoly_au = unique(sppoly$AUID)
-
-  missing_au = setdiff( sppoly_au, M_au )
-  if (length(missing_au) > 0 )  {
-    print("Areal units with no data found, this will likely cause problems if there are too many:\n")
-    print( missing_au )
-  }
-  
-      
   if ("bathymetry" %in% lookup_parameters_names) {
     require(aegis.bathymetry)
     message( "lookup: bathymetry observations")
@@ -130,8 +132,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     vns = intersect(  c( "z", "dZ", "ddZ", "b.sdSpatial", "b.sdObs", "b.phi", "b.nu", "b.localrange" ), names(LU) )
     for (vn in setdiff( vns, "z") ) M[[ vn]] = LU[ iML, vn ]
     LU =  iML = vns = NULL
-    
-    
+
     if ( exists("spatial_domain", p)) {
       # need to be careful with extrapolation ...  filter depths
       ii = geo_subset( spatial_domain=p$spatial_domain, Z=M )
