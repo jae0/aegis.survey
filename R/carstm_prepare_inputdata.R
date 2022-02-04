@@ -65,12 +65,24 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
   sppoly = st_transform(sppoly, st_crs(crs_lonlat))
   
+  Mpts = st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat )
+
   # observations
   M$AUID = st_points_in_polygons(
-    pts = st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ),
+    pts = Mpts,
     polys = sppoly[, "AUID"],
     varname = "AUID"
   )
+
+  ooo = which( is.na(M$AUID ) )
+  if (length(ooo) > 0 )  {
+    # associating closest polygon to a given data point
+    for ( i in 1:length(ooo)) {
+      j = ooo[i]
+      k = which.min(c( st_distance( Mpts[j,], st_centroid(sppoly)) ) )
+      M$AUID[j] = sppoly$AUID[k]
+    }
+  }
 
   ooo = which( is.na(M$AUID ) )
   if (length(ooo) > 0 )  {
@@ -81,9 +93,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     plot(st_as_sf( M[ooo,], coords=c("lon","lat"), crs=crs_lonlat ), col="red", add=TRUE ) 
     # message( "If dropping these locations, in red, is OK, then press 'c' to continue.")
     # browser() 
+    M = M[ - ooo, ]
   }
 
-  M = M[ - ooo, ]
   M$AUID = as.character( M$AUID )  # match each datum to an area
 
   nM = nrow(M)
@@ -177,6 +189,21 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       )  
     }   
     
+    iM = which(!is.finite( M[[vn]] ))
+    if (length(iM > 0)) {
+
+      M[[ vn ]][iM] = aegis_lookup( 
+      parameters=carstm_prediction_surface_parameters["substrate"],  
+      LOCS=sppoly$AUID,
+      LOCS_AU=sppoly,
+      project_class = pc, # lookup from modelled predictions from carstm
+      output_format = "areal_units",
+      variable_name = ifelse( pc=="carstm", list("predictions"), vn ) ,
+      statvars = c("mean"),
+      space_resolution = p$pres * 2,
+      returntype = "vector"
+     }
+ 
     # due to limited spatial range, resort to using some of the modelled results as well to fill in some gaps
 
     # yes substrate source coordinate system is same as for bathy .. to match substrate source for the data
@@ -231,7 +258,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
         DS="aggregated_data", 
         output_format="points", 
         variable_name="t.mean", 
-        space_resolution = p$pres*2 ,
+        space_resolution = p$pres*5 ,
         time_resolution = 1/10 ,   
         tz="America/Halifax",
         year.assessment=p$year.assessment
