@@ -83,7 +83,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       areal_units_timeperiod = "pre2014"    # "pre2014" for older
     )
 
-    p = parameters_add_without_overwriting( p, habitat_quantile = 0.05 ) # quantile beyond which a location is considered improper habitat
+    p = parameters_add_without_overwriting( p, habitat.threshold.quantile = 0.05 ) # quantile beyond which a location is considered improper habitat
 
 
   if (project_class=="stratanal") {

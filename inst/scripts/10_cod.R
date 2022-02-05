@@ -310,6 +310,17 @@ glm methods here
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
     fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
   
+
+  # drop data withough covariates 
+  i = which(!is.finite( rowSums(M[, .(z, t, pca1, pca2 ) ] )) )
+  au = unique( M$AUID[i] )
+
+  M = M[ which( !(M$AUID %in% au )) , ]
+
+  sppoly = sppoly[ which(! sppoly$AUID %in% au ), ] 
+  sppoly = areal_units_neighbourhood_reset( sppoly, snap=2 )
+
+
   ip = which(M$tag == "predictions")
   io = which(M$tag == "observations")
   

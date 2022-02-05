@@ -1322,7 +1322,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
     set = set[ which(  is.finite(set$data_offset)   ),  ]
 
-    set$pa = presence.absence( X=set$totno / set$data_offset, px=p$habitat_quantile )$pa  # determine presence absence and weighting
+    set$pa = presence.absence( X=set$totno / set$data_offset, px=p$habitat.threshold.quantile )$pa  # determine presence absence and weighting
     set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
 
     set$tiyr = lubridate::decimal_date ( set$timestamp )  # required for inputdata
@@ -1364,9 +1364,19 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     if (!exists("yr", M)) M$yr = M$year  # req for meanweights
 
-    # IMPERATIVE:
-    M = M[ which( is.finite(M$t ) ), ]
-    M = M[ which( is.finite(M$z ) ), ]
+    # IMPERATIVE: 
+    i =  which(!is.finite(M$z))
+    j =  which(!is.finite(M$t)) 
+
+    if (length(j)>0 | length(i)>0) {
+      warning( "Some areal units that have no information on key covariates ... you will need to drop these and do a sppoly/nb reduction with areal_units_neighbourhood_reset() :")
+          print( "Missing depths:")
+      print(unique(M$AUID[i]) )
+      print( "Missing temperatures:")
+      print(unique(M$AUID[j] ) )
+    }
+    # M = M[ which( is.finite(M$t ) ), ]
+    # M = M[ which( is.finite(M$z ) ), ]
 
     # predictions to: westeren 2a and NED
     gears_ref = "Western IIA trawl"

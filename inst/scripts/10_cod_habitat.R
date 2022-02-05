@@ -203,11 +203,11 @@
         M$pa0 = M$pa
 
         M$pa = NA
-        p$habitat_quantile = 0.05
+        p$habitat.threshold.quantile = 0.05
 
         for (y in unique(M$yr)) {
           yy = which( M$tag=="observations" & M$yr==y)
-          if (length(yy) > 0 ) M$pa[yy] = presence.absence( X=M$totno[yy] / M$data_offset[yy], px=p$habitat_quantile )$pa  # determine presence absence and weighting
+          if (length(yy) > 0 ) M$pa[yy] = presence.absence( X=M$totno[yy] / M$data_offset[yy], px=p$habitat.threshold.quantile )$pa  # determine presence absence and weighting
         }
       
         # "miscalassification" ~ 321 / 24941 = 0.0129 ... low due to time bias in abundance
