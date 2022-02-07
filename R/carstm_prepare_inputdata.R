@@ -191,22 +191,17 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
-
-      pc = carstm_prediction_surface_parameters[["substrate"]][["project_class"]]
-
-      M[[ vn ]][iM] = aegis_lookup( 
-        parameters=carstm_prediction_surface_parameters["substrate"],  
-        LOCS=sppoly$AUID,
-        LOCS_AU=sppoly,
-        project_class = pc, # lookup from modelled predictions from carstm
-        output_format = "areal_units",
-        variable_name = ifelse( pc=="carstm", list("predictions"), vn ) ,
-        statvars = c("mean"),
-        space_resolution = p$pres ,
-        returntype = "vector"
-      )
-     }
- 
+      M[[vn]][iM] = aegis_lookup(  
+        parameters="substrate",    
+        LOCS=M[ iM, c("lon", "lat")],  
+        project_class="stmv", 
+        output_format="points" , 
+        DS="complete", 
+        variable_name="substrate.grainsize",
+        space_resolution=p$pres, 
+        returntype="vector" 
+      ) 
+    }
     # due to limited spatial range, resort to using some of the modelled results as well to fill in some gaps
 
     # yes substrate source coordinate system is same as for bathy .. to match substrate source for the data
