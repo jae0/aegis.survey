@@ -644,6 +644,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     if (lookup_exhaustive) {
 
+      if (pc != "stmv" ) {
         iM = which(!is.finite( APS[[vn]] )) 
 
         if (pc != "stmv") {
@@ -662,23 +663,23 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
           }
         }
+      }
 
-
-        iM = which(!is.finite( APS[[vn]] )) 
-        if (length(iM) > 0 ) {
-          # depth is very important so try again
-          APS[[vn]][iM]  = aegis_lookup(  
-            parameters="bathymetry", 
-            LOCS=APS$AUID[iM],
-            LOCS_AU=sppoly,
-            project_class = "core", # lookup from aggregated data
-            output_format = "areal_units",
-            DS = "aggregated_data",  # needed for core 
-            variable_name = "z.mean", 
-            space_resolution=p$pres ,
-            returntype = "vector"
-          ) 
-        }
+      iM = which(!is.finite( APS[[vn]] )) 
+      if (length(iM) > 0 ) {
+        # depth is very important so try again
+        APS[[vn]][iM]  = aegis_lookup(  
+          parameters="bathymetry", 
+          LOCS=APS$AUID[iM],
+          LOCS_AU=sppoly,
+          project_class = "core", # lookup from aggregated data
+          output_format = "areal_units",
+          DS = "aggregated_data",  # needed for core 
+          variable_name = "z.mean", 
+          space_resolution=p$pres ,
+          returntype = "vector"
+        ) 
+      }
     
     }
 
