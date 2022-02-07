@@ -691,7 +691,6 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     vn = "substrate.grainsize"
     pc = carstm_prediction_surface_parameters[["substrate"]][["project_class"]]
-
     APS[[vn]]  = aegis_lookup( 
       parameters=carstm_prediction_surface_parameters["substrate"],  
       LOCS=sppoly$AUID,
@@ -703,28 +702,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
       space_resolution = p$pres ,
       returntype = "vector"
     )  
-
-
-    if (lookup_exhaustive) {
-
-      if (pc != "stmv") {
-        iM = which(!is.finite( APS[[vn]] )) 
-        if (length(iM) > 0 ) {
-
-          APS[[vn]][iM] = aegis_lookup(  
-            parameters="substrate", 
-            LOCS=APS$AUID[iM],
-            LOCS_AU=sppoly,
-            project_class = "stmv", # lookup from modelled predictions from stmv
-            output_format = "areal_units",
-            variable_name = "substrate.grainsize", 
-            space_resolution=p$pres ,
-            returntype = "vector"
-          ) 
-        }
-      }
-    }
-
+ 
   }
 
   # prediction surface in time
