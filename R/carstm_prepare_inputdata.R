@@ -192,6 +192,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
 
+      pc = carstm_prediction_surface_parameters[["substrate"]][["project_class"]]
+
       M[[ vn ]][iM] = aegis_lookup( 
         parameters=carstm_prediction_surface_parameters["substrate"],  
         LOCS=sppoly$AUID,
