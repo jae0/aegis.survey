@@ -74,15 +74,15 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     varname = "AUID"
   )
 
-  ooo = which( is.na(M$AUID ) )
-  if (length(ooo) > 0 )  {
-    # associating closest polygon to a given data point
-    for ( i in 1:length(ooo)) {
-      j = ooo[i]
-      k = which.min(c( st_distance( Mpts[j,], st_centroid(sppoly)) ) )
-      M$AUID[j] = sppoly$AUID[k]
-    }
-  }
+  # ooo = which( is.na(M$AUID ) )
+  # if (length(ooo) > 0 )  {
+  #   # associating closest polygon to a given data point
+  #   for ( i in 1:length(ooo)) {
+  #     j = ooo[i]
+  #     k = which.min(c( st_distance( Mpts[j,], st_centroid(sppoly)) ) )
+  #     M$AUID[j] = sppoly$AUID[k]
+  #   }
+  # }
 
   ooo = which( is.na(M$AUID ) )
   if (length(ooo) > 0 )  {
