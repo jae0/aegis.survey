@@ -629,7 +629,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     vn = "z"
     pc = carstm_prediction_surface_parameters[["bathymetry"]][["project_class"]]
-
+browser()
     APS[[vn]] = aegis_lookup( 
       parameters=carstm_prediction_surface_parameters["bathymetry"], 
       LOCS=sppoly$AUID,
