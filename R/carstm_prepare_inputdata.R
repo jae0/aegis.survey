@@ -66,7 +66,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
   sppoly = st_transform(sppoly, st_crs(crs_lonlat))
   
-  Mpts = st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat )
+  Mpts = st_as_sf( M[,c("lon","lat")], coords=c("lon","lat"), crs=crs_lonlat )
 
   # observations
   M$AUID = st_points_in_polygons(
@@ -74,16 +74,17 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     polys = sppoly[, "AUID"],
     varname = "AUID"
   )
-  
+
   ooo = which( is.na(M$AUID ) )
   if (length(ooo) > 0 )  {
     if ( retain_positions_outside_of_boundary ) {
       # associating closest polygon to a given data point
-      au_centroid = st_transform( st_centroid(sppoly), st_crs( p$aegis_proj4string_planar_km))
+      au_centroid = st_transform( st_centroid( st_geometry(sppoly)), st_crs( p$aegis_proj4string_planar_km))
       Mpts = st_transform( Mpts,  st_crs( p$aegis_proj4string_planar_km))
       for ( i in 1:length(ooo)) {
         j = ooo[i]
         dd = c(st_distance( Mpts[j,], au_centroid))
+        attributes(dd) = NULL
         k = which.min( dd  )
         if (dd[k] < retain_positions_outside_of_boundary ) M$AUID[j] = sppoly$AUID[k]
       }
