@@ -2,7 +2,8 @@
 carstm_prepare_inputdata = function( p, M, sppoly, 
   carstm_prediction_surface_parameters = NULL, 
   lookup_projects=c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" ), 
-  APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE
+  APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE, 
+  retain_positions_outside_of_boundary= 0
 ) {
 
   # covariates only with stmv
@@ -73,28 +74,35 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     polys = sppoly[, "AUID"],
     varname = "AUID"
   )
-
-  # ooo = which( is.na(M$AUID ) )
-  # if (length(ooo) > 0 )  {
-  #   # associating closest polygon to a given data point
-  #   for ( i in 1:length(ooo)) {
-  #     j = ooo[i]
-  #     k = which.min(c( st_distance( Mpts[j,], st_centroid(sppoly)) ) )
-  #     M$AUID[j] = sppoly$AUID[k]
-  #   }
-  # }
+browser()
+  ooo = which( is.na(M$AUID ) )
+  if (length(ooo) > 0 )  {
+    if ( retain_positions_outside_of_boundary ) {
+      # associating closest polygon to a given data point
+      au_centroid = st_transform( st_centroid(sppoly), st_crs( p$aegis_proj4string_planar_km))
+      Mpts = st_transform( Mpts,  st_crs( p$aegis_proj4string_planar_km))
+      for ( i in 1:length(ooo)) {
+        j = ooo[i]
+        dd = c(st_distance( Mpts[j,], au_centroid))
+        k = which.min( dd  )
+        if (dd[k] < retain_positions_outside_of_boundary ) M$AUID[j] = sppoly$AUID[k]
+      }
+    }
+  } 
 
   ooo = which( is.na(M$AUID ) )
   if (length(ooo) > 0 )  {
-    print("Dropping data with no associated areal units (probably need to alter sppoly):\n")
-    print( M[ooo,] )
-    plot(sppoly["AUID"], reset=FALSE)
-    plot(st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ), add=TRUE ) 
-    plot(st_as_sf( M[ooo,], coords=c("lon","lat"), crs=crs_lonlat ), col="red", add=TRUE ) 
-    # message( "If dropping these locations, in red, is OK, then press 'c' to continue.")
-    # browser() 
-    M = M[ - ooo, ]
+      print("Dropping data with no associated areal units (probably need to alter sppoly):\n")
+      print( M[ooo,] )
+      plot(sppoly["AUID"], reset=FALSE)
+      plot(st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ), add=TRUE ) 
+      plot(st_as_sf( M[ooo,], coords=c("lon","lat"), crs=crs_lonlat ), col="red", add=TRUE ) 
+      # message( "If dropping these locations, in red, is OK, then press 'c' to continue.")
+      # browser() 
+      M = M[ - ooo, ]
   }
+
+  ooo = dd = j = k = Mpts =au_centroid= NULL; gc()
 
   M$AUID = as.character( M$AUID )  # match each datum to an area
 
