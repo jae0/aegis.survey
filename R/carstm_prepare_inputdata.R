@@ -74,7 +74,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     polys = sppoly[, "AUID"],
     varname = "AUID"
   )
-browser()
+  
   ooo = which( is.na(M$AUID ) )
   if (length(ooo) > 0 )  {
     if ( retain_positions_outside_of_boundary ) {
