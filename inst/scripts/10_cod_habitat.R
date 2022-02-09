@@ -732,7 +732,7 @@ Phi for space_time                                                       Phi for
       variable_name="substrate.grainsize",
       # variable_name=list("predictions"),
       statvars=c("mean"),
-      space_resolution=min(p$gridparams$res) /2,
+      space_resolution=p$pres,
       returntype = "vector"
     )
 
@@ -775,7 +775,8 @@ Phi for space_time                                                       Phi for
       output_format="points", 
       variable_name=list("predictions"),
       statvars=c("mean"),
-      space_resolution=min(p$gridparams$res) /2,
+      space_resolution= p$pres,
+      time_resolution= p$tres,
       cyclic_resolution=0.25,
       tz="America/Halifax", 
       year.assessment=year.assessment,

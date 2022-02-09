@@ -379,7 +379,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # merge depth
     iM = which( !is.finite(set$z) )
     if (length(iM > 0)) {
-      set$z[iM] = aegis_lookup( parameters="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", variable_name="z.mean"  ) # core==unmodelled
+      set$z[iM] = aegis_lookup( parameters="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", space_resolution=p$pres, variable_name="z.mean"  ) # core==unmodelled
       }
 
     # substrate lookup
@@ -387,7 +387,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (!(exists(pS$variabletomodel, set ))) set[,pS$variabletomodel] = NA
     iM = which(!is.finite( set[, pS$variabletomodel] ))
     if (length(iM > 0)) {
-      set[iM, pS$variabletomodel] = aegis_lookup( parameters="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", variable_name="substrate.grainsize.mean"  )
+      set[iM, pS$variabletomodel] = aegis_lookup( parameters="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", space_resolution=p$pres, variable_name="substrate.grainsize.mean"  )
     }
 
     # merge temperature
@@ -395,9 +395,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (!(exists(pT$variabletomodel, set ))) set[,pT$variabletomodel] = NA
     iM = which(!is.finite( set[, pT$variabletomodel] ))
     if (length(iM > 0)) {
-      set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean" , year.assessment=p$year.assessment,
-          tz="America/Halifax", yrs=p$yrs
-        )
+      set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean", space_resolution=p$pres, time_resolution=p$tres, year.assessment=p$year.assessment,
+          tz="America/Halifax" )
     }
 
     set$oxysat = oxygen_concentration_to_saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
