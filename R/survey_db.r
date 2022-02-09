@@ -395,7 +395,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (!(exists(pT$variabletomodel, set ))) set[,pT$variabletomodel] = NA
     iM = which(!is.finite( set[, pT$variabletomodel] ))
     if (length(iM > 0)) {
-      set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean" ,
+      set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean" , year.assessment=p$year.assessment,
           tz="America/Halifax", yrs=p$yrs
         )
     }

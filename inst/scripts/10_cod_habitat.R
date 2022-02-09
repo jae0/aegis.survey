@@ -778,7 +778,7 @@ Phi for space_time                                                       Phi for
       space_resolution=min(p$gridparams$res) /2,
       cyclic_resolution=0.25,
       tz="America/Halifax", 
-      yrs=pT$yrs,
+      year.assessment=year.assessment,
       returntype = "vector"
     )
   }
