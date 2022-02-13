@@ -82,12 +82,14 @@
   # estimate via approximation using speed etc.
   groundfish_survey_db( DS="sweptarea.redo", yrs=yrs )  ## this is actually gsinf with updated data, etc.
 
-  # these are now obsolete:
-  #groundfish_survey_db( DS="gshyd.profiles.redo", yrs=yrs  )
-  #groundfish_survey_db( DS="gshyd.redo", yrs=yrs  )
-  #groundfish_survey_db( DS="gshyd.georef.redo", yrs=yrs  )  # not used here but used in temperature re-analysis
 
     if (0) {
+
+      # these are now obsolete:
+
+      #groundfish_survey_db( DS="gshyd.profiles.redo", yrs=yrs  )
+      #groundfish_survey_db( DS="gshyd.redo", yrs=yrs  )
+      #groundfish_survey_db( DS="gshyd.georef.redo", yrs=yrs  )  # not used here but used in temperature re-analysis
 
       # lookupregion = lookup.strata()  # create strata vs region lookup table
 
