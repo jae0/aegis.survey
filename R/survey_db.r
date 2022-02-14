@@ -1287,11 +1287,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       }
     }
 
-
-    set$gear.cat = NULL
-
     # fix NA's 
-
     routine_replacement = c( "spec", "spec_bio", "name.common", "name.scientific", "itis.tsn" )
     for ( vn in routine_replacement ) {
       if (exists( vn, set)) {
