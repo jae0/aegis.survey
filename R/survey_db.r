@@ -74,11 +74,10 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       y$setquality[ which( y$towquality == 1 ) ] = "good"  # 1=good
       y$sal = NA  # dummy
       y$oxyml = NA # dummy var
-      y$cf_tow = 1/y$sa
-      y$sa_towdistance = y$sa  #copy
+      
 
       # hard-gating:
-      qsa = c(0.002, 0.007)
+      qsa = c(0.001, 0.01)
       i = which( y$sa < qsa[1] )
       if (length(i) > 0) y$sa[i] = qsa[1]
       j = which( y$sa > qsa[2] )
@@ -86,6 +85,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       k = which( !is.finite(y$sa ) )
       if (length(k) > 0) y$sa[k] = median( y$sa[-k] )
       
+      y$cf_tow = 1/y$sa
+      y$sa_towdistance = y$sa  #copy
+
       set = rbind( set, y[ , set.names ] )  # sa is in km^2
 
 
