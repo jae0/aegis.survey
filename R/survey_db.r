@@ -704,7 +704,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       ), 
       by=.(id2)
     ]
-    cat = cat[ det_summary, on=.(id2) ] # merge
+    cat = det_summary[cat, on=.(id2) ] # merge
 
     # set-->kg/km^2, det-->km
     cat$massTotdet[ which( !is.finite (cat$massTotdet ))] = 0  ### when missing it means no determinations were made
@@ -763,7 +763,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     setDT(det)
     setDT(cat)
 
-    cat = cat[ set[, c("id", "gear") ], on=.(id) ] # merge
+    cat = set[, c("id", "gear") ] [ cat , on=.(id) ] # merge
     oo = which( duplicated( cat$id2) )
     if (length( oo) > 0 ) cat = cat[ -oo, ]
 
@@ -779,7 +779,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       ), 
       by=.(id2)
     ]
-    cat = cat[ det_summary, on=.(id2) ] # merge
+    cat = det_summary[cat, on=.(id2) ] # merge
     
     cat$mr[ which(!is.finite(cat$mr))] = 0
     cat$smr[ which(!is.finite(cat$smr))] = 0
@@ -837,7 +837,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       ), 
       by=.(id)
     ]
-    set = set[ cat_summary, on=.(id) ] # merge
+    set = cat_summary[set, on=.(id) ] # merge
 
     set$cf_set_mass = set$totwgt_adjusted / set$totwgt
     set$cf_set_no = set$totno_adjusted / set$totno
@@ -857,7 +857,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       ), 
       by=.(id)
     ]
-    set = set[ det_summary, on=.(id) ] # merge
+    set = det_summary[set, on=.(id) ] # merge
     
     set$mr[ which(!is.finite(set$mr))] = 0
     set$smr[ which(!is.finite(set$smr))] = 0
@@ -951,7 +951,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       ), 
       by=.(id)
     ]
-    set = set[ det_summary, on=.(id) ] # merge
+    set = det_summary[set, on=.(id) ] # merge
 
     cat = survey_db( DS="cat", p=p  ) # size information, no, cm, kg
     cat = cat[ which( cat$id %in% unique( set$id) ), ]
@@ -971,7 +971,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       by=.(id)
     ]
 
-    set = set[ cat_summary, on=.(id) ] # merge
+    set = cat_summary[set, on=.(id) ] # merge
 
     set$totno_adjusted[ which(!is.finite(set$totno_adjusted))] = 0
     set$totwgt_adjusted[ which(!is.finite(set$totwgt_adjusted))] = 0
@@ -1243,7 +1243,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
         by=.(id)
       ]
 
-      set = set[ det_summary, on=.(id) ] # merge
+      set = det_summary[set, on=.(id) ] # merge
 
       set$mr[ which(!is.finite(set$mr))] = 0
       set$smr[ which(!is.finite(set$smr))] = 0
