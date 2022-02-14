@@ -726,7 +726,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # oo = which ( cat$cf_det_wgt > 500 )
     # if (length(oo)>0) cat$cf_det_wgt[oo] = NA
 
-    cat = cat[, c("id2", "cf_det_wgt", "cf_det_no"), with=TRUE ]
+    cat = cat[, c("id2", "cf_det_wgt", "cf_det_no")  ]
     det = det[ cat, on=.(id2) ]
 
     det$cf_det_wgt[!is.finite(det$cf_det_wgt)] = 1
@@ -763,7 +763,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     setDT(det)
     setDT(cat)
 
-    cat = cat[ set[, c("id", "gear"), with=TRUE], on=.(id) ] # merge
+    cat = cat[ set[, c("id", "gear") ], on=.(id) ] # merge
     oo = which( duplicated( cat$id2) )
     if (length( oo) > 0 ) cat = cat[ -oo, ]
 
