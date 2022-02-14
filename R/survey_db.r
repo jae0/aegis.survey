@@ -653,7 +653,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       A = b0 * (mass.g)^b1 * from.ml.O2.per.g.per.hr.to.W.per.kg
       oo = which( !is.finite(A) )
 
-      if (length(oo)>0) A[oo] = median(A[-oo])
+      if (length(oo)>0) A[oo] = NA
 
       # 'activation energy'
       Ea =  b2 * temperature.C * K * ( temperature.C + 273.15 )
@@ -674,7 +674,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       return(x)
     }
 
-browser()
+
 
     detmr = metabolic_rates ( mass.g=det$mass * 1000, temperature.C=det$t )
     det = cbind( det, detmr )
