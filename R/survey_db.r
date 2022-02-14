@@ -393,7 +393,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # merge depth
     iM = which( !is.finite(set$z) )
     if (length(iM > 0)) {
-      set$z[iM] = aegis_lookup( parameters="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", space_resolution=p$pres, variable_name="z.mean"  ) # core==unmodelled
+      set$z[iM] = aegis_lookup( parameters="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", space_resolution=p$pres*2, variable_name="z.mean"  ) # core==unmodelled
       }
 
     # substrate lookup
@@ -401,7 +401,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (!(exists(pS$variabletomodel, set ))) set[,pS$variabletomodel] = NA
     iM = which(!is.finite( set[, pS$variabletomodel] ))
     if (length(iM > 0)) {
-      set[iM, pS$variabletomodel] = aegis_lookup( parameters="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", space_resolution=p$pres, variable_name="substrate.grainsize.mean"  )
+      set[iM, pS$variabletomodel] = aegis_lookup( parameters="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", space_resolution=p$pres*2, variable_name="substrate.grainsize.mean"  )
     }
 
     # merge temperature
@@ -409,7 +409,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (!(exists(pT$variabletomodel, set ))) set[,pT$variabletomodel] = NA
     iM = which(!is.finite( set[, pT$variabletomodel] ))
     if (length(iM > 0)) {
-      set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean", space_resolution=p$pres, time_resolution=p$tres, year.assessment=p$year.assessment,
+      set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean", space_resolution=p$pres*2, time_resolution=p$tres*2, year.assessment=p$year.assessment,
           tz="America/Halifax" )
     }
 
@@ -690,37 +690,42 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     cat = survey_db( DS="cat.init", p=p )
 
-    massTotCat = applySum( det[ ,c("id2", "mass")], newnames=c("id2","massTotdet" ) )
-    cat = merge( cat, massTotCat, by="id2", all.x=T, all.y=F, sort=F )  # set-->kg/km^2, det-->km
+    setDT(det)
+    setDT(cat)
+
+    det_summary = det[, .(
+        massTotdet=sum(mass, na.rm=TRUE), 
+        noTotdet=sum(len, na.rm=TRUE),
+        noTotCat=.N
+      ), 
+      by=.(id2)
+    ]
+    cat = cat[ det_summary, on=.(id2) ] # merge
+
+    # set-->kg/km^2, det-->km
     cat$massTotdet[ which( !is.finite (cat$massTotdet ))] = 0  ### when missing it means no determinations were made
     cat$cf_det_wgt =  cat$massTotdet * cat$cf_cat / cat$totwgt   # cf_det is the multiplier required to make each det measurement scale properly to totwgt in units of Alfred Needler  .. subsample
-
-    det$no = 1
-    noTotCat = applySum( det[ ,c("id2", "no")], newnames=c("id2","noTotdet" ) )
-    cat = merge( cat, noTotCat, by="id2", all.x=T, all.y=F, sort=F )    # set-->no/km^2, det-->no
     cat$noTotdet[ which( !is.finite (cat$noTotdet ))] = 0  ### when missing it means no determinations were made
     cat$cf_det_no = cat$noTotdet * cat$cf_cat / cat$totno   # cf_det is the multiplier required to make each det measurement scale properly to totno in units of Alfred Needler  .. subsample
-    det$no = NULL
 
+    # assume no subsampling -- all weights determined from the subsample
+    oo = which ( !is.finite( cat$cf_det_wgt ) |  cat$cf_det_wgt==0 )
+    if (length(oo)>0) cat$cf_det_wgt[oo] = 1
 
-  # assume no subsampling -- all weights determined from the subsample
-  oo = which ( !is.finite( cat$cf_det_wgt ) |  cat$cf_det_wgt==0 )
-  if (length(oo)>0) cat$cf_det_wgt[oo] = 1
+    # assume no subsampling -- all weights determined from the subsample
+    oo = which ( !is.finite( cat$cf_det_no ) |  cat$cf_det_no==0 )
+    if (length(oo)>0) cat$cf_det_no[oo] = 1
 
-  # assume no subsampling -- all weights determined from the subsample
-  oo = which ( !is.finite( cat$cf_det_no ) |  cat$cf_det_no==0 )
-  if (length(oo)>0) cat$cf_det_no[oo] = 1
+    # oo = which ( cat$cf_det_wgt < 0.001 )
+    # if (length(oo)>0) cat$cf_det_wgt[oo] = NA
 
-  # oo = which ( cat$cf_det_wgt < 0.001 )
-  # if (length(oo)>0) cat$cf_det_wgt[oo] = NA
-  #
-  # oo = which ( cat$cf_det_wgt > 500 )
-  # if (length(oo)>0) cat$cf_det_wgt[oo] = NA
+    # oo = which ( cat$cf_det_wgt > 500 )
+    # if (length(oo)>0) cat$cf_det_wgt[oo] = NA
 
-    cat = cat[, c("id2", "cf_det_wgt", "cf_det_no")]
-    det = merge( det, cat, by="id2", all.x=T, all.y=F, sort=F)
+    cat = cat[, c("id2", "cf_det_wgt", "cf_det_no"), with=TRUE ]
+    det = det[ cat, on=.(id2) ]
 
-    det$cf_det_wgt [!is.finite(det$cf_det_wgt)] = 1
+    det$cf_det_wgt[!is.finite(det$cf_det_wgt)] = 1
     det$cf_det_no [!is.finite(det$cf_det_no)] = 1
 
     ## remaining NA's with cf_det are mostly due to bad hauls, broken nets etc.
@@ -749,23 +754,34 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     cat = survey_db( DS="cat.init", p=p )
     cat = cat[ which( cat$id %in% unique( set$id) ), ]
-    cat = merge(cat, set[, c("id", "gear")])
 
+    setDT(set)
+    setDT(det)
+    setDT(cat)
+
+    cat = cat[ set[, c("id", "gear"), with=TRUE], on=.(id) ] # merge
     oo = which( duplicated( cat$id2) )
     if (length( oo) > 0 ) cat = cat[ -oo, ]
 
-    cm = data.frame( id2=as.character( sort( unique( cat$id2 ) )), stringsAsFactors=FALSE )
-    cm = merge( cm, applySum( det[ , c("id2", "mr", "cf_det_wgt")] ), by="id2", all.x=TRUE, all.y=FALSE, sort=FALSE )
-
-    # averages of these variables
-    newvars = c( "residual", "mass", "len", "Ea", "A", "Pr.Reaction", "smr"  )
-    for ( nv in newvars ) {
-    #browser()
-      cm = merge( cm,
-        applyMean( det[ , c("id2", nv, "cf_det_wgt")] ), by="id2", all.x=TRUE, all.y=FALSE, sort=FALSE )
-    }
-
-    cat = merge( cat, cm, by="id2", all.x=TRUE, all.y=FALSE, sort=FALSE )
+    det_summary = det[, .(
+        mass=mean(mass*cf_det_no, na.rm=TRUE), 
+        len=mean(len*cf_det_no, na.rm=TRUE), 
+        mr=sum(mr*cf_det_no, na.rm=TRUE),
+        smr=mean(smr*cf_det_no, na.rm=TRUE), 
+        residual=mean(residual*cf_det_no, na.rm=TRUE), 
+        Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
+        A=mean(A*cf_det_no, na.rm=TRUE), 
+        Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+      ), 
+      by=.(id2)
+    ]
+    cat = cat[ det_summary, on=.(id2) ] # merge
+    
+    cat$mr[ which(!is.finite(cat$mr))] = 0
+    cat$smr[ which(!is.finite(cat$smr))] = 0
+    cat$Ea[ which(!is.finite(cat$Ea))] = 0
+    cat$A[ which(!is.finite(cat$A))] = 0
+    cat$Pr.Reaction[ which(!is.finite(cat$Pr.Reaction))] = 0
 
     # where det measurements not available, estimate mean mass from total weights and numbers
     oo = which( !is.finite( cat$mass ))
@@ -803,33 +819,47 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     cat = survey_db( DS="cat", p=p )
     cat = cat[ which( cat$id %in% unique( set$id) ), ]
 
-    # NOTE: cat$totno and cat$totwgt are not cf corrected
-
-    sm = data.frame( id=as.character( sort( unique( set$id ) )), stringsAsFactors=FALSE )
+    setDT(set)
+    setDT(det)
+    setDT(cat)
 
     # summaries from cat .. weighted by cf to make per standard unit
-    sm = merge( sm, applySum( cat[ , c("id", "totno") ], newnames=c("id", "totno") ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-    sm = merge( sm, applySum( cat[ , c("id", "totwgt") ], newnames=c("id", "totwgt")  ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
+    # NOTE: cat$totno and cat$totwgt are not cf corrected
+    cat_summary = cat[, .(
+        totno=sum(totno, na.rm=TRUE),
+        totwgt=sum(totwgt, na.rm=TRUE),
+        totno_adjusted=sum(totno*cf_cat, na.rm=TRUE),
+        totwgt_adjusted=sum(totwgt*cf_cat, na.rm=TRUE)
+      ), 
+      by=.(id)
+    ]
+    set = set[ cat_summary, on=.(id) ] # merge
 
-    sm = merge( sm, applySum( cat[ , c("id", "totno", "cf_cat") ], newnames=c("id", "totno_adjusted") ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-    sm = merge( sm, applySum( cat[ , c("id", "totwgt", "cf_cat") ], newnames=c("id", "totwgt_adjusted")  ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-
-    sm$cf_set_mass = sm$totwgt_adjusted / sm$totwgt
-    sm$cf_set_no = sm$totno_adjusted / sm$totno
+    set$cf_set_mass = set$totwgt_adjusted / set$totwgt
+    set$cf_set_no = set$totno_adjusted / set$totno
     # NOTE:: these should be == or ~= 1/set$sa ( done this way in case there has been other adjustmensts such as subampling, etc ..) .. these become offets required to express totwgt or totno as areal density per unit km^2 in Poisson models
 
     # summaries from det
     # --- NOTE det was not always determined and so totals from det mass != totals from cat nor set for all years
-    sm = merge( sm, applySum( det[ , c("id", "mr", "cf_det_wgt")] ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-
-    # averages of these variables from det
-    newvars = c( "residual", "mass", "len", "Ea", "A", "Pr.Reaction", "smr"  )
-    for ( nv in newvars ) {
-      sm = merge( sm,
-        applyMean( det[ , c("id", nv, "cf_det_wgt")] ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-    }
-
-    set = merge( set, sm, by ="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
+    det_summary = det[, .(
+        mr=sum(mr*cf_det_no, na.rm=TRUE),
+        smr=mean(smr*cf_det_no, na.rm=TRUE), 
+        residual=mean(residual*cf_det_no, na.rm=TRUE), 
+        mass=mean(mass*cf_det_no, na.rm=TRUE), 
+        len=mean(len*cf_det_no, na.rm=TRUE), 
+        Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
+        A=mean(A*cf_det_no, na.rm=TRUE), 
+        Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+      ), 
+      by=.(id)
+    ]
+    set = set[ det_summary, on=.(id) ] # merge
+    
+    set$mr[ which(!is.finite(set$mr))] = 0
+    set$smr[ which(!is.finite(set$smr))] = 0
+    set$Ea[ which(!is.finite(set$Ea))] = 0
+    set$A[ which(!is.finite(set$A))] = 0
+    set$Pr.Reaction[ which(!is.finite(set$Pr.Reaction))] = 0
 
     save( set, file=fn, compress=T )
     return (set)
@@ -900,10 +930,24 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # summaries from det
     # --- NOTE det was not always determined and so totals from det mass != totals from cat nor set for all years
     # cf_det is the weight to make it sum up to the correct total catch (vs any subsamples) and tow length, etc
-    det$no = 1
 
-    set = merge( set, applySum( det[ , c("id", "no")],   newnames=c("id", "totno") ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-    set = merge( set, applySum( det[ , c("id", "mass")], newnames=c("id", "totwgt") ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
+    setDT(set)
+    setDT(det)
+    det_summary = det[, .(
+        totno=.N, 
+        totwgt=sum(mass, na.rm=TRUE),
+        mr=sum(mr*cf_det_no, na.rm=TRUE),
+        smr=mean(smr*cf_det_no, na.rm=TRUE), 
+        residual=mean(residual*cf_det_no, na.rm=TRUE), 
+        mass=mean(mass*cf_det_no, na.rm=TRUE), 
+        len=mean(len*cf_det_no, na.rm=TRUE), 
+        Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
+        A=mean(A*cf_det_no, na.rm=TRUE), 
+        Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+      ), 
+      by=.(id)
+    ]
+    set = set[ det_summary, on=.(id) ] # merge
 
     cat = survey_db( DS="cat", p=p  ) # size information, no, cm, kg
     cat = cat[ which( cat$id %in% unique( set$id) ), ]
@@ -914,9 +958,16 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           isc = NULL
         }
       }
+    
+    setDT(cat)
+    cat_summary = cat[, .(
+        totno_adjusted=sum(totno*cf_cat, na.rm=TRUE),
+        totwgt_adjusted=sum(totwgt*cf_cat, na.rm=TRUE)
+      ), 
+      by=.(id)
+    ]
 
-    set = merge( set, applySum( cat[ , c("id", "totno", "cf_cat")], newnames=c("id", "totno_adjusted") ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-    set = merge( set, applySum( cat[ , c("id", "totwgt", "cf_cat")], newnames=c("id", "totwgt_adjusted") ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
+    set = set[ cat_summary, on=.(id) ] # merge
 
     set$totno_adjusted[ which(!is.finite(set$totno_adjusted))] = 0
     set$totwgt_adjusted[ which(!is.finite(set$totwgt_adjusted))] = 0
@@ -936,19 +987,11 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # NOTE:: these should be == or ~= 1/set$sa ( done this way in case there has been other adjustmensts such as subampling, etc ..) .. these become offets required to express totwgt or totno at a common areal density per unit km^2 in Poisson models
 
     # --- NOTE det was not always determined and so totals from det mass != totals from cat nor set for all years
-    set = merge( set, applySum( det[ , c("id", "mr", "cf_det_wgt")] ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
     set$mr[ which(!is.finite(set$mr))] = 0
-
-    # averages of these variables from det
-    newvars = c( "residual", "mass", "len", "Ea", "A", "Pr.Reaction", "smr"  )
-    for ( nv in newvars ) {
-      set = merge( set,
-        applyMean( det[ , c("id", nv, "cf_det_wgt")] ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-    }
+    set$smr[ which(!is.finite(set$smr))] = 0
     set$Ea[ which(!is.finite(set$Ea))] = 0
     set$A[ which(!is.finite(set$A))] = 0
     set$Pr.Reaction[ which(!is.finite(set$Pr.Reaction))] = 0
-    set$smr[ which(!is.finite(set$smr))] = 0
 
     # aggeragate measurement filter
     if (exists("selection", p)) {
@@ -1177,33 +1220,33 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           isc = NULL
         }
       }
-      det$no = 1
 
-      oo = applySum( det[ , c("id", "no")],   newnames=c("id", "totno") )
-      set = merge( set, oo, by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
+      setDT(set)
+      setDT(det)
+      det_summary = det[, .(
+          totno=.N, 
+          totwgt=sum(mass, na.rm=TRUE),
+          totno_adjusted=sum(cf_det_no, na.rm=TRUE),
+          totwgt_adjusted=sum(mass*cf_det_wgt, na.rm=TRUE),
+          mr=sum(mr*cf_det_no, na.rm=TRUE),
+          smr=mean(smr*cf_det_no, na.rm=TRUE), 
+          residual=mean(residual*cf_det_no, na.rm=TRUE), 
+          mass=mean(mass*cf_det_no, na.rm=TRUE), 
+          len=mean(len*cf_det_no, na.rm=TRUE), 
+          Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
+          A=mean(A*cf_det_no, na.rm=TRUE), 
+          Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+        ), 
+        by=.(id)
+      ]
 
-      oo = applySum( det[ , c("id", "mass")], newnames=c("id", "totwgt") )
-      set = merge( set, oo, by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
+      set = set[ det_summary, on=.(id) ] # merge
 
-      oo = applySum( det[ , c("id", "no", "cf_det_no")], newnames=c("id", "totno_adjusted") )
-      set = merge( set, oo, by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-
-      oo = applySum( det[ , c("id", "mass", "cf_det_wgt")], newnames=c("id", "totwgt_adjusted") )
-      set = merge( set, oo, by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-
-      # --- NOTE det was not always determined and so totals from det mass != totals from cat nor set for all years
-      set = merge( set, applySum( det[ , c("id", "mr", "cf_det_wgt")] ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
       set$mr[ which(!is.finite(set$mr))] = 0
-      # averages of these variables from det
-      newvars = c( "residual", "mass", "len", "Ea", "A", "Pr.Reaction", "smr"  )
-      for ( nv in newvars ) {
-        set = merge( set,
-          applyMean( det[ , c("id", nv, "cf_det_wgt")] ), by="id", all.x=TRUE, all.y=FALSE, sort=FALSE )
-      }
+      set$smr[ which(!is.finite(set$smr))] = 0
       set$Ea[ which(!is.finite(set$Ea))] = 0
       set$A[ which(!is.finite(set$A))] = 0
       set$Pr.Reaction[ which(!is.finite(set$Pr.Reaction))] = 0
-      set$smr[ which(!is.finite(set$smr))] = 0
     }
 
     set$totno_adjusted[ which(!is.finite(set$totno_adjusted))] = 0
@@ -1212,6 +1255,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$totwgt[ which(!is.finite(set$totwgt))] = 0
 
     # NOTE:: these should be == or ~= 1/set$sa ( done this way in case there has been other adjustmensts such as subampling, etc ..) .. these become offets required to express totwgt or totno at a common areal density per unit km^2 in Poisson models
+
     set$cf_set_mass = set$totwgt_adjusted / set$totwgt
     set$cf_set_no = set$totno_adjusted / set$totno
 
