@@ -1183,7 +1183,6 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       }
     }
 
-
     data_source_base = "det"
 
     # indiviudal measurements filter
