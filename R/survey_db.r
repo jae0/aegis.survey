@@ -1120,8 +1120,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     routine_replacement = c( "spec", "spec_bio", "name.common", "name.scientific", "itis.tsn" )
     for ( vn in routine_replacement ) {
       if (exists( vn, set)) {
-        i = which( is.na(set[, vn] ) )
-        if (length(i) > 0) set[i, vn] = unique( set[-i, vn] )[1] 
+        i = which( is.na(set[[vn]] ) )
+        if (length(i) > 0) set[[vn]][i] = unique( set[[vn]][-i] )[1] 
       }
     }
 
@@ -1287,11 +1287,12 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     }
 
     # fix NA's 
+ 
     routine_replacement = c( "spec", "spec_bio", "name.common", "name.scientific", "itis.tsn" )
     for ( vn in routine_replacement ) {
       if (exists( vn, set)) {
-        i = which( is.na(set[, vn] ) )
-        if (length(i) > 0) set[i, vn] = unique( set[-i, vn] )[1] 
+        i = which( is.na(set[[vn]] ) )
+        if (length(i) > 0) set[[vn]][i] = unique( set[[vn]][-i] )[1] 
       }
     }
 
