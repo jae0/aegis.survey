@@ -767,15 +767,16 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     oo = which( duplicated( cat$id2) )
     if (length( oo) > 0 ) cat = cat[ -oo, ]
 
+    # note subsampling is on weight basis
     det_summary = det[, .(
-        mass=mean(mass*cf_det_no, na.rm=TRUE), 
-        len=mean(len*cf_det_no, na.rm=TRUE), 
-        mr=sum(mr*cf_det_no, na.rm=TRUE),
-        smr=mean(smr*cf_det_no, na.rm=TRUE), 
-        residual=mean(residual*cf_det_no, na.rm=TRUE), 
-        Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
-        A=mean(A*cf_det_no, na.rm=TRUE), 
-        Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+        mass=mean(mass*cf_det_wgt, na.rm=TRUE), 
+        len=mean(len*cf_det_wgt, na.rm=TRUE), 
+        mr=sum(mr*cf_det_wgt, na.rm=TRUE),
+        smr=mean(smr*cf_det_wgt, na.rm=TRUE), 
+        residual=mean(residual*cf_det_wgt, na.rm=TRUE), 
+        Ea=mean(Ea*cf_det_wgt, na.rm=TRUE), 
+        A=mean(A*cf_det_wgt, na.rm=TRUE), 
+        Pr.Reaction=mean(Pr.Reaction*cf_det_wgt, na.rm=TRUE) 
       ), 
       by=.(id2)
     ]
@@ -846,14 +847,14 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # summaries from det
     # --- NOTE det was not always determined and so totals from det mass != totals from cat nor set for all years
     det_summary = det[, .(
-        mr=sum(mr*cf_det_no, na.rm=TRUE),
-        smr=mean(smr*cf_det_no, na.rm=TRUE), 
-        residual=mean(residual*cf_det_no, na.rm=TRUE), 
-        mass=mean(mass*cf_det_no, na.rm=TRUE), 
-        len=mean(len*cf_det_no, na.rm=TRUE), 
-        Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
-        A=mean(A*cf_det_no, na.rm=TRUE), 
-        Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+        mr=sum(mr*cf_det_wgt, na.rm=TRUE),
+        smr=mean(smr*cf_det_wgt, na.rm=TRUE), 
+        residual=mean(residual*cf_det_wgt, na.rm=TRUE), 
+        mass=mean(mass*cf_det_wgt, na.rm=TRUE), 
+        len=mean(len*cf_det_wgt, na.rm=TRUE), 
+        Ea=mean(Ea*cf_det_wgt, na.rm=TRUE), 
+        A=mean(A*cf_det_wgt, na.rm=TRUE), 
+        Pr.Reaction=mean(Pr.Reaction*cf_det_wgt, na.rm=TRUE) 
       ), 
       by=.(id)
     ]
@@ -940,14 +941,14 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     det_summary = det[, .(
         totno=.N, 
         totwgt=sum(mass, na.rm=TRUE),
-        mr=sum(mr*cf_det_no, na.rm=TRUE),
-        smr=mean(smr*cf_det_no, na.rm=TRUE), 
-        residual=mean(residual*cf_det_no, na.rm=TRUE), 
-        mass=mean(mass*cf_det_no, na.rm=TRUE), 
-        len=mean(len*cf_det_no, na.rm=TRUE), 
-        Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
-        A=mean(A*cf_det_no, na.rm=TRUE), 
-        Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+        mr=sum(mr*cf_det_wgt, na.rm=TRUE),
+        smr=mean(smr*cf_det_wgt, na.rm=TRUE), 
+        residual=mean(residual*cf_det_wgt, na.rm=TRUE), 
+        mass=mean(mass*cf_det_wgt, na.rm=TRUE), 
+        len=mean(len*cf_det_wgt, na.rm=TRUE), 
+        Ea=mean(Ea*cf_det_wgt, na.rm=TRUE), 
+        A=mean(A*cf_det_wgt, na.rm=TRUE), 
+        Pr.Reaction=mean(Pr.Reaction*cf_det_wgt, na.rm=TRUE) 
       ), 
       by=.(id)
     ]
@@ -1229,16 +1230,16 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       det_summary = det[, .(
           totno=.N, 
           totwgt=sum(mass, na.rm=TRUE),
-          totno_adjusted=sum(cf_det_no, na.rm=TRUE),
+          totno_adjusted=sum(cf_det_wgt, na.rm=TRUE),
           totwgt_adjusted=sum(mass*cf_det_wgt, na.rm=TRUE),
-          mr=sum(mr*cf_det_no, na.rm=TRUE),
-          smr=mean(smr*cf_det_no, na.rm=TRUE), 
-          residual=mean(residual*cf_det_no, na.rm=TRUE), 
-          mass=mean(mass*cf_det_no, na.rm=TRUE), 
-          len=mean(len*cf_det_no, na.rm=TRUE), 
-          Ea=mean(Ea*cf_det_no, na.rm=TRUE), 
-          A=mean(A*cf_det_no, na.rm=TRUE), 
-          Pr.Reaction=mean(Pr.Reaction*cf_det_no, na.rm=TRUE) 
+          mr=sum(mr*cf_det_wgt, na.rm=TRUE),
+          smr=mean(smr*cf_det_wgt, na.rm=TRUE), 
+          residual=mean(residual*cf_det_wgt, na.rm=TRUE), 
+          mass=mean(mass*cf_det_wgt, na.rm=TRUE), 
+          len=mean(len*cf_det_wgt, na.rm=TRUE), 
+          Ea=mean(Ea*cf_det_wgt, na.rm=TRUE), 
+          A=mean(A*cf_det_wgt, na.rm=TRUE), 
+          Pr.Reaction=mean(Pr.Reaction*cf_det_wgt, na.rm=TRUE) 
         ), 
         by=.(id)
       ]
