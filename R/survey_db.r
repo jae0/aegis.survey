@@ -935,13 +935,12 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           det_sc = bio.snowcrab::snowcrab.db( DS ="det.georeferenced" )
           det_sc$spec = 2526
           det_sc$spec_bio =  taxonomy.recode( from="spec", to="parsimonious", tolookup=det_sc$spec ) # snow crab using groundfish codes
-          det_sc$id = paste( det_sc$trip, det_sc$set, sep="." )
-          det_sc$id2 = paste( det_sc$id, det_sc$spec_bio, sep=".")
+          det_sc$individual = paste( det_sc$trip, det_sc$set, det_sc$spec_bio, det_sc$crabno, sep=".")
           det_sc$filter.class = p$selection$biologicals_using_snowcrab_filter_class
           isc = bio.snowcrab::filter.class( x=det_sc, type=p$selection$biologicals_using_snowcrab_filter_class )
-          if (length(isc) > 0) det_sc = det_sc[isc, c("id2", "filter.class") ]
+          if (length(isc) > 0) det_sc = det_sc[isc, c("individual", "filter.class") ]
           isc = NULL
-          det = merge( det, det_sc, by="id2", all.x=TRUE, all.y=FALSE )
+          det = merge( det, det_sc, by="individual", all.x=TRUE, all.y=FALSE )
           det = det[ !is.na(det$filter.class), ]
         }
 
