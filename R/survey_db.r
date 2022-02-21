@@ -267,7 +267,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       #  mat.unknown = 2
 
 
-    det.names =  c("data.source", "id", "id2", "spec", "spec_bio", "sex", "mass", "len", "mat")
+    det.names =  c("data.source", "id", "id2", "individual", "spec", "spec_bio", "sex", "mass", "len", "mat")
     if ( "groundfish" %in% p$data_sources ) {
 
       x = aegis.survey::groundfish_survey_db( DS="gsdet", yrs=p$yrs )
@@ -276,7 +276,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
       x$id2 = paste(x$id, x$spec_bio, sep=".")
       x = x[x$spec_bio > 0, ]
-
+     
       # mass in kg, len in cm
 
       # convert sex codes to snow crab standard
@@ -325,6 +325,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       x$spec_bio =  taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec ) # snow crab using groundfish codes
       x$id = paste( x$trip, x$set, sep="." )
       x$id2 = paste( x$id, x$spec_bio, sep=".")
+      x$individual = x$crabno
 
       x$len = x$cw / 10  # convert mm to cm
       # x$cf_det = 1/x$sa  ########## <<<<<< ------ NOTE THIS accounts only for SA as there is no subsampling (so far)
@@ -673,9 +674,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
       return(x)
     }
-
-
-
+ 
     detmr = metabolic_rates ( mass.g=det$mass * 1000, temperature.C=det$t )
     det = cbind( det, detmr )
 
@@ -930,6 +929,22 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           if (length(isc) > 0) det = det[isc,]
           isc = NULL
         }
+        if (exists("biologicals_using_snowcrab_filter_class", p$selection)) {  # filter biologicals using snow crab short-form ID
+          warning( "Filtering using snow crab 'types' requires more data than is carried by survey_db. \n 
+            .. Adding data directly from snowcrab.db .. this also means dropping other sources of data \n")
+          det_sc = bio.snowcrab::snowcrab.db( DS ="det.georeferenced" )
+          det_sc$spec = 2526
+          det_sc$spec_bio =  taxonomy.recode( from="spec", to="parsimonious", tolookup=det_sc$spec ) # snow crab using groundfish codes
+          det_sc$id = paste( det_sc$trip, det_sc$set, sep="." )
+          det_sc$id2 = paste( det_sc$id, det_sc$spec_bio, sep=".")
+          det_sc$filter.class = p$selection$biologicals_using_snowcrab_filter_class
+          isc = bio.snowcrab::filter.class( x=det_sc, type=p$selection$biologicals_using_snowcrab_filter_class )
+          if (length(isc) > 0) det_sc = det_sc[isc, c("id2", "filter.class") ]
+          isc = NULL
+          det = merge( det, det_sc, by="id2", all.x=TRUE, all.y=FALSE )
+          det = det[ !is.na(det$filter.class), ]
+        }
+
       }
 
     # summaries from det
@@ -1222,6 +1237,20 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           isc = filter_data( det, p$selection$biologicals )
           if (length(isc) > 0) det = det[isc,]
           isc = NULL
+        }
+        if (exists("biologicals_using_snowcrab_filter_class", p$selection)) {  # filter biologicals using snow crab short-form ID
+          warning( "Filtering using snow crab 'types' requires more data than is carried by survey_db. \n 
+            .. Adding data directly from snowcrab.db .. this also means dropping other sources of data \n")
+          det_sc = bio.snowcrab::snowcrab.db( DS ="det.georeferenced" )
+          det_sc$spec = 2526
+          det_sc$spec_bio =  taxonomy.recode( from="spec", to="parsimonious", tolookup=det_sc$spec ) # snow crab using groundfish codes
+          det_sc$individual = paste( det_sc$trip, det_sc$set, det_sc$spec_bio, det_sc$crabno, sep=".")
+          det_sc$filter.class = p$selection$biologicals_using_snowcrab_filter_class
+          isc = bio.snowcrab::filter.class( x=det_sc, type=p$selection$biologicals_using_snowcrab_filter_class )
+          if (length(isc) > 0) det_sc = det_sc[isc, c("individual", "filter.class") ]
+          isc = NULL
+          det = merge( det, det_sc, by="individual", all.x=TRUE, all.y=FALSE )
+          det = det[ !is.na(det$filter.class), ]
         }
       }
 

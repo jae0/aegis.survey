@@ -352,9 +352,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     names(gsdet)[which(names(gsdet)=="fmat")] = "mat"
     names(gsdet)[which(names(gsdet)=="flen")] = "len"  # cm
     names(gsdet)[which(names(gsdet)=="fwt")]  = "mass" # g
-
+    gsdet$individual = gsdet$fshno
     gsdet$mass = gsdet$mass / 1000 # convert from grams to kg
-    gsdet = gsdet[, c("id", "spec",  "sex", "mat", "len", "mass", "age") ]
+    gsdet = gsdet[, c("id", "spec",  "individual", "sex", "mat", "len", "mass", "age") ]
 
     save(gsdet, file=fn, compress=T)
 
