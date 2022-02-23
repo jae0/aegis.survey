@@ -1205,7 +1205,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       if (exists("biologicals", p$selection)) {  # filter biologicals
         if ( length( p$selection$biologicals) == 1 ) {
           if ( exists( "spec_bio", p$selection$biologicals ) | exists( "spec", p$selection$biologicals ) ) {
-            data_source_base = "cat"  #only if a single filter based upon spec or spec_bio
+            if ( !exists( "biologicals_using_snowcrab_filter_class", p$selection) ) { 
+              data_source_base = "cat"  #only if a single filter based upon spec or spec_bio
+            }
           }
         }
       }
@@ -1240,19 +1242,20 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
         if (exists("biologicals_using_snowcrab_filter_class", p$selection)) {  # filter biologicals using snow crab short-form ID
           warning( "Filtering using snow crab 'types' requires more data than is carried by survey_db. \n 
             .. Adding data directly from snowcrab.db .. this also means dropping other sources of data \n")
+
           det_sc = bio.snowcrab::snowcrab.db( DS ="det.georeferenced" )
           det_sc$spec = 2526
           det_sc$spec_bio =  taxonomy.recode( from="spec", to="parsimonious", tolookup=det_sc$spec ) # snow crab using groundfish codes
-          det_sc$individual = paste( det_sc$trip, det_sc$set, det_sc$spec_bio, det_sc$crabno, sep=".")
+          det_sc$individual_id = paste( det_sc$trip, det_sc$set, det_sc$spec_bio, det_sc$crabno, sep=".")
           det_sc$filter.class = p$selection$biologicals_using_snowcrab_filter_class
           isc = bio.snowcrab::filter.class( x=det_sc, type=p$selection$biologicals_using_snowcrab_filter_class )
-          if (length(isc) > 0) det_sc = det_sc[isc, c("individual", "filter.class") ]
+          if (length(isc) > 0) det_sc = det_sc[isc, c("individual_id", "filter.class") ]
           isc = NULL
-          det = merge( det, det_sc, by="individual", all.x=TRUE, all.y=FALSE )
+          det$individual_id = paste( det$id2, det$individual, sep=".")
+          det = merge( det, det_sc, by="individual_id", all.x=TRUE, all.y=FALSE )
           det = det[ !is.na(det$filter.class), ]
         }
       }
-
       setDT(set)
       setDT(det)
       det_summary = det[, .(
