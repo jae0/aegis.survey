@@ -616,7 +616,6 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   if (grepl("space", p$aegis_dimensionality)) {
 
-    region.id = slot( slot(sppoly, "nb"), "region.id" )
     APS = st_drop_geometry(sppoly)
     setDT(APS)
 
