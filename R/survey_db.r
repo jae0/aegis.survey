@@ -1352,8 +1352,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
-    if (is.null(fn))  fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
-    
+    if (is.null(fn))  fn = file.path( p$modeldir, p$carstm_model_label, paste("carstm_inputs", areal_units_fn, sep="_") )
+
     # inputs are shared across various secneario using the same polys
     #.. store at the modeldir level as default
     outputdir = dirname( fn )

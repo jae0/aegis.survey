@@ -371,7 +371,7 @@ glm methods here
     # toget="predictions",  # this updates a specific subset of calc
     # theta = c( 0.158, 4.251, 1.954, 2.745, 1.831, 1.622, 5.499, -0.393, 4.635, -0.436, 3.954, 3.201 ),
     control.inla = list( strategy='adaptive' ), 
-    control.family = list(control.link=list(model="logit") ), 
+    # control.family = list(control.link=list(model="logit") ), 
     num.threads="4:2", mc.cores=2   
   ) 
   # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )

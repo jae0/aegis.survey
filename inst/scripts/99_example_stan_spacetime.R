@@ -162,8 +162,8 @@ fit = carstm_model( p=pB, data=M, DS="redo", carstm_model_label="test"  ) # run 
   sppoly = st_transform(sppoly, st_crs(projection_proj4string("lonlat_wgs84")) )
   plot(sppoly)
 
-  W.nb = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod, returntype="neighbourhoods" )
-  W = spdep::nb2mat(W.nb, style="B", zero.policy=TRUE) # adjacency matrix ; B = binary ; W=row standardized etc
+  NB_graph = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod, returntype="neighbourhoods" )
+  W = spdep::nb2mat(NB_graph, style="B", zero.policy=TRUE) # adjacency matrix ; B = binary ; W=row standardized etc
 
   library(rgeos)
   # sset = maritimes_groundfish_strata_identify( Y=sset, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$areal_units_proj4string_planar_km  )
@@ -193,8 +193,8 @@ fit = carstm_model( p=pB, data=M, DS="redo", carstm_model_label="test"  ) # run 
     AU = as.integer(as.factor(sdat$AUID)), # numeric codes of strata
     TU = as.integer(as.factor(sdat$yr)), # numerical value of time untis
     W = W,               # adjacency matrix
-    scaling_factor = bym_scaling_factor(W.nb) ), # additional parameters required by the bym_scaled model (topology and variance scale factor)
-    nb2edge(W.nb)
+    scaling_factor = bym_scaling_factor(NB_graph) ), # additional parameters required by the bym_scaled model (topology and variance scale factor)
+    nb2edge(NB_graph)
   )
 
 

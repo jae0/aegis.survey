@@ -221,7 +221,7 @@
  
   fit = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
     posterior_simulations_to_retain="predictions", 
-    control.family=list( control.link=list(model="logit") ), ## this is the default for binomial, just here to show wher to use it
+    # control.family=list( control.link=list(model="logit") ), ## this is the default for binomial, just here to show wher to use it
     # theta = c(0.773, 3.539, 1.854, 0.849, 1.791, 0.699, -0.676, 4.617, -0.314, 3.963, 2.988), # 2021 solution
     # toget = c("summary", "fixed_effects", "predictions" ), 
     # toget = c("summary", "fixed_effects", "random_other", "predictions"), 
