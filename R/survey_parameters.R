@@ -117,12 +117,12 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     if ( !exists("carstm_prediction_surface_parameters", p))  {
         # generics using "default" carstm models and stmv solutions for spatial effects
         p$carstm_prediction_surface_parameters = list()
-        p$carstm_prediction_surface_parameters = parameters_add_without_overwriting( p$carstm_prediction_surface_parameters,
+        p$carstm_prediction_surface_parameters = parameters_add_without_overwriting(   p$carstm_prediction_surface_parameters,
           bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
           substrate = aegis.substrate::substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
           temperature = aegis.temperature::temperature_parameters( project_class="carstm", carstm_model_label="1970_present", yrs=p$yrs ),
-          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="1970_present", variabletomodel="pca1", yrs=p$yrs  ),
-          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="1970_present", variabletomodel="pca2", yrs=p$yrs  )
+          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="1999_present", variabletomodel="pca1", yrs=p$yrs  ),
+          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label="1999_present", variabletomodel="pca2", yrs=p$yrs  )
         )
     }
 

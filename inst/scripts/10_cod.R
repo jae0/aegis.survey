@@ -14,7 +14,7 @@ require(aegis)
 require(aegis.survey)
 
 spatial_domain = "SSE"
-yrs = 1970:2021
+yrs = 1999:2021
 groundfish_survey_species_code = 10 # cod
 
 # basic selection criteria for biologicals and sets 
@@ -31,10 +31,9 @@ selection = list(
     polygon_enforce=TRUE
   )
 )
-
-results_file = file.path( project.datadirectory( "aegis", "survey", "modelled", "cod"), "RES_basic_stratanal.RDS" )
-
-RES= list( yr = yrs )
+ 
+# auid to drop to mimic Michelle's extraction
+auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ) 
 
 
 
@@ -50,16 +49,13 @@ p = survey_parameters(
   project_name="survey",  
   speciesname = "Atlantic_cod",
   trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
-  carstm_model_label="stratanal",   # default = 1970:present, alt: 1999_present 
+  carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal",   # default = 1970:present, alt: 1999_present 
   areal_units_type = "stratanal_polygons_pre2014",
   areal_units_proj4string_planar_km = projection_proj4string("utm20"), #projection_proj4string("omerc_nova_scotia") ,
   areal_units_overlay = "none",
   areal_units_timeperiod = "pre2014",    # "pre2014" for older
   selection = selection
 )
-
-# auid to drop to mimic Michelle's extraction
-auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ) 
 
 # sppoly is used for "stratanal_designated_au" method .. which is the survey.db standard
 sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  )
@@ -74,6 +70,7 @@ if (0) {
 sppoly = sppoly[ -which( sppoly$AUID %in% auid_to_drop ), ]
 # x11(); plot(sppoly["AUID"]
 
+RES= list( yr = p$yrs )
 for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
 for ( tu in c( "standardtow", "towdistance", "sweptarea") ) {  
   # c("Standard tow", "Length adjusted", "Length & width adjusted")
@@ -86,6 +83,10 @@ for ( tu in c( "standardtow", "towdistance", "sweptarea") ) {
   RES[[mf]] = bi[ match(RES[["yr"]], bi$year), ]
   RES[[mf]]$label = mf
 }}
+
+outputdir = file.path( p$modeldir,  p$carstm_model_label )
+if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+results_file = file.path( outputdir, "RES_basic_stratanal.RDS" )
 
 saveRDS( RES, results_file, compress=TRUE )
 # RES = readRDS( results_file )
@@ -204,7 +205,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
 # ------------------------------------------------
-## mimic stranal with aegis.survey::survey_db with glm
+## Part 2: mimic stranal with aegis.survey::survey_db with glm
 
 # -- glm methods here
 
@@ -216,7 +217,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
 # ------------------------------------------------
-# Atlantic cod with a CAR (ICAR/BYM) Poisson process models
+# Part 3: Atlantic cod with a CAR (ICAR/BYM) Poisson process models
+
 # using sweptarea only on groundfish polygons  with environmental covariates.
 # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
 # This adds some differences relative to "statanal" (which uses sa in sq nautical miles, btw)
@@ -228,9 +230,10 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 p = survey_parameters(
   project_class = "carstm",
   project_name="survey",  # "survey" == keyword used to bring in domain of maritimes boundaries groundfish surveys; otherwise use xydata
-  label ="Atlantic cod stranal polygons",
+  speciesname = "Atlantic_cod",
+  label ="Atlantic cod stratanal polygons",
   trawlable_units = "towdistance",  
-  carstm_model_label="cod_summer_RV_1970_present",   # default = 1970:present, alt: 1999_present 
+  carstm_model_label="Atlantic_cod_summer_RV_1970_present",   # default = 1970:present, alt: 1999_present 
   yrs = yrs,
   variabletomodel = "totno",
   vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id"),  # to compute mean size, etc
@@ -245,12 +248,8 @@ p = survey_parameters(
 sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  )
 sppoly$strata_to_keep = ifelse( sppoly$AUID %in% auid_to_drop, FALSE,  TRUE )
  
-
-
-
-redo_survey_data = FALSE
-# redo_survey_data = TRUE
-M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
+ 
+M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE, quantile_upper_limit=0.99, 
   fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
 
 
