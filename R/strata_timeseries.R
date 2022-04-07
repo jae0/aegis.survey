@@ -11,6 +11,7 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
   vn = params[["variable"]]
 
   # convert kg ->  kt
+  setDF(set)
   set[ , vn ] = set[ , vn ] / 10^6
 
   for (yr in params[["yrs"]]){

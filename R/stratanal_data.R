@@ -55,6 +55,7 @@ stratanal_data = function( selection=NULL, toget="", sppoly=NULL, trawlable_unit
 
   spp = st_drop_geometry( sppoly )
   attributes(spp$au_sa_km2) = NULL
+  
   set = merge( set, spp, by="AUID", all.x=TRUE, all.y=FALSE, suffixes=c(".set",""))
 
   # compute no of trawlable units for each stratum
@@ -83,7 +84,7 @@ stratanal_data = function( selection=NULL, toget="", sppoly=NULL, trawlable_unit
     standardtow = as.numeric(set$au_sa_km2) / standardtow_sakm2, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by 0.011801
     towdistance = as.numeric(set$au_sa_km2) / set$sa_towdistance # convert strata area to trawlable units 41ft by 1.75 nm, divide area by 0.011801
   )
-  
+
   i = which(!is.finite(set$nh))
   set$nh[i] = as.numeric(set$au_sa_km2[i]) / standardtow_sakm2  # override missing with "standard set" .. also if no trawlable_units set
 
