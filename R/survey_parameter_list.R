@@ -1,5 +1,5 @@
 
-survey_parameter_list = function( mf, p, type="abundance" ) {
+survey_parameter_list = function( p, mf, type="abundance" ) {
 
   p$label = mf 
   p$type = type

@@ -156,9 +156,9 @@ strata_timeseries = function( set, gini_compute=FALSE, bootstrap_compute=FALSE, 
     
     res_summary = data.frame(
       year = as.numeric(yr),
-      Y = yst * Nhsum,
-      Ylb = ci.yst[1]*Nhsum,
-      Yub = ci.yst[2]*Nhsum,
+      mean = yst * Nhsum,
+      lb025 = ci.yst[1]*Nhsum,
+      ub975 = ci.yst[2]*Nhsum,
       dwao = dwao
     )
 
