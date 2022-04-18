@@ -11,6 +11,7 @@
 
 # set up the run parameters
 require(aegis)
+require(aegis.polygons)
 require(aegis.survey)
 require(carstm)
 
@@ -67,11 +68,10 @@ p = survey_parameters(
   areal_units_timeperiod = "pre2014",    # "pre2014" for older
   selection = selection
 )
-
-
+ 
 
 # sppoly is used for "stratanal_designated_au" method .. which is the survey.db standard
-sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=TRUE  )
+sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")   )
 
 
 # bbox = c(-71.5, 41, -52.5,  50.5 )
@@ -97,7 +97,7 @@ plot(sppoly["AUID"] )
 
 RES= list( yr = p$yrs )
 for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
-for ( tu in c( "standardtow", "towdistance", "sweptarea") ) {  
+for ( tu in c( "standardtow", "towdistance", "sweptarea" ) ) {  
   # c("Standard tow", "Length adjusted", "Length & width adjusted")
   bi = strata_timeseries(
     set=stratanal_data( toget=data_approach, selection=selection, trawlable_units=tu, sppoly=sppoly ),
@@ -105,7 +105,8 @@ for ( tu in c( "standardtow", "towdistance", "sweptarea") ) {
     alpha.t = 0.05 # confidence interval for t-tdist assumption eg. 0.05 = 95%, 0.1 = 90%
   )
   mf = paste(data_approach, tu, sep=".")
-  RES[[mf]] = bi[ match(RES[["yr"]], bi$year), ]
+  RES[[mf]] = data.frame( year=p$yrs )
+  RES[[mf]] = merge( RES[[mf]], bi, by="year", all.x=TRUE, all.y=FALSE )
   RES[[mf]]$label = mf
 }}
 
@@ -157,7 +158,7 @@ plot( o )
 
 
 # as a check: these were Michelle's results: 
-# derived from a base access of gcat without correction factors for boat, species, etc)  
+# derived from a base access of gcat without correction factors for boat, species, subsampling, etc) 
 # NOTE here they are in kg .. but they are now recorded as kt
 
 #         year pop.total variable orig.mean boot.mean var.boot.mean lower.ci upper.ci   length
@@ -244,7 +245,7 @@ p = survey_parameters(
   project_name="survey",  # "survey" == keyword used to bring in domain of maritimes boundaries groundfish surveys; otherwise use xydata
   speciesname = "Atlantic_cod",
   label ="Atlantic cod stratanal polygons",
-  trawlable_units = "towdistance",  
+  trawlable_units = "direct_number",  
   outputdir = file.path( p$modeldir, p$carstm_model_label ),
   carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal_polygons_iid",   # default = 1970:present, alt: 1999_present 
   carstm_model_type="S_iid.T_iid",
@@ -272,8 +273,7 @@ io = which(M$tag == "observations")
 iq = unique( c( which( M$totno > 0), ip ) ) # subset to positive definite data (for number and size)
 
 mo = 10^6
-M$data_offset[io] = M$data_offset[io] * mo  # ( number / mo * km^2 ) ==> this forces everyting to be expressed as  no. / (1000km)^2  .. including predictions (offset==1)
-
+M$data_offset[io] = M$data_offset[io] * mo  # ( number / (mo * km^2 )) ==> this forces everyting to be expressed as  no. / (mo * km^2)
 
 pN = survey_parameter_list( p=p, mf=p$carstm_model_type, type="abundance" )
 pW = survey_parameter_list( p=p, mf=p$carstm_model_type, type="meansize" )
@@ -301,10 +301,7 @@ fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain
 fit = NULL; gc()
 
 sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly )
-sims = sims * mo / 10^6 # 10^6 kg -> kt;; kt/km^2
-# convert from per 1000km^2 to kg per km^2 ( . / 10^6 ) 
-# however, due to offset fiddling above for INLA's experiemental mode (mo), this cancels out as
-# as mo==10^6  
+sims = sims * mo / 1000  # 10^6 kg -> kt;; kt/km^2
 
 
 # this is to match Michelle's extraction for "Summer RV" for final aggregation and plotting 
@@ -322,6 +319,8 @@ RES[[p$carstm_model_type]]$median = apply( simplify2array(SM), 1, median )
 RES[[p$carstm_model_type]]$lb025 = apply( simplify2array(SM), 1, quantile, probs=0.025 )
 RES[[p$carstm_model_type]]$ub975 = apply( simplify2array(SM), 1, quantile, probs=0.975 )
  
+saveRDS( RES, results_file, compress=TRUE )
+# RES = readRDS( results_file )
  
 outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "aggregated_biomass_timeseries" )
 if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
@@ -329,6 +328,7 @@ if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarning
 ( fn = file.path( outputdir, "atlantic_cod_martimes.png") )
 png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
   plot( mean ~ year, data=RES[[p$carstm_model_type]], lty="solid", lwd=4, pch=20, col="slateblue", type="b", ylab="Biomass index (kt)", xlab="")
+  # lines( mean ~ year, data=RES[[p$carstm_model_type]], lty="solid", lwd=4, pch=20, col="slateblue", type="b", ylab="Biomass index (kt)", xlab="")
   lines( lb025 ~ year, data=RES[[p$carstm_model_type]], lty="dotted", lwd=2, col="slategray" )
   lines( ub975 ~ year, data=RES[[p$carstm_model_type]], lty="dotted", lwd=2, col="slategray" )
 dev.off()
@@ -454,6 +454,8 @@ sims = sims * mo / 10^6 # 10^6 kg -> kt;; kt/km^2
 sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those that are not of interest for aggregation
 SM = colSums( sims * sppoly$au_sa_km2/ sum(sppoly$au_sa_km2), na.rm=TRUE )
 
+RES = readRDS( results_file )
+ 
 RES[[p$carstm_model_type]] = data.frame( year = as.numeric(rownames(SM)) )
 RES[[p$carstm_model_type]]$mean = apply( simplify2array(SM), 1, mean )
 RES[[p$carstm_model_type]]$sd = apply( simplify2array(SM), 1, sd )
@@ -461,7 +463,9 @@ RES[[p$carstm_model_type]]$median = apply( simplify2array(SM), 1, median )
 RES[[p$carstm_model_type]]$lb025 = apply( simplify2array(SM), 1, quantile, probs=0.025 )
 RES[[p$carstm_model_type]]$ub975 = apply( simplify2array(SM), 1, quantile, probs=0.975 )
  
- 
+saveRDS( RES, results_file, compress=TRUE )
+# RES = readRDS( results_file )
+  
 outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "aggregated_biomass_timeseries" )
 if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 

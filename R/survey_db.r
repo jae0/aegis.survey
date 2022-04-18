@@ -1385,13 +1385,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
 
     p$selection$survey$strata_toremove = oo  
-    
-    set$totno0 = set$totno 
-    set$totwgt0 = set$totwgt 
-
-    set$totno = floor( set$totno_adjusted )  
-    set$totwgt = set$totwgt_adjusted  
-
+     
     set$totno[which(!is.finite(set$totno))] = NA
 
     # ensure we have some estimate of sweptarea and choose the appropriate
@@ -1405,11 +1399,14 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$data_offset = switch( p$trawlable_units,
       standardtow =  rep(standardtow_sakm2, nrow(set)) , # "standard tow"
       towdistance = set$sa_towdistance,  # "sa"=computed from tow distance and standard width, 0.011801==),
-      sweptarea = set$sa  # swept area based upon stand tow width and variable lenths based upon start-end locations wherever possible
+      sweptarea = set$sa,  # swept area based upon stand tow width and variable lenths based upon start-end locations wherever possible
+      direct_number = 1 / set[, "cf_set_no"],  # sa, subsampling
+      direct_biomass = 1 / set[, "cf_set_mass"]  # sa, subsampling
     )
 
     set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
     set = set[ which(  is.finite(set$data_offset)   ),  ]
+ 
 
     set$pa = presence.absence( X=set$totno / set$data_offset, px=p$habitat.threshold.quantile )$pa  # determine presence absence and weighting
     set$meansize  = set$totwgt / set$totno  # note, these are constrained by filters in size, sex, mat, etc. .. in the initial call
