@@ -1372,7 +1372,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     oo = p$selection$survey$strata_toremove 
     p$selection$survey$strata_toremove = NULL  # emphasize that all data enters analysis initially ..
     
-    set = survey_db( p=p, DS="filter" )
+    set = survey_db( p=p, DS="filter" ) # units:: kg / km^2 or  no / km^2
 
 
     crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
@@ -1418,14 +1418,14 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (!is.null(quantile_upper_limit)) {
       # truncate upper bounds of density 
 
-      density = set$totno / set$data_offset
-      qm = quantile( density, quantile_upper_limit, na.rm=TRUE )
-      mi = which( density > qm )
-      set$totno[mi] = floor( qm * set$data_offset[mi] )
+      ndensity = set$totno / set$data_offset
+      qn = quantile( ndensity, quantile_upper_limit, na.rm=TRUE )
+      mi = which( ndensity > qn )
+      set$totno[mi] = floor( qn * set$data_offset[mi] )
 
-      density = set$totwgt / set$data_offset
-      qm = quantile( density, quantile_upper_limit, na.rm=TRUE )
-      mi = which( density > qm )
+      bdensity = set$totwgt / set$data_offset
+      qm = quantile( bdensity, quantile_upper_limit, na.rm=TRUE )
+      mi = which( bdensity > qm )
       set$totwgt[mi] = floor( qm * set$data_offset[mi] )
     }
 
