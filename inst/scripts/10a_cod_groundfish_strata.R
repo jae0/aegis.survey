@@ -26,6 +26,16 @@ if ( !file.exists(global_output_directory)) dir.create( global_output_directory,
 results_file = file.path( global_output_directory, "RES.RDS" )
 
 
+# settype:
+# 1=stratified random,
+# 2=regular survey,
+# 3=unrepresentative(net damage),
+# 4=representative sp recorded(but only part of total catch),
+# 5=comparative fishing experiment,
+# 6=tagging,
+# 7=mesh/gear studies,
+# 8=explorartory fishing,
+# 9=hydrography
 
 # basic selection criteria for biologicals and sets 
 selection = list(

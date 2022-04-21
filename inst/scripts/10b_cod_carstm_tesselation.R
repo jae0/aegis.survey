@@ -35,17 +35,28 @@ results_file = file.path( global_output_directory, "RES.RDS" )
 
 
 
+# settype:
+# 1=stratified random,
+# 2=regular survey,
+# 3=unrepresentative(net damage),
+# 4=representative sp recorded(but only part of total catch),
+# 5=comparative fishing experiment,
+# 6=tagging,
+# 7=mesh/gear studies,
+# 8=explorartory fishing,
+# 9=hydrography
+
 # basic selection criteria for biologicals and sets 
 selection = list(
   biologicals=list(
     spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
   ),
   survey=list(
-    data.source="groundfish",
+    data.source=c("groundfish", "snowcrab"),
     yr = yrs,      # time frame for comparison specified above
-    months=6:8,
-    settype = 1,
-    gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
+    # months=6:8,  # all months
+    settype = c(1,2,5,8 ),
+    # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),  # all gear!
     polygon_enforce=TRUE
   )
 )
@@ -63,72 +74,7 @@ auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Wat
   
 
 
-
-
-  # --------------------------------  
-  # choose design
-
-  mf = c( "stranal_design", "tesselation" ) [2]
-
-
-  if (mf == "stranal_design") {
-    ## -- stratanal design-based polygons 
-    p$label ="Atlantic cod summer standardtow habitat stratanal"
- 
-    # limit to generic summer survey 
-    p$selection$survey$months = 6:8 # "summer"
-    p$selection$survey$settype = c(1,2)
-      # settype:
-      # 1=stratified random,
-      # 2=regular survey,
-      # 3=unrepresentative(net damage),
-      # 4=representative sp recorded(but only part of total catch),
-      # 5=comparative fishing experiment,
-      # 6=tagging,
-      # 7=mesh/gear studies,
-      # 8=explorartory fishing,
-      # 9=hydrography
-    
-    p = parameters_add( p, list(
-      areal_units_type = "stratanal_polygons_pre2014",
-      areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
-      areal_units_resolution_km = 25, # km  
-      areal_units_overlay = "none",
-      areal_units_timeperiod = "pre2014"    # "pre2014" for older
-    ) )
   
-    p$formula = formula( 
-        pa ~ 1 
-          + f( time, model="ar1",  hyper=H$ar1 ) 
-          + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
-          + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE,  hyper=H$bym2 ) 
-          + f( space_time, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, group=time_space,  hyper=H$bym2, control.group=list(model="ar1", hyper=H$ar1_group)) 
-    )
-    p$family = "binomial" 
-
-
-    # create polygons
-    redo_sppoly=FALSE
-    # redo_sppoly=TRUE 
-    ff = survey_db( p=p, DS="areal_units_input", redo=TRUE, fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs.rdata" )  )
-    ff = NULL
-    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=redo_sppoly, areal_units_constraint="survey"   )  # generic
-    plot(sppoly["AUID"], reset=FALSE)
- 
-
-    redo_survey_data = FALSE
-    # redo_survey_data = TRUE
-    M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, 
-      fn=file.path( p$modeldir, p$speciesname , mf, "carstm_inputs_stratanal.rdata" )  )
-
-    M$log.substrate.grainsize = log( M$substrate.grainsize )
-
-  }
-
-
-
-
 # ------------------------------------------------
 # Part 3: Atlantic cod with a CAR (ICAR/BYM) Poisson process models with tesselation
 
@@ -149,7 +95,7 @@ p = survey_parameters(
   vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id"),  # to compute mean size, etc
   areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
   areal_units_type = "tesselation",
-  areal_units_constraint_ntarget = length(yrs)/3,  # n time slices req in each au
+  areal_units_constraint_ntarget = length(yrs),  # n time slices req in each au
   areal_units_constraint_nmin = 5,   # n time slices req in each au
   areal_units_resolution_km = 1,  # starting resolution .. if using tesselation/ otherwise grid size ()
   areal_units_overlay = "none",
@@ -203,7 +149,7 @@ fit = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_
 
 # habitat model
 fit = NULL; gc()
-fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain="predictions", 
+fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain="predictions", redo_fit=FALSE,
   # control.inla = list( strategy='adaptive' ), 
   num.threads="4:2", mc.cores=2   
 ) 
