@@ -9,67 +9,11 @@
 # NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
 
 # the variations examined here:
-
-# ----------------------------------------------
-# define model_forms: params are stored in  survey_parameter_list()
-
-# adding settype 2 and 5 (comparative tows, and generic surveys) 
-
-
-# set up the run parameters
-  require(aegis.survey)
-
-  spatial_domain = "SSE"
   
-  yrs = 1970:2021
-  runtype = "1970_present"
- 
-  groundfish_survey_species_code = 10 # cod
+  
+  parameter_set = "habitat_paper"  # used by 10_cod_workspace to defined parameter subsets
 
-
-  # basic selection criteria
-  ## note difference from stratanal: all gears kept, and all areas kept
-  selection = list(
-    biologicals=list(
-      spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
-    ),
-    survey=list(
-      data.source = c("groundfish", "snowcrab"),
-      yr = yrs,      # time frame for comparison specified above
-      # months=6:11,   #"summer"
-      # dyear = c(150,250)/365, #  summer = which( (x>150) & (x<250) ) , spring = which(  x<149 ), winter = which(  x>251 )
-      # ranged_data="dyear"
-      settype = c(1,2,5,8 ),
-      # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
-      # strata_toremove=c("Gulf", "Georges_Bank", "Spring", "Deep_Water"),  # <<<<< strata to remove from standard strata-based analysis
-      polygon_enforce=TRUE
-    )
-  )
-
-  p = survey_parameters(
-    project_class = "carstm",
-    project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
-    label ="Atlantic cod summer",
-    speciesname = "Atlantic_cod",
-    trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
-    # carstm_model_label = "full_model"   ## <<----- 
-    carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present 
-    runtype=runtype,
-    yrs = yrs,
-    selection = selection,
-    type="habitat",
-    variabletomodel = "pa",  
-    vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id")  # to compute mean size, etc
-  )
-
-  results_file = file.path( p$modeldir, p$speciesname , "RES_habitat_comparisons.rdata" )
-
-  RES= list( yr = yrs )
-
-
-  # basic param set definitions END
-  # --------------------------------  
- 
+  source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
 
 
@@ -542,6 +486,58 @@
     )
   }
 
+
+  # temperature timeseries
+    require(aegis.temperature)
+
+
+  yrs=1970:2021
+
+  polys = st_sf( st_union( st_geometry( sppoly ) ) )
+  polys$AUID = 0
+
+  
+  
+  pt = temperature_parameters( 
+      project_class="carstm", 
+      yrs=yrs, 
+      carstm_model_label="1970_present"
+  ) 
+
+  tss = aegis_lookup(  
+    parameters=list( temperature = pt ), 
+    LOCS=expand.grid( AUID=polys$AUID, timestamp=pt$yrs + 0.75 ), LOCS_AU=polys, 
+    project_class="carstm", output_format="areal_units", 
+    variable_name=list( "predictions" ), statvars=c("mean", "sd"), space_resolution=pt$pres, year.assessment=pt$year.assessment,
+    tz="America/Halifax",
+    returntype = "data.table"
+  ) 
+
+  yran = c( 2, 11 )
+  nrep = 10000
+  nd = length(yrs)
+  y = matrix( NA, nrow=nrep, ncol=nd )
+  ncolors = 600
+  prs = seq( from=0.025, to=0.975, length.out=ncolors*2 )  # 95% CI
+  alpha = seq( from=0.85, to=0.95, length.out=ncolors )
+
+  cols_plot = c("Blues", "Purples",  "Reds", "Dark Mint", "Greens", "Light Grays")
+  ncc = length(cols_plot)
+  
+  cols = matrix( NA, ncol=ncc, nrow=ncolors*2 )
+  for (i in 1:ncc ) {
+    cols[,i] = c( rev(hcl.colors(ncolors, cols_plot[i], alpha=rev(alpha))), hcl.colors(ncolors, cols_plot[i], alpha=(alpha) ) ) 
+  }
+
+  plot( 0, 0, type="n", ylim=yran, xlim=range(yrs), axes=FALSE, xlab="Year", ylab="Bottom temperature (Celcius)" ) #change xlim to yrs0 to remove 3 yr projection
+
+    for (i in 1:nd) y[,i] = rnorm( nrep, mean=tss$predictions_mean[i], sd=tss$predictions_sd[i])
+    Bq =  apply( y, 2, quantile, probs=prs, na.rm=T  )
+    for ( k in 1:length(prs) ) lines ( yrs, Bq[k,], lwd=3, col=cols[k,6] )
+    lines ( yrs, Bq[ncolors,], lwd=3, col=cols[ncolors, 6]  ) # median
+    axis(2)
+  axis(1 )
+  
  
   # --------------------------------  
   # maps and plots END

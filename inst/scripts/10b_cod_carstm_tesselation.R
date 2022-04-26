@@ -4,6 +4,7 @@
 # Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
 # using sweptarea only on a lattice system with environmental covariates.
 # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
+
 # This adds some differences relative to "statanal" (which uses sa in sq nautical miles, btw)
 
 # NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
@@ -18,106 +19,30 @@
  
 # set up the run parameters
 
-require(aegis)
-require(aegis.polygons)
-require(aegis.survey)
-require(carstm)
+parameter_set = "tesselation"  # used by 10_cod_workspace to defined parameter subsets
 
+source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
-spatial_domain = "SSE"
-yrs = 1970:2021
-groundfish_survey_species_code = 10 # cod
-
-global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "Atlantic_cod" )
-if ( !file.exists(global_output_directory)) dir.create( global_output_directory, recursive=TRUE, showWarnings=FALSE )
-
-results_file = file.path( global_output_directory, "RES.RDS" )
-
-
-
-# settype:
-# 1=stratified random,
-# 2=regular survey,
-# 3=unrepresentative(net damage),
-# 4=representative sp recorded(but only part of total catch),
-# 5=comparative fishing experiment,
-# 6=tagging,
-# 7=mesh/gear studies,
-# 8=explorartory fishing,
-# 9=hydrography
-
-# basic selection criteria for biologicals and sets 
-selection = list(
-  biologicals=list(
-    spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
-  ),
-  survey=list(
-    data.source=c("groundfish", "snowcrab"),
-    yr = yrs,      # time frame for comparison specified above
-    # months=6:8,  # all months
-    settype = c(1,2,5,8 ),
-    # gear = c("Western IIA trawl", "Yankee #36 otter trawl"),  # all gear!
-    polygon_enforce=TRUE
-  )
-)
- 
-# auid to drop to mimic Michelle's extraction
-auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ) 
-
-
-
-  # basic param set definitions END  --- upto this point the same as "stratanal"
-  # --------------------------------  
- 
-
-  # over-ride stratanal setting with more permissive selection criteria:
-  
 
 
   
-# ------------------------------------------------
-# Part 3: Atlantic cod with a CAR (ICAR/BYM) Poisson process models with tesselation
-
-#
-# set up the run parameters
-  
-p = survey_parameters(
-  project_class = "carstm",
-  project_name="survey",  # "survey" == keyword used to bring in domain of maritimes boundaries groundfish surveys; otherwise use xydata
-  speciesname = "Atlantic_cod",
-  label ="Atlantic cod tesselation",
-  trawlable_units = "direct_number",  
-  carstm_model_label="Atlantic_cod_summer_RV_1970_present_tesselation",   # default = 1970:present, alt: 1999_present 
-  carstm_model_type="full_model",
-  outputdir = file.path( global_output_directory, "full_model" ),
-  yrs = yrs,
-  variabletomodel = "totno",
-  vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id"),  # to compute mean size, etc
-  areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
-  areal_units_type = "tesselation",
-  areal_units_constraint_ntarget = length(yrs),  # n time slices req in each au
-  areal_units_constraint_nmin = 5,   # n time slices req in each au
-  areal_units_resolution_km = 1,  # starting resolution .. if using tesselation/ otherwise grid size ()
-  areal_units_overlay = "none",
-  areal_units_timeperiod = "none",  # only relevent for groundfish polys
-  tus="yr",
-  hull_alpha = 15,
-  fraction_todrop = 0.05,
-  fraction_cv = 1.0,  # just under poisson (binomial)
-  fraction_good_bad = 0.9,
-  nAU_min = 30,
-  selection = selection
-)
-
+# ----------------------------------------------
+# Atlantic cod with a CAR (ICAR/BYM) Poisson process models with tesselation
 
 # instead of dropping right away, carry the data as it represents neighbourhood information and additional data
 # reset sppoly to full domain
-sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=TRUE  )  # required to reset save location
-sppoly$strata_to_keep = ifelse( sppoly$AUID %in% auid_to_drop, FALSE,  TRUE )
- 
-M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE, quantile_upper_limit=0.99, 
-  fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
+if (redo_data) {
+  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=TRUE  )  # required to reset save location
+  sppoly$strata_to_keep = ifelse( sppoly$AUID %in% auid_to_drop, FALSE,  TRUE )
 
+  M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE, quantile_upper_limit=0.99, 
+    fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
+}
+
+sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84") )
+
+M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, quantile_upper_limit=0.99, 
+    fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
 
 ip = which(M$tag == "predictions")
 io = which(M$tag == "observations")
@@ -149,40 +74,32 @@ fit = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_
 
 # habitat model
 fit = NULL; gc()
-fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain="predictions", redo_fit=FALSE,
+fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain="predictions", 
   # control.inla = list( strategy='adaptive' ), 
   num.threads="4:2", mc.cores=2   
 ) 
 # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
 
-# this is to match Michelle's extraction for "Summer RV" for final aggregation and plotting 
-sppoly = sppoly[ which( sppoly$strata_to_keep ), ]
-
-sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 )
-sims = sims / 10^6 # 10^6 kg -> kt;; kt/km^2
-
+# aggregate simulations
 # this is to match Michelle's extraction for "Summer RV" for final aggregation and plotting 
 sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those that are not of interest for aggregation
 
-
-# aggregate_biomass_from_simulations
-sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those that are not of interest for aggregation
-SM = colSums( sims * sppoly$au_sa_km2, na.rm=TRUE )
-
+# reload collator
 RES = readRDS( results_file )
- 
-RES[[p$carstm_model_type]] = data.frame( year = as.numeric(rownames(SM)) )
-RES[[p$carstm_model_type]]$mean = apply( simplify2array(SM), 1, mean )
-RES[[p$carstm_model_type]]$sd = apply( simplify2array(SM), 1, sd )
-RES[[p$carstm_model_type]]$median = apply( simplify2array(SM), 1, median )
-RES[[p$carstm_model_type]]$lb025 = apply( simplify2array(SM), 1, quantile, probs=0.025 )
-RES[[p$carstm_model_type]]$ub975 = apply( simplify2array(SM), 1, quantile, probs=0.975 )
- 
+
+# NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
+
+# with "habitat" at habitat definition of prob=0.05
+sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 ) * sppoly$au_sa_km2 /10^6  
+RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
+
+
 saveRDS( RES, results_file, compress=TRUE )
 # RES = readRDS( results_file )
   
 outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "aggregated_biomass_timeseries" )
 if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+
 
 ( fn = file.path( outputdir, "atlantic_cod_martimes.png") )
 png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
@@ -192,58 +109,60 @@ png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
 dev.off()
 
 
-  # map it ..mean density
-  sppoly = areal_units( p=pN )  # to reload
-
-  vn = paste("biomass", "predicted", sep=".")
-
-  outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "predicted_biomass_densitites" )
-
-  if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-
-  B = apply( sims, c(1,2), mean ) 
+# map it ..mean density (choose appropriate p$carstm_model_type/"sims", above)
+sppoly = areal_units( p=pN )  # to reload in case
+vn = paste("biomass", "predicted", sep=".")
+outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "predicted_biomass_densitites" )
+if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+B = apply( sims, c(1,2), mean ) 
+brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) )* 10^6)  )
+for (i in 1:length(pN$yrs) ){
+  y = as.character( pN$yrs[i] )
+  sppoly[,vn] = log10( B[,y]* 10^6 )
+  outfilename = file.path( outputdir , paste( "biomass", y, "png", sep=".") )
+  tmout =  carstm_map(  sppoly=sppoly, vn=vn,
+      breaks=brks,
+      additional_features=additional_features,
+      title=paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
+      palette="-RdYlBu",
+      plot_elements=c( "compass", "scale_bar", "legend" ), 
+      outfilename=outfilename
+  )
+  tmout
   
-  brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) )* 10^6)  )
+}
+ 
 
-  
-  for (i in 1:length(pN$yrs) ){
-    y = as.character( pN$yrs[i] )
-    sppoly[,vn] = log10( B[,y]* 10^6 )
-    outfilename = file.path( outputdir , paste( "biomass", y, "png", sep=".") )
-    tmout =  carstm_map(  sppoly=sppoly, vn=vn,
-        breaks=brks,
-        additional_features=additional_features,
-        title=paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
-        palette="-RdYlBu",
-        plot_elements=c( "compass", "scale_bar", "legend" ), 
-        outfilename=outfilename
-    )
-    tmout
-    
-  }
-
-
-# comparison of timeseries:
-
+# comparative plots of timeseries:
 dev.new(width=11, height=7)
 nvn = setdiff( names(RES), "yr" )
-nv = 1:length(nvn)
+vc = paste( "full_model" )
 
-col = c("slategray", "turquoise", "darkorange", "green", "blue", "darkred", "cyan", "darkgreen", "purple" )[nv]
-pch = c(20, 21, 22, 23, 24, 25, 26, 27, 20)[nv] 
-lty = c(1, 3, 4, 5, 6, 7, 1, 3, 4 )[nv]
-lwd = c(2, 4, 6, 2, 4, 6, 2, 4, 6 )[nv]
-type =c("l", "l", "l", "l", "l", "l", "l", "l", "l") [nv]
+nv  = which( nvn %in% c( "full_model",  "stratanal.towdistance")  )
+col = c("slategray", "turquoise", "darkorange", "lightgreen", "navyblue", "darkred",  "turquoise", "cyan", "darkgreen", "purple", "darkgray", "pink" )
+pch = c(20, 21, 22, 23, 24, 25, 26, 27, 20, 19, 23)
+lty = c(2, 1, 4, 5, 6, 7, 1, 3, 4, 5, 6 )
+lwd = c(3, 6, 6, 2, 4, 6, 2, 4, 6, 5, 4 )
+type =c("l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l")
 
-plot( 0, 0, type="n", xlim=range(RES[["yr"]]), ylim=c(0, 3.2e2), xlab="Year", ylab="kt", main="Comparing input data treatment and sweptareas")
-for (i in nv) {
-  lines( mean ~ RES[["yr"]], data=RES[[nvn[i]]], lty=lty[i], lwd=lwd[i], col=col[i], pch=pch[i], type=type[i])
+plot( 0, 0, type="n", xlim=range(RES[["yr"]]), ylim=c(0, 320), xlab="Year", ylab="kt", main="Comparing input data treatment and sweptareas")
+for (j in 1:length(nv) ) {
+  i = nv[j]
+  lines( mean ~ year, data=RES[[nvn[i]]], lty=lty[j], lwd=lwd[j], col=col[j], pch=pch[j], type=type[j])
+  lines( lb025 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[j] )
+  lines( ub975 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[j] )
 }
-legend("topright", legend=nvn, lty=lty, col=col, lwd=lwd )
-# note: sweptarea methods have lower peak abundance
 
+legend("topright", legend=nvn[nv], lty=lty, col=col, lwd=lwd )
 
- 
+# alternative plot
+library(ggplot2)
+
+ggplot(subset(predData, hp==200), aes(wt, fit, fill=factor(cyl), colour=factor(cyl))) +
+  geom_ribbon(aes(ymin=lwr, max=upr), alpha=0.2, colour=NA) +
+  geom_line() +
+  labs(x="Weight", y="Predicted MPG", colour="Cylinders", fill="Cylinders") +
+  theme_bw()
 # end
 # ------------------------------------------------
 

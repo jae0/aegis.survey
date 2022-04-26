@@ -10,52 +10,12 @@
 
 
 # set up the run parameters
-require(aegis)
-require(aegis.polygons)
-require(aegis.survey)
-require(carstm)
 
+parameter_set = "stratanal"  # used by 10_cod_workspace to defined parameter subsets
 
-spatial_domain = "SSE"
-yrs = 1970:2021
-groundfish_survey_species_code = 10 # cod
+source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
-global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "Atlantic_cod" )
-if ( !file.exists(global_output_directory)) dir.create( global_output_directory, recursive=TRUE, showWarnings=FALSE )
-
-results_file = file.path( global_output_directory, "RES.RDS" )
-
-
-# settype:
-# 1=stratified random,
-# 2=regular survey,
-# 3=unrepresentative(net damage),
-# 4=representative sp recorded(but only part of total catch),
-# 5=comparative fishing experiment,
-# 6=tagging,
-# 7=mesh/gear studies,
-# 8=explorartory fishing,
-# 9=hydrography
-
-# basic selection criteria for biologicals and sets 
-selection = list(
-  biologicals=list(
-    spec_bio = bio.taxonomy::taxonomy.recode( from="spec", to="parsimonious", tolookup=groundfish_survey_species_code )
-  ),
-  survey=list(
-    data.source="groundfish",
-    yr = yrs,      # time frame for comparison specified above
-    months=6:8,
-    settype = 1,
-    gear = c("Western IIA trawl", "Yankee #36 otter trawl"),
-    polygon_enforce=TRUE
-  )
-)
  
-# auid to drop to mimic Michelle's extraction
-auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ) 
-
-
 
 # ------------------------------------------------
 # PART 1 -- simple "stratanal" 
@@ -64,43 +24,18 @@ auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Wat
 # parameter setting used to filter data via 'survey_db( DS="filter")'
 # specific selection params required for survey_db(DS="filter") data selection mechanism
 
-p = survey_parameters(
-  project_class = "stratanal",
-  project_name="survey",  
-  speciesname = "Atlantic_cod",
-  trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
-  carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal",   # default = 1970:present, alt: 1999_present 
-  outputdir = file.path( global_output_directory, "stratanal" ),
-  yrs=1970:2021,
-  areal_units_type = "stratanal_polygons_pre2014",
-  areal_units_proj4string_planar_km = projection_proj4string("utm20"), #projection_proj4string("omerc_nova_scotia") ,
-  areal_units_overlay = "none",
-  areal_units_timeperiod = "pre2014",    # "pre2014" for older
-  selection = selection
-)
- 
-
 # sppoly is used for "stratanal_designated_au" method .. which is the survey.db standard
-sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")   )
 
-
-# bbox = c(-71.5, 41, -52.5,  50.5 )
-additional_features = additional_features_tmap( 
-    p=p, 
-    isobaths=c( 10, 100, 200, 300, 500, 1000 ), 
-    coastline =  c("canada"), 
-    xlim=c(-80,-40), 
-    ylim=c(38, 60) 
-)
-
-
-if (0) {
+if (redo_data) {
+  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=TRUE )
   # no data in these areal units: remove .. they seem to be US locations
   plot(sppoly["AUID"], reset=FALSE)
   plot(sppoly[which(sppoly$AUID %in% auid_to_drop), "AUID"], col="darkgray", add=TRUE )
 }
 
+
 # this is to match Michelle's extraction for "Summer RV" 
+sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")   )
 sppoly = sppoly[ -which( sppoly$AUID %in% auid_to_drop ), ]
 
 plot(sppoly["AUID"] )
@@ -244,7 +179,7 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
 # ------------------------------------------------
-## Part 2: mimic stratanal with aegis.survey::survey_db and inla .. 
+## Part 2: mimic stratanal with aegis.survey::survey_db and inla .. as an IID process
 
 # NOTE:: large areal units so environmental covariates do not make sense 
 # This is just a simple random effects models
@@ -256,26 +191,12 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
  
 
 # set up the run parameters
-  
-p = survey_parameters(
-  project_class = "carstm",
-  project_name="survey",  # "survey" == keyword used to bring in domain of maritimes boundaries groundfish surveys; otherwise use xydata
-  speciesname = "Atlantic_cod",
-  label ="Atlantic cod stratanal polygons",
-  trawlable_units = "direct_number",  
-  outputdir = file.path( p$modeldir, p$carstm_model_label ),
-  carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal_polygons_iid",   # default = 1970:present, alt: 1999_present 
-  carstm_model_type="S_iid.T_iid",
-  outputdir = file.path( global_output_directory, "stratanal_iid" ),
-  yrs = yrs,
-  variabletomodel = "totno",
-  vars_to_retain = c("totwgt", "totno", "pa", "meansize", "data_offset", "gear", "data.source", "id"),  # to compute mean size, etc
-  areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm; alt projection_proj4string("omerc_nova_scotia")   
-  areal_units_type = "stratanal_polygons_pre2014",
-  areal_units_timeperiod = "pre2014",    # "pre2014" for older
-  selection = selection  # same as stratanal above
-)
 
+parameter_set = "stratanal_iid"  # used by 10_cod_workspace to defined parameter subsets
+
+source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
+
+ 
 # reset sppoly to full domain
 # instead of dropping right away, carry the data as it represents neighbourhood information and additional data
 sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  ) 
@@ -303,7 +224,7 @@ fit = carstm_model( p=pW, data=M[iw,], sppoly=sppoly,  posterior_simulations_to_
 fit = NULL; gc()
 fit = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
   num.threads="4:2", mc.cores=2, inla.mode="classic"
-)  
+) a
 
 # habitat model
 fit = NULL; gc()
@@ -313,7 +234,7 @@ fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain
 
 fit = NULL; gc()
 
-sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly  )   
+sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05  )   
 sims = sims / 10^6 # 10^6 kg -> kt;; kt/km^2
  
 
