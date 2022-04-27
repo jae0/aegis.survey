@@ -614,8 +614,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       # from Robinson et al. (1983)
       # specific standard MR
       #   = smr
-      #   = 0.067 M^(-0.24) * exp(0.051 * Temp.Celcius)
-      # (Temp.Celcius; M in grams, MR in ml O2/g/hr)
+      #   = 0.067 M^(-0.24) * exp(0.051 * Temp.Celsius)
+      # (Temp.Celsius; M in grams, MR in ml O2/g/hr)
       #
       # Converting to more standard units:
       # 1 ml O2 = 4.8 cal (from paper)
@@ -1420,8 +1420,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
       ndensity = set$totno / set$data_offset
       qn = quantile( ndensity, quantile_upper_limit, na.rm=TRUE )
-      mi = which( ndensity > qn )
-      set$totno[mi] = floor( qn * set$data_offset[mi] )
+      ni = which( ndensity > qn )
+      set$totno[ni] = floor( qn * set$data_offset[ni] )
 
       bdensity = set$totwgt / set$data_offset
       qm = quantile( bdensity, quantile_upper_limit, na.rm=TRUE )

@@ -179,7 +179,6 @@
       speciesname = "Atlantic_cod",
       label ="Atlantic cod stratanal polygons",
       trawlable_units = "direct_number",  
-      outputdir = file.path( p$modeldir, p$carstm_model_label ),
       carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal_polygons_iid",   # default = 1970:present, alt: 1999_present 
       carstm_model_type="S_iid.T_iid",
       outputdir = file.path( global_output_directory, "stratanal_iid" ),
@@ -217,5 +216,4 @@ additional_features = additional_features_tmap(
     ylim=c(38, 60) 
 )
 
-
-
+ 

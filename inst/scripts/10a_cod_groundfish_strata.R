@@ -40,7 +40,9 @@ sppoly = sppoly[ -which( sppoly$AUID %in% auid_to_drop ), ]
 
 plot(sppoly["AUID"] )
 
-RES= list( yr = p$yrs )
+# RES= list( yr = p$yrs )
+RES = readRDS( results_file )
+
 for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
 for ( tu in c( "standardtow", "towdistance", "sweptarea" ) ) {  
   # c("Standard tow", "Length adjusted", "Length & width adjusted")
@@ -60,6 +62,29 @@ saveRDS( RES, results_file, compress=TRUE )
  
 
 # --------- 
+
+# single plot
+dev.new(width=11, height=7)
+nvn = setdiff( names(RES), "yr" )
+nv = which( nvn == "stratanal.standardtow" )
+
+col = c("darkslategray", "turquoise", "darkorange", "green", "blue", "darkred", "slategray", "darkgreen", "purple", "darkgray", "pink" )
+pch = c(20, 21, 22, 23, 24, 25, 26, 27, 20, 19, 23)  
+lty = c(1, 3, 4, 5, 6, 7, 1, 3, 4, 5, 6 ) 
+lwd = c(2, 4, 6, 2, 4, 6, 6, 4, 6, 5, 4 ) 
+type =c("l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l")
+
+plot( 0, 0, type="n", xlim=range(RES[["yr"]]), ylim=c(0, 280), xlab="Year", ylab="kt", main="Comparing input data treatment and sweptareas")
+for (i in nv) {
+  lines( mean ~ year, data=RES[[nvn[i]]], lty=lty[i], lwd=lwd[i], col=col[i], pch=pch[i], type=type[i])
+  lines( lb025 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[i] )
+  lines( ub975 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[i] )
+}
+
+
+
+
+
 # comparative plots:
 
 dev.new(width=11, height=7)

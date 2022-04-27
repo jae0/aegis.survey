@@ -373,7 +373,7 @@
   i = "inla.group(t, method = \"quantile\", n = 13)"
   dta = fit$summary.random[[i]] 
   plot( inverse.logit(dta$mean) ~ dta$ID,  type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0.2, 0.8), 
-    xlab="Bottom temperature (degrees Celcius)", ylab="Probability" )
+    xlab="Bottom temperature (degrees Celsius)", ylab="Probability" )
   lines( inverse.logit(dta[,4]) ~ dta$ID,  lty="dotted", col="slategray")
   lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dotted", col="slategray")
   abline( h=0.5, lty="dashed",  col="slategray" )
