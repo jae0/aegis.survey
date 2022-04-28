@@ -37,19 +37,19 @@ Then one can create the model input data and output prediction locations, both c
 The specific form of the model can be specified directly or stored and read in from file:
 
 ```
-mf = "A.S_bym2.T_ar1.ST_bym2.env.eco"
+model_label = "A.S_bym2.T_ar1.ST_bym2.env.eco"
 
-survey_params = survey_parameter_list( mf=mf, p=p )
+survey_params = survey_parameter_list( model_label=model_label, p=p )
 
 # or specified directly:
 
-survey_params$label = mf
+survey_params$label = model_label
 
       survey_params$type="abundance"
 
       survey_params$pN = p
       survey_params$pN$label ="Atlantic cod summer standardtow totno"
-      survey_params$pN$carstm_model_label = mf
+      survey_params$pN$carstm_model_label = model_label
       survey_params$pN$variabletomodel = "totno"
       survey_params$pN$family = "poisson"
       survey_params$pN$formula = formula(
@@ -70,7 +70,7 @@ survey_params$label = mf
 
       survey_params$pW = p
       survey_params$pW$label ="Atlantic cod summer standardtow meansize"
-      survey_params$pW$carstm_model_label = mf
+      survey_params$pW$carstm_model_label = model_label
       survey_params$pW$variabletomodel = "meansize"
       survey_params$pW$family = "gaussian"
       survey_params$pW$formula = formula (
@@ -244,19 +244,19 @@ For example, to conduct a simple Conditional Autogressive Model (BYM), one needs
 The specific form of the model can be specified directly or stored and read in from file:
 
 ```
-mf = "A.S_bym2.T_ar1.ST_bym2.env.eco"
+model_label = "A.S_bym2.T_ar1.ST_bym2.env.eco"
 
-survey_params = survey_parameter_list( mf=mf, p=p )
+survey_params = survey_parameter_list( model_label=model_label, p=p )
 
 # or specified directly:
 
-survey_params$label = mf
+survey_params$label = model_label
 
       survey_params$type="abundance"
 
       survey_params$pN = p
       survey_params$pN$label ="Atlantic cod summer standardtow totno"
-      survey_params$pN$carstm_model_label = mf
+      survey_params$pN$carstm_model_label = model_label
       survey_params$pN$variabletomodel = "totno"
       survey_params$pN$family = "poisson"
       survey_params$pN$formula = formula(
@@ -277,7 +277,7 @@ survey_params$label = mf
 
       survey_params$pW = p
       survey_params$pW$label ="Atlantic cod summer standardtow meansize"
-      survey_params$pW$carstm_model_label = mf
+      survey_params$pW$carstm_model_label = model_label
       survey_params$pW$variabletomodel = "meansize"
       survey_params$pW$family = "gaussian"
       survey_params$pW$formula = formula (

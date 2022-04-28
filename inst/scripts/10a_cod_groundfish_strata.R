@@ -45,16 +45,17 @@ RES = readRDS( results_file )
 
 for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
 for ( tu in c( "standardtow", "towdistance", "sweptarea" ) ) {  
-  # c("Standard tow", "Length adjusted", "Length & width adjusted")
-  set = stratanal_data( toget=data_approach, selection=selection, trawlable_units=tu, sppoly=sppoly )
+  # data selection (depending upon methods, sa estimates, etc)
+  set = stratanal_data( toget=data_approach, selection=selection, trawlable_units=tu, sppoly=sppoly ) 
+  # compute stratanal (stratum-surface area weighted sums)
   bi = strata_timeseries(
     set=set, variable="totwgt", speciesname=p[["speciesname"]], yrs=p$yrs,
     alpha.t = 0.05 # confidence interval for t-tdist assumption eg. 0.05 = 95%, 0.1 = 90%
   )
-  mf = paste(data_approach, tu, sep=".")
-  RES[[mf]] = data.frame( year=p$yrs )
-  RES[[mf]] = merge( RES[[mf]], bi, by="year", all.x=TRUE, all.y=FALSE )
-  RES[[mf]]$label = mf
+  model_label = paste(data_approach, tu, sep=".")
+  RES[[model_label]] = data.frame( year=p$yrs )
+  RES[[model_label]] = merge( RES[[model_label]], bi, by="year", all.x=TRUE, all.y=FALSE )
+  RES[[model_label]]$label = model_label
 }}
 
 saveRDS( RES, results_file, compress=TRUE )
@@ -204,28 +205,31 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
 
 # ------------------------------------------------
-## Part 2: mimic stratanal with aegis.survey::survey_db and inla .. as an IID process
+## Part 2: mimic stratanal with aegis.survey::survey_db and inla .. as an IID process (i.e., a simple "mixed effect" model)
+## Not presented in paper .. exploratory 
 
-# NOTE:: large areal units so environmental covariates do not make sense 
-# This is just a simple random effects models
+# NOTE:: large areal units so using environmental covariates do not make sense (they get averaged/integrated out) 
 
 # Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
 # This adds some differences relative to "statanal" (which uses sa in sq nautical miles, btw)
 
 # NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
  
-
 # set up the run parameters
 
-parameter_set = "stratanal_iid"  # used by 10_cod_workspace to defined parameter subsets
+parameter_set = "stratanal_iid"  # used by 10_cod_workspace to load a defined parameter subset
 
 source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
  
 # reset sppoly to full domain
-# instead of dropping right away, carry the data as it represents neighbourhood information and additional data
+# instead of dropping right away, carry the data as it represents neighbourhood information and additional data 
+# (additional information/constraints for areal units on the border of the domain)
+# zero out SA estimates for the areal units being screened out .. 
+# this is to match Michelle's extraction for "Summer RV" for final aggregation and plotting 
 sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  ) 
 sppoly$strata_to_keep = ifelse( sppoly$AUID %in% auid_to_drop, FALSE,  TRUE )
+sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those that are not of interest for aggregation
 
 M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=FALSE, quantile_upper_limit=0.95, 
   fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_stratanal_polygons_pre2014.rdata" ) )
@@ -235,9 +239,9 @@ iq = unique( c( which( M$totno > 0), ip ) ) # subset to positive definite data (
 iw = unique( c( which( M$totno > 30), ip ) ) # subset to positive definite data (for number and size) .. mean size needs to have at least 3 individuals
 # M$data_offset[io] = M$data_offset[io] *10^6
 
-pN = survey_parameter_list( p=p, mf=p$carstm_model_type, type="abundance" )
-pW = survey_parameter_list( p=p, mf=p$carstm_model_type, type="meansize" )
-pH = survey_parameter_list( p=p, mf=p$carstm_model_type, type="habitat" )
+pN = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="abundance" )
+pW = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="meansize" )
+pH = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="habitat" )
  
 # size model
 fit = NULL; gc()
@@ -259,25 +263,16 @@ fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain
 
 fit = NULL; gc()
 
-sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05  )   
-sims = sims / 10^6 # 10^6 kg -> kt;; kt/km^2
- 
+  
 
-# this is to match Michelle's extraction for "Summer RV" for final aggregation and plotting 
-sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those that are not of interest for aggregation
-
-# aggregate_biomass_from_simulations
-SM = colSums( sims * sppoly$au_sa_km2, na.rm=TRUE )
-
+# load file that contains aggregation summary  
 RES = readRDS( results_file )
 
-RES[[p$carstm_model_type]] = data.frame( year = as.numeric(rownames(SM)) )
-RES[[p$carstm_model_type]]$mean = apply( simplify2array(SM), 1, mean )
-RES[[p$carstm_model_type]]$sd = apply( simplify2array(SM), 1, sd )
-RES[[p$carstm_model_type]]$median = apply( simplify2array(SM), 1, median )
-RES[[p$carstm_model_type]]$lb025 = apply( simplify2array(SM), 1, quantile, probs=0.025 )
-RES[[p$carstm_model_type]]$ub975 = apply( simplify2array(SM), 1, quantile, probs=0.975 )
- 
+# NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
+# with "habitat" at habitat definition of prob=0.05 (hurdle process)
+sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 ) * sppoly$au_sa_km2 /10^6  
+RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
+
 saveRDS( RES, results_file, compress=TRUE )
 # RES = readRDS( results_file )
  
@@ -302,14 +297,11 @@ dev.off()
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
   B = apply( sims, c(1,2), mean ) 
-  
-  brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) )* 10^6)  )
-
-  
+  brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) ))  )
   
   for (i in 1:length(pN$yrs) ){
     y = as.character( pN$yrs[i] )
-    sppoly[,vn] = log10( B[,y]* 10^6 )
+    sppoly[,vn] = log10( B[,y] )
     outfilename = file.path( outputdir , paste( "biomass", y, "png", sep=".") )
     tmout =  carstm_map(  sppoly=sppoly, vn=vn,
         breaks=brks,

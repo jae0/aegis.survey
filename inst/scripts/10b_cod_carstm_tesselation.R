@@ -50,9 +50,9 @@ io = which(M$tag == "observations")
 iq = unique( c( which( M$totno > 0), ip ) ) # subset to positive definite data (for number and size)
 iw = unique( c( which( M$totno > 30), ip ) ) # subset to positive definite data (for number and size)
 
-pN = survey_parameter_list( p=p, mf=p$carstm_model_type, type="abundance" )
-pW = survey_parameter_list( p=p, mf=p$carstm_model_type, type="meansize" )
-pH = survey_parameter_list( p=p, mf=p$carstm_model_type, type="habitat" )
+pN = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="abundance" )
+pW = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="meansize" )
+pH = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="habitat" )
 
  
 # size model
@@ -89,8 +89,7 @@ sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those tha
 RES = readRDS( results_file )
 
 # NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
-
-# with "habitat" at habitat definition of prob=0.05
+# with "habitat" at habitat definition of prob=0.05 (hurdle process)
 sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 ) * sppoly$au_sa_km2 /10^6  
 RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
 
@@ -115,16 +114,37 @@ dev.off()
 
 # map it ..mean density (choose appropriate p$carstm_model_type/"sims", above)
 sppoly = areal_units( p=pN )  # to reload in case
-vn = paste("biomass", "predicted", sep=".")
+
 outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "predicted_biomass_densitites" )
 if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-B = apply( sims, c(1,2), mean ) 
-brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) )* 10^6)  )
+
+# equivalent of the persistent spatial effect (global spatial mean)
+Bg = apply( sims, c(1), mean ) # global spatial means 
+brks = pretty( log10( quantile( Bg, probs=c(0.05, 0.95) ))  )
+vn =  "biomass_mean_global" 
+sppoly[,vn] = log10( Bg )
+outfilename = file.path( outputdir , paste( "biomass", "spatial_effect", "png", sep=".") )
+carstm_map(  sppoly=sppoly, vn=vn,
+    breaks=brks,
+    additional_features=additional_features,
+#    title= y, #paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
+    palette="-RdYlBu",
+    plot_elements=c( "compass", "scale_bar", "legend" ), 
+    scale=1.5,
+    map_mode="view",
+    tmap_zoom= c(map_centre, map_zoom),
+    outfilename=outfilename
+) 
+
+# kt / km^2
+B = apply( sims, c(1,2), mean ) # means by year
+brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) ))  )
+vn = paste("biomass", "predicted", sep=".")
 for (i in 1:length(pN$yrs) ){
   y = as.character( pN$yrs[i] )
-  sppoly[,vn] = log10( B[,y]* 10^6 )
+  sppoly[,vn] = log10( B[,y] )
   outfilename = file.path( outputdir , paste( "biomass", y, "png", sep=".") )
-  tmout =  carstm_map(  sppoly=sppoly, vn=vn,
+  carstm_map(  sppoly=sppoly, vn=vn,
       breaks=brks,
       additional_features=additional_features,
       title= y, #paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
@@ -132,10 +152,9 @@ for (i in 1:length(pN$yrs) ){
       plot_elements=c( "compass", "scale_bar", "legend" ), 
       scale=1.5,
       map_mode="view",
-      tmap_zoom= c(map_centre, map_zoom)
+      tmap_zoom= c(map_centre, map_zoom), 
       outfilename=outfilename
   )
-  tmout
   
 }
  
@@ -161,7 +180,6 @@ for (j in 1:length(nv) ) {
 }
 
 legend("topright", legend=nvn[nv], lty=lty, col=col, lwd=lwd )
-
 
 # alternative plot (Figure 2)
 library(ggplot2)
@@ -242,12 +260,13 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), "png", sep=".") )
   carstm_map(  res=res, vn=vn, tmatch=tmatch, 
       sppoly = sppoly, 
-      # palette="-RdYlBu",
+      palette="-RdYlBu",
       plot_elements=c(  "compass", "scale_bar", "legend" ),
       additional_features=additional_features,
       outfilename=fn,
       # title = paste( title, "spatial effect") ,
       background = background,
+      transformation=ifelse( grepl("probability", fn_root), NULL, log10) , 
       tmap_zoom= c(map_centre, map_zoom)  
   )
 
@@ -258,12 +277,13 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     carstm_map(  res=res, vn=vn, tmatch=time_match,
       sppoly = sppoly, 
       # breaks=brks,
-      # palette="RdYlBu",
+      palette="-RdYlBu",
       plot_elements=c(  "compass", "scale_bar", "legend" ),
       additional_features=additional_features,
       title= paste( time_match) , #paste(fn_root, time_match, sep="_"),  
       outfilename=fn,
       background = background,
+      transformation=ifelse( grepl("probability", fn_root), NULL, log10) , 
       scale=1.5,
       map_mode="view",
       tmap_zoom= c(map_centre, map_zoom)
