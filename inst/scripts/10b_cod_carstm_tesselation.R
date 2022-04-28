@@ -127,9 +127,12 @@ for (i in 1:length(pN$yrs) ){
   tmout =  carstm_map(  sppoly=sppoly, vn=vn,
       breaks=brks,
       additional_features=additional_features,
-      title=paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
+      title= y, #paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
       palette="-RdYlBu",
       plot_elements=c( "compass", "scale_bar", "legend" ), 
+      scale=1.5,
+      map_mode="view",
+      tmap_zoom= c(map_centre, map_zoom)
       outfilename=outfilename
   )
   tmout
@@ -192,127 +195,15 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 # ------------------------------------------------
 
    
-
-  # --------------------------------  
-  # analysis and output
-  
-  if (0) {
-    p = pH
-    fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "time" ), 
-      transf=inverse.logit, 
-      type="b", ylim=c(0,1), xlab="Year", ylab="Probability", h=0.5, v=1992   )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "cyclic" ), 
-      transf=inverse.logit, 
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0.35, 0.65),
-      xlab="Season", ylab="Probability", h=0.5  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(t, method = \"quantile\", n = 9)" ), 
-      transf=inverse.logit,   
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0.2, 0.8) ,
-      xlab="Bottom temperature (degrees Celsius)", ylab="Probability", h=0.5  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(z, method = \"quantile\", n = 9)" ), 
-      transf=inverse.logit,  
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, ylim=c(0, 0.8) ,
-      xlab="Depth (m)", ylab="Probability", h=0.5  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 9)" ), 
-      transf=inverse.logit, ylim=c(0.35, 0.65), 
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5,
-      xlab="Ln(grain size; mm)", ylab="Probability", h=0.5  )
-
-    gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "gear" ), subtype="errorbar", errorbar_labels=gears,
-      type="p",
-      transf=inverse.logit, ylim=c(0.25, 0.75), 
-      col="slategray", pch=19, lty=1, lwd=2.5,
-      xlab="Gear type", ylab="Probability", h=0.5  )
-
-
-    p = pN
-    fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "time" ), 
-      transf=exp,
-      #ylim=c(0,1), 
-      type="b",  xlab="Year", ylab="Effect size (fraction)", h=1.0, v=1992   )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "cyclic" ), 
-      transf=exp, 
-      # ylim=c(0.35, 0.65),
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-      xlab="Season", ylab="Effect size (fraction)", h=1.0  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(t, method = \"quantile\", n = 9)" ), 
-      transf=exp,   
-      #ylim=c(0.2, 0.8) ,
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-      xlab="Bottom temperature (degrees Celsius)", ylab="Effect size (fraction)", h=1.0  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(z, method = \"quantile\", n = 9)" ), 
-      transf=exp,  # ylim=c(0, 0.8) ,
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-      xlab="Depth (m)", ylab="Effect size (fraction)", h=1.0  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 9)" ), 
-      transf=exp, # ylim=c(0.35, 0.65), 
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5,
-      xlab="Ln(grain size; mm)", ylab="Effect size (fraction)", h=1.0  )
-
-    gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "gear" ), subtype="errorbar", errorbar_labels=gears,
-      type="p",
-      transf=exp, ylim=c(0., 14), 
-      col="slategray", pch=19, lty=1, lwd=2.5, adj=0,
-      xlab="Gear type", ylab="Effect size (fraction)", h=1.0  )
-
-
-    p = pW
-    fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "time" ), 
-            #ylim=c(0,1), 
-      type="b",  xlab="Year", ylab="Effect size (fraction)", h=1.0, v=1992   )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "cyclic" ), 
-      
-      # ylim=c(0.35, 0.65),
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-      xlab="Season", ylab="Effect size (fraction)", h=1.0  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(t, method = \"quantile\", n = 9)" ), 
-        
-      #ylim=c(0.2, 0.8) ,
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-      xlab="Bottom temperature (degrees Celsius)", ylab="Effect size (fraction)", h=1.0  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(z, method = \"quantile\", n = 9)" ), 
-       # ylim=c(0, 0.8) ,
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-      xlab="Depth (m)", ylab="Effect size (fraction)", h=1.0  )
-
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 9)" ), 
-      # ylim=c(0.35, 0.65), 
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5,
-      xlab="Ln(grain size; mm)", ylab="Effect size (fraction)", h=1.0  )
-
-    gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
-    carstm_plotxy( fit, vn=c( "fit", "summary.random", "gear" ), subtype="errorbar", errorbar_labels=gears,
-      type="p",
-      ylim=c(0., 14), 
-      col="slategray", pch=19, lty=1, lwd=2.5, adj=0,
-      xlab="Gear type", ylab="Effect size (fraction)", h=1.0  )
-
-
-  }
-
-
+ 
   # --------------------------------  
   # maps and plots
  
+
+  p = pH
+  fn_root = "Predicted_habitat_probability"
+  title = "Predicted habitat probability"
+
   
   p = pN
   fn_root = "Predicted_numerical_density"
@@ -323,42 +214,46 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   fn_root = "Predicted_mean_weight"
   title = "Predicted mean weight"
   
-  p = pH
-  fn_root = "Predicted_habitat_probability"
-  title = "Predicted habitat probability"
 
+  if (0) {
+    fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
+    names( fit$summary.random)
+  }
 
-  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
+  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
+  names( res[["random"]])
+  # "time"  
+  # "cyclic" 
+  # "gear" 
+  # "inla.group(t, method = \"quantile\", n = 13)"
+  # "inla.group(z, method = \"quantile\", n = 13)"  
+
   outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted", "number" )
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
- 
   map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
   map_zoom = 7
   background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
 
   plot_crs = st_crs(sppoly)
 
-
   vn=c( "random", "space", "combined" )
   tmatch = ""
+  fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), "png", sep=".") )
   carstm_map(  res=res, vn=vn, tmatch=tmatch, 
       sppoly = sppoly, 
       # palette="-RdYlBu",
       plot_elements=c(  "compass", "scale_bar", "legend" ),
       additional_features=additional_features,
-      # outfilename=fn,
+      outfilename=fn,
+      # title = paste( title, "spatial effect") ,
       background = background,
       tmap_zoom= c(map_centre, map_zoom)  
-      # title ="Probability"
   )
-
- 
 
   vn="predictions" 
   for (y in res$time ){
     time_match = as.character(y) 
-    
     fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
     carstm_map(  res=res, vn=vn, tmatch=time_match,
       sppoly = sppoly, 
@@ -366,39 +261,177 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
       # palette="RdYlBu",
       plot_elements=c(  "compass", "scale_bar", "legend" ),
       additional_features=additional_features,
-      title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
+      title= paste( time_match) , #paste(fn_root, time_match, sep="_"),  
       outfilename=fn,
       background = background,
-      # vwidth = 1600,
-      # vheight=1000,
+      scale=1.5,
       map_mode="view",
       tmap_zoom= c(map_centre, map_zoom)
     )
   }
 
-    # NOTE: res contains estimates on user scale
-  names(res[["random"]])
-  names(  fit$summary.random)
-  # "time"  
-  # "cyclic" 
-  # "gear" 
-  # "inla.group(t, method = \"quantile\", n = 13)"
-  # "inla.group(z, method = \"quantile\", n = 13)"  
+   
+
+  # ---
+  # NOTE: these can use fit instead of res, but res is faster to load; res are already in use space
+
+  # H marginal effects 
+  
+  dev.new(width=10, height=8, pointsize=16)
 
 
-  # Figure:   vs time - marginal
-  carstm_plotxy( res, vn=c("res", "random", "time"),   type="b", lwd=1.5, xlab="year" )
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(z, method = \"quantile\", n = 11)" ), 
+    # transf=inverse.logit,  
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0, 1) ,
+    xlab="Depth (m)", ylab="Probability", h=0.5  )
 
-  # Figure:   vs season
-  carstm_plotxy( res, vn=c("res", "random", "cyclic"),  type="b", lwd=1.5, xlab="fractional year" )
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(t, method = \"quantile\", n = 11)" ), 
+    # transf=inverse.logit,   
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0, 1) ,
+    xlab="Bottom temperature (degrees Celsius)", ylab="Probability", h=0.5  )
 
-  # Figure:   vs gear
-  carstm_plotxy( res, vn=c("res", "random", "gear"),  type="b", lwd=1.5, xlab="fractional year" )
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 11)" ), 
+    # transf=inverse.logit, 
+    ylim=c(0, 1), 
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    xlab="ln(grain size; mm)", ylab="Probability", h=0.5  )
 
-  # Figure:   vs season
-  carstm_plotxy( res, vn=c("res", "random", "cyclic"),  type="b", lwd=1.5, xlab="fractional year" )
+  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
+  carstm_plotxy( res, vn=c( "res", "random", "gear" ), subtype="errorbar", errorbar_labels=gears,
+    type="p",
+    # transf=inverse.logit, 
+    ylim=c(0, 1), 
+    col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0,  
+    adj=0, offs=0,
+    xlab="Gear type", ylab="Probability", h=0.5 )
 
-  # , ylim=c(0.35, 0.65) 
+
+  carstm_plotxy( res, vn=c( "res", "random", "time" ), 
+    # transf=inverse.logit,  # only if from fit and not res
+    type="b", col="slategrey", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0, 1), 
+    xlab="Year", ylab="Probability", h=0.5, v=1992   )
+
+  carstm_plotxy( res, vn=c( "res", "random", "cyclic" ), 
+    # transf=inverse.logit, 
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0, 1),
+    xlab="Season", ylab="Probability", h=0.5  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca1, method = \"quantile\", n = 11)" ), 
+    # transf=inverse.logit, 
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0, 1),
+    xlab="PCA1", ylab="Probability", h=0.5  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca2, method = \"quantile\", n = 11)" ), 
+    # transf=inverse.logit, 
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0, 1),
+    xlab="PCA2", ylab="Probability", h=0.5  )
+
+
+
+  # N marginal effects 
+  
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(z, method = \"quantile\", n = 11)" ), 
+    # transf=exp,  # ylim=c(0, 0.8) ,
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
+    xlab="Depth (m)", ylab="Effect size", h=1.0  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(t, method = \"quantile\", n = 11)" ), 
+    # transf=exp,   
+    #ylim=c(0.2, 0.8) ,
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
+    xlab="Bottom temperature (degrees Celsius)", ylab="Effect size", h=1.0  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 11)" ), 
+    # transf=exp, # ylim=c(0.35, 0.65), 
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5,
+    xlab="ln(grain size; mm)", ylab="Effect size", h=1.0  )
+
+  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
+  carstm_plotxy( res, vn=c( "res", "random", "gear" ), subtype="errorbar", errorbar_labels=gears,
+    type="p",
+    # transf=exp, 
+    ylim=c(-1., 14), 
+    col="slategray", pch=19, lty=1, lwd=2.5, adj=NULL,
+    xlab="Gear type", ylab="Effect size", h=1.0  )
+
+
+  carstm_plotxy( res, vn=c( "res", "random", "time" ), 
+    ## transf=exp,
+    ylim=c(0,5), 
+     col="slategray", pch=19, lty=1, lwd=2.5, 
+    type="b",  xlab="Year", ylab="Effect size", h=1.0, v=1992   )
+
+  carstm_plotxy( res, vn=c( "res", "random", "cyclic" ), 
+    # transf=exp, 
+    # ylim=c(0.35, 0.65),
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
+    xlab="Season", ylab="Effect size", h=1.0  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca1, method = \"quantile\", n = 11)" ), 
+     type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0.4, 1.75),
+    xlab="PCA1", ylab="Effect size", h=0.5  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca2, method = \"quantile\", n = 11)" ), 
+      type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0.4, 1.75 ),
+    xlab="PCA2", ylab="Effect size", h=0.5  )
+
+
+
+
+  # W marginal effects 
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(z, method = \"quantile\", n = 11)" ), 
+    ylim=c(0.6, 2.75) ,
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
+    xlab="Depth (m)", ylab="Effect size", h=1.0  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(t, method = \"quantile\", n = 11)" ), 
+    ylim=c(0.8, 1.2) ,
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
+    xlab="Bottom temperature (degrees Celsius)", ylab="Effect size", h=1.0  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 11)" ), 
+    ylim=c(0.8, 1.2), 
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5,
+    xlab="ln(grain size; mm)", ylab="Effect size", h=1.0  )
+
+  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
+  carstm_plotxy( res, vn=c( "res", "random", "gear" ), subtype="errorbar", errorbar_labels=gears,
+    type="p",
+    ylim=c(0.3, 1.75), 
+    col="slategray", pch=19, lty=1, lwd=2.5, adj=NULL,
+    xlab="Gear type", ylab="Effect size", h=1.0  )
+
+
+  carstm_plotxy( res, vn=c( "res", "random", "time" ), 
+    ylim=c(0, 7), 
+    col="slategray", pch=19, lty=1, lwd=2.5,
+    type="b",  xlab="Year", ylab="Effect size", h=1.0, v=1992   )
+
+  carstm_plotxy( res, vn=c( "res", "random", "cyclic" ), 
+    ylim=c(0.85, 1.2),
+    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
+    xlab="Season", ylab="Effect size", h=1.0  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca1, method = \"quantile\", n = 11)" ), 
+     type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0.4, 1.75),
+    xlab="PCA1", ylab="Effect size", h=1.0  )
+
+  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca2, method = \"quantile\", n = 11)" ), 
+      type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
+    ylim=c(0.4, 1.75 ),
+    xlab="PCA2", ylab="Effect size", h=1.0  )
+
+
 
 
 
@@ -411,17 +444,17 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   # --------------------------------  
   # Figure XX 3D plot of habitat vs temperature vs depth  via splines
   
-  tvar = "inla.group(t, method = \"quantile\", n = 9)"
+  tvar = "inla.group(t, method = \"quantile\", n = 11)"
   temp_fn = carstm_spline( res, vn=c("random", tvar), statvar="mean" ) 
   temp_fn_lb = carstm_spline( res, vn=c("random", tvar), statvar="quant0.025" ) 
   temp_fn_ub = carstm_spline( res, vn=c("random", tvar), statvar="quant0.975" ) 
 
-  zvar = "inla.group(z, method = \"quantile\", n = 9)"
+  zvar = "inla.group(z, method = \"quantile\", n = 11)"
   depth_fn = carstm_spline( res, vn=c("random", zvar), statvar="mean" ) 
   depth_fn_lb = carstm_spline( res, vn=c("random", zvar), statvar="quant0.025" ) 
   depth_fn_ub = carstm_spline( res, vn=c("random", zvar), statvar="quant0.975" ) 
 
-  svar = "inla.group(log.substrate.grainsize, method = \"quantile\", n = 9)"
+  svar = "inla.group(log.substrate.grainsize, method = \"quantile\", n = 11)"
   substrate_fn = carstm_spline( res, vn=c("random", svar), statvar="mean" ) 
   substrate_fn_lb = carstm_spline( res, vn=c("random", svar), statvar="quant0.025" ) 
   substrate_fn_ub = carstm_spline( res, vn=c("random", svar), statvar="quant0.975" ) 
