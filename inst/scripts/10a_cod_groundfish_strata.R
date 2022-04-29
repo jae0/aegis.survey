@@ -16,6 +16,9 @@ parameter_set = "stratanal"  # used by 10_cod_workspace to defined parameter sub
 source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
  
+outputdir = file.path( dirname(results_file), p$carstm_model_label  )
+if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+
 
 # ------------------------------------------------
 # PART 1 -- simple "stratanal" 
@@ -203,122 +206,4 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 
  
 
-
-# ------------------------------------------------
-## Part 2: mimic stratanal with aegis.survey::survey_db and inla .. as an IID process (i.e., a simple "mixed effect" model)
-## Not presented in paper .. exploratory 
-
-# NOTE:: large areal units so using environmental covariates do not make sense (they get averaged/integrated out) 
-
-# Here we compute surface area of each polygon via projection to utm or some other appropriate planar projection.
-# This adds some differences relative to "statanal" (which uses sa in sq nautical miles, btw)
-
-# NOTE:: unlike stratanl, we do not need to remove strata until the last /aggregation step
  
-# set up the run parameters
-
-parameter_set = "stratanal_iid"  # used by 10_cod_workspace to load a defined parameter subset
-
-source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
-
- 
-# reset sppoly to full domain
-# instead of dropping right away, carry the data as it represents neighbourhood information and additional data 
-# (additional information/constraints for areal units on the border of the domain)
-# zero out SA estimates for the areal units being screened out .. 
-# this is to match Michelle's extraction for "Summer RV" for final aggregation and plotting 
-sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")  ) 
-sppoly$strata_to_keep = ifelse( sppoly$AUID %in% auid_to_drop, FALSE,  TRUE )
-sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those that are not of interest for aggregation
-
-M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=FALSE, quantile_upper_limit=0.95, 
-  fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_stratanal_polygons_pre2014.rdata" ) )
-ip = which(M$tag == "predictions")
-io = which(M$tag == "observations")
-iq = unique( c( which( M$totno > 0), ip ) ) # subset to positive definite data (for number and size)
-iw = unique( c( which( M$totno > 30), ip ) ) # subset to positive definite data (for number and size) .. mean size needs to have at least 3 individuals
-# M$data_offset[io] = M$data_offset[io] *10^6
-
-pN = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="abundance" )
-pW = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="meansize" )
-pH = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="habitat" )
- 
-# size model
-fit = NULL; gc()
-fit = carstm_model( p=pW, data=M[iw,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
-  num.threads="4:2", mc.cores=2 
-)  
-
-# numerical model
-fit = NULL; gc()
-fit = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
-  num.threads="4:2", mc.cores=2, inla.mode="classic"
-) a
-
-# habitat model
-fit = NULL; gc()
-fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain="predictions", 
-  num.threads="4:2", mc.cores=2   
-) 
-
-fit = NULL; gc()
-
-  
-
-# load file that contains aggregation summary  
-RES = readRDS( results_file )
-
-# NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
-# with "habitat" at habitat definition of prob=0.05 (hurdle process)
-sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 ) * sppoly$au_sa_km2 /10^6  
-RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
-
-saveRDS( RES, results_file, compress=TRUE )
-# RES = readRDS( results_file )
- 
-outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "aggregated_biomass_timeseries" )
-if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-
-( fn = file.path( outputdir, "atlantic_cod_martimes.png") )
-png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
-  plot( mean ~ year, data=RES[[p$carstm_model_type]], lty="solid", lwd=4, pch=20, col="slateblue", type="b", ylab="Biomass index (kt)", xlab="")
-  # lines( mean ~ year, data=RES[[p$carstm_model_type]], lty="solid", lwd=4, pch=20, col="green", type="b", ylab="Biomass index (kt)", xlab="")
-  lines( lb025 ~ year, data=RES[[p$carstm_model_type]], lty="dotted", lwd=2, col="slategray" )
-  lines( ub975 ~ year, data=RES[[p$carstm_model_type]], lty="dotted", lwd=2, col="slategray" )
-dev.off()
-
-
-# if you want to map it ..mean density
-
-  vn = paste("biomass", "predicted", sep=".")
-
-  outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "predicted_biomass_densitites" )
-
-  if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-
-  B = apply( sims, c(1,2), mean ) 
-  brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) ))  )
-  
-  for (i in 1:length(pN$yrs) ){
-    y = as.character( pN$yrs[i] )
-    sppoly[,vn] = log10( B[,y] )
-    outfilename = file.path( outputdir , paste( "biomass", y, "png", sep=".") )
-    tmout =  carstm_map(  sppoly=sppoly, vn=vn,
-        breaks=brks,
-        additional_features=additional_features,
-        title=paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
-        palette="-RdYlBu",
-        plot_elements=c( "compass", "scale_bar", "legend" ), 
-        outfilename=outfilename
-    )
-    tmout
-    
-  }
-
-# end
-# ------------------------------------------------
-
-
-
-
-

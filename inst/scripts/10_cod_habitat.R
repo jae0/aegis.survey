@@ -21,10 +21,10 @@
   # --------------------------------  
   # choose design
 
-  mf = c( "stranal_design", "tesselation" ) [2]
+  mf = c( "stratanal_design", "tesselation" ) [2]
 
 
-  if (mf == "stranal_design") {
+  if (mf == "stratanal_design") {
     ## -- stratanal design-based polygons 
     p$label ="Atlantic cod summer standardtow habitat stratanal"
  

@@ -24,9 +24,6 @@
   results_file = file.path( global_output_directory, "RES.RDS" )
 
 
-  # auid to drop to match Michelle's extraction for "stratanal"
-  auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ) 
-
   # settype:
   # 1=stratified random,
   # 2=regular survey,
@@ -216,4 +213,9 @@ additional_features = additional_features_tmap(
     ylim=c(38, 60) 
 )
 
- 
+
+map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
+map_zoom = 7
+background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
+
+

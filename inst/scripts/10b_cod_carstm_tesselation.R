@@ -19,21 +19,29 @@
  
 # set up the run parameters
 
+# parameter_set = "stratanal_iid"  # used by 10_cod_workspace to load a defined parameter subset
 parameter_set = "tesselation"  # used by 10_cod_workspace to defined parameter subsets
 
 source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
+outputdir = file.path( dirname(results_file), p$carstm_model_label  )
+if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
 
   
 # ----------------------------------------------
 # Atlantic cod with a CAR (ICAR/BYM) Poisson process models with tesselation
 
+
 # instead of dropping right away, carry the data as it represents neighbourhood information and additional data
 # reset sppoly to full domain
+
+# auid to drop to match Michelle's extraction for "stratanal"
+
 if (redo_data) {
+  # tesselation
   sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=TRUE  )  # required to reset save location
-  sppoly$strata_to_keep = ifelse( sppoly$AUID %in% auid_to_drop, FALSE,  TRUE )
+  
 
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE, quantile_upper_limit=0.99, 
     fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
@@ -41,6 +49,12 @@ if (redo_data) {
 
 
 sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84") )
+
+# auid to drop to match Michelle's extraction for "stratanal"
+auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ) 
+sppoly = set_surface_area_to_NA( sppoly, auid_to_drop )  # do not drop data .. only set areas beyond domain to NA
+sppoly$filter = ifelse(is.finite( sppoly$au_sa_km2 ), 1, NA)
+
 
 M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, quantile_upper_limit=0.99, 
     fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
@@ -81,49 +95,39 @@ fit = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain
 ) 
 # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
 
-# aggregate simulations
-# this is to match Michelle's extraction for "Summer RV" for final aggregation and plotting 
-sppoly$au_sa_km2[ which( !sppoly$strata_to_keep ) ] = 0  # set to zero those that are not of interest for aggregation
 
 # reload collator
 RES = readRDS( results_file )
 
 # NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
-# with "habitat" at habitat definition of prob=0.05 (hurdle process)
-sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 ) * sppoly$au_sa_km2 /10^6  
+# with "habitat" at habitat definition of prob=0.05 (hurdle process)  
+sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 ) * sppoly$au_sa_km2 / 10^6  
 RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
 
 
 saveRDS( RES, results_file, compress=TRUE )
 # RES = readRDS( results_file )
   
-outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "aggregated_biomass_timeseries" )
-if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
 
-( fn = file.path( outputdir, "atlantic_cod_martimes.png") )
+( fn = file.path( outputdir, "biomass_timeseries.png") )
 png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
-  plot( mean ~ year, data=RES[[p$carstm_model_type]], lty="solid", lwd=4, pch=20, col="slateblue", type="b", ylab="Biomass index (kt)", xlab="")
-  
+  plot( mean ~ year, data=RES[[p$carstm_model_type]], type="n", ylab="Biomass index (kt)", xlab="")
   lines( mean ~ year, data=RES[[p$carstm_model_type]], lty="solid", lwd=4, pch=20, col="slateblue" )
-  
   lines( lb025 ~ year, data=RES[[p$carstm_model_type]], lty="dotted", lwd=2, col="slategray" )
   lines( ub975 ~ year, data=RES[[p$carstm_model_type]], lty="dotted", lwd=2, col="slategray" )
 dev.off()
 
 
 # map it ..mean density (choose appropriate p$carstm_model_type/"sims", above)
-sppoly = areal_units( p=pN )  # to reload in case
-
-outputdir = file.path( carstm_filenames( pN, returnvalue="output_directory"), "predicted_biomass_densitites" )
-if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-
+ 
 # equivalent of the persistent spatial effect (global spatial mean)
-Bg = apply( sims, c(1), mean ) # global spatial means 
-brks = pretty( log10( quantile( Bg, probs=c(0.05, 0.95) ))  )
+Bg = apply( sims, c(1), mean, na.rm=TRUE )  # global spatial means  
+brks = pretty( log10( quantile( Bg, probs=c(0.05, 0.95), na.rm=TRUE ))  )
 vn =  "biomass_mean_global" 
 sppoly[,vn] = log10( Bg )
-outfilename = file.path( outputdir , paste( "biomass", "spatial_effect", "png", sep=".") )
+
+outfilename = file.path( outputdir , "predictions", paste( "biomass", "spatial_effect", "png", sep=".") )
 carstm_map(  sppoly=sppoly, vn=vn,
     breaks=brks,
     additional_features=additional_features,
@@ -135,15 +139,14 @@ carstm_map(  sppoly=sppoly, vn=vn,
     tmap_zoom= c(map_centre, map_zoom),
     outfilename=outfilename
 ) 
-
-# kt / km^2
-B = apply( sims, c(1,2), mean ) # means by year
-brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95) ))  )
+ 
+B = apply( sims, c(1,2), mean, na.rm=TRUE  ) # means by year
+brks = pretty( log10( quantile( B[], probs=c(0.05, 0.95), na.rm=TRUE  ))  )
 vn = paste("biomass", "predicted", sep=".")
 for (i in 1:length(pN$yrs) ){
   y = as.character( pN$yrs[i] )
   sppoly[,vn] = log10( B[,y] )
-  outfilename = file.path( outputdir , paste( "biomass", y, "png", sep=".") )
+  outfilename = file.path( outputdir, "predictions",  paste( "biomass", y, "png", sep=".") )
   carstm_map(  sppoly=sppoly, vn=vn,
       breaks=brks,
       additional_features=additional_features,
@@ -155,33 +158,34 @@ for (i in 1:length(pN$yrs) ){
       tmap_zoom= c(map_centre, map_zoom), 
       outfilename=outfilename
   )
-  
 }
- 
+
 
 # comparative plots of timeseries:
-dev.new(width=11, height=7)
-nvn = setdiff( names(RES), "yr" )
-vc = paste( "full_model" )
+# dev.new(width=11, height=7)
+# nvn = setdiff( names(RES), "yr" )
+# vc = paste( "full_model" )
 
-nv  = which( nvn %in% c( "full_model",  "stratanal.towdistance")  )
-col = c("slategray", "turquoise", "darkorange", "lightgreen", "navyblue", "darkred",  "turquoise", "cyan", "darkgreen", "purple", "darkgray", "pink" )
-pch = c(20, 21, 22, 23, 24, 25, 26, 27, 20, 19, 23)
-lty = c(2, 1, 4, 5, 6, 7, 1, 3, 4, 5, 6 )
-lwd = c(3, 6, 6, 2, 4, 6, 2, 4, 6, 5, 4 )
-type =c("l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l")
+# nv  = which( nvn %in% c( "full_model",  "stratanal.towdistance")  )
+# col = c("slategray", "turquoise", "darkorange", "lightgreen", "navyblue", "darkred",  "turquoise", "cyan", "darkgreen", "purple", "darkgray", "pink" )
+# pch = c(20, 21, 22, 23, 24, 25, 26, 27, 20, 19, 23)
+# lty = c(2, 1, 4, 5, 6, 7, 1, 3, 4, 5, 6 )
+# lwd = c(3, 6, 6, 2, 4, 6, 2, 4, 6, 5, 4 )
+# type =c("l", "l", "l", "l", "l", "l", "l", "l", "l", "l", "l")
 
-plot( 0, 0, type="n", xlim=range(RES[["yr"]]), ylim=c(0, 320), xlab="Year", ylab="kt", main="Comparing input data treatment and sweptareas")
-for (j in 1:length(nv) ) {
-  i = nv[j]
-  lines( mean ~ year, data=RES[[nvn[i]]], lty=lty[j], lwd=lwd[j], col=col[j], pch=pch[j], type=type[j])
-  lines( lb025 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[j] )
-  lines( ub975 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[j] )
-}
+# plot( 0, 0, type="n", xlim=range(RES[["yr"]]), ylim=c(0, 320), xlab="Year", ylab="kt", main="Comparing input data treatment and sweptareas")
+# for (j in 1:length(nv) ) {
+#   i = nv[j]
+#   lines( mean ~ year, data=RES[[nvn[i]]], lty=lty[j], lwd=lwd[j], col=col[j], pch=pch[j], type=type[j])
+#   lines( lb025 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[j] )
+#   lines( ub975 ~ year, data=RES[[nvn[i]]], lty="dotted", lwd=1, col=col[j] )
+# }
 
-legend("topright", legend=nvn[nv], lty=lty, col=col, lwd=lwd )
+# legend("topright", legend=nvn[nv], lty=lty, col=col, lwd=lwd )
 
 # alternative plot (Figure 2)
+dev.new(width=14, height=8, pointsize=20)
+
 library(ggplot2)
 
 r1 = RES[["stratanal.standardtow"]]
@@ -211,259 +215,150 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 
 # end
 # ------------------------------------------------
-
-   
  
-  # --------------------------------  
-  # maps and plots
- 
+# Figure 1alt. average bottom temperature of prediction surface (whole year spatial and temporal variability)
+  pt = temperature_parameters( 
+      project_class="carstm", 
+      yrs=1970:2021, 
+      carstm_model_label="1970_present" 
+    ) 
+  tspol = areal_units( p=pt )
+  tspol = set_surface_area_to_NA( tspol, auid_to_drop )  # do not drop data .. only set areas beyond domain to NA
 
+  res = carstm_model( p=pt, DS="carstm_modelled_summary", sppoly=tspol  ) # to load currently saved results
+
+  aufilter = ifelse( is.finite(tspol$au_sa_km2), 1, NA )
+  res = res$predictions[,,,"mean"] * aufilter  # subannual means
+  res_mean = apply(res, 2, mean, na.rm=TRUE )
+  res_q025 = apply(res, 2, quantile, probs=0.025, na.rm=TRUE )
+  res_q975 = apply(res, 2, quantile, probs=0.975, na.rm=TRUE )
+  
+  trange = range(  c(res_q975, res_q025) ) * c(0.9, 1.1)
+  plot( res_mean ~ RES$yr, type="b", pch=19, col="slategray", ylim = trange, ylab="Bottom temperature, Celsius", xlab="Year", lwd=1.5)
+  lines( res_q025 ~RES$yr, col="darkgray", lty="dashed")
+  lines( res_q975 ~RES$yr, col="darkgray", lty="dashed")
+
+
+
+
+# --------------------------------  
+# maps and plots
+ 
   p = pH
   fn_root = "Predicted_habitat_probability"
   title = "Predicted habitat probability"
+  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
+  
+  carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom)
+
+  # posterior predictions: timeseries 
+  preds = res[["predictions"]] * sppoly$filter # space x year (in 1 JULY)
+
+  # spatial CI
+    preds = data.table(
+      mean = apply( preds, 2, mean, na.rm=TRUE) ,
+      q025 = apply( preds, 2, quantile, probs=0.025, na.rm=TRUE) ,
+      q975 = apply( preds, 2, quantile, probs=0.975, na.rm=TRUE) 
+    )
+
+    plot( 0 , 0, type="n", ylab="Probability", xlab="Year", ylim=c(0, 1), xlim=range( RES$yr)   )
+    lines( preds$mean ~ RES$yr, lty=1, lwd=2.5, col="slategray" )
+    lines( preds$q025 ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+    lines( preds$q975 ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+
+    abline( h=0.5, lty="dashed",  col="slategray" )
 
   
+  # from sims:
+  
+    # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
+    sims = carstm_posterior_simulations( pH=pH, sppoly=sppoly, pa_threshold=0.05 ) 
+    sims = sims * sppoly$au_sa_km2 / sum(  sppoly$au_sa_km2, na.rm=TRUE )
+
+    lab = paste(p$carstm_model_type, "habitat", sep="_")
+    RES[[lab]] = carstm_posterior_simulations_summary( sims )  # sum area weighted probs
+  
+
+    ( fn = file.path( outputdir, "habitat_timeseries.png") )
+    png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
+      plot( mean ~ year, data=RES[[lab]], type="p", pch=20, cex=2, col="slategray", ylab="Probability", xlab="", ylim=c(0,1))
+      lines( mean ~ year, data=RES[[lab]], lty="solid", lwd=1, pch=20, col="slateblue" )
+      lines( lb025 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
+      lines( ub975 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
+    dev.off()
+
+
+
   p = pN
   fn_root = "Predicted_numerical_density"
   title = "Predicted numerical density"
- 
+  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
+  carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom )
+ # from sims:
+  
+    # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
+    sims = carstm_posterior_simulations( pN=pN, sppoly=sppoly, pa_threshold=0.05 ) 
+    sims = sims * sppoly$au_sa_km2  / 10^6  kg -> kt
+
+    lab = paste(p$carstm_model_type, "number", sep="_")
+    RES[[lab]] = carstm_posterior_simulations_summary( sims )  # sum area weighted probs
+  
+    ( fn = file.path( outputdir, "number_timeseries.png") )
+    png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
+      plot( mean ~ year, data=RES[[lab]], type="p", pch=20, cex=2, col="slategray", ylab="Number, kg", xlab="")
+      lines( mean ~ year, data=RES[[lab]], lty="solid", lwd=1, pch=20, col="slateblue" )
+      lines( lb025 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
+      lines( ub975 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
+    dev.off()
+
+
 
   p = pW
   fn_root = "Predicted_mean_weight"
   title = "Predicted mean weight"
+  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
+  carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom)
   
+    sims = carstm_posterior_simulations( pW=pW, sppoly=sppoly, pa_threshold=0.05 ) 
+    sims = sims * sppoly$au_sa_km2 / sum(  sppoly$au_sa_km2, na.rm=TRUE )  # area weighted average
+
+    lab = paste(p$carstm_model_type, "weight", sep="_")
+    RES[[lab]] = carstm_posterior_simulations_summary( sims )  # sum area weighted probs
+  
+    ( fn = file.path( outputdir, "weight_timeseries.png") )
+    png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
+      plot( mean ~ year, data=RES[[lab]], type="p", pch=20, cex=2, col="slategray", ylab="Weight, kg", xlab="")
+      lines( mean ~ year, data=RES[[lab]], lty="solid", lwd=1, pch=20, col="slateblue" )
+      lines( lb025 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
+      lines( ub975 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
+    dev.off()
+
+
+
 
   if (0) {
     fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
     names( fit$summary.random)
+    res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
+    names( res[["random"]])
+    # "time"  
+    # "cyclic" 
+    # "gear" sppoly$filter 
+    # "inla.group(t, method = \"quantile\", n = 11)"
+    # "inla.group(z, method = \"quantile\", n = 11)"
+    # etc 
   }
 
+
+
+# --------------------------------  
+# Figure  3D plot of habitat vs temperature vs depth  via splines
+
+  p = pH
+  fn_root = "Predicted_habitat_probability"
+  title = "Predicted habitat probability"
   res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
-  names( res[["random"]])
-  # "time"  
-  # "cyclic" 
-  # "gear" 
-  # "inla.group(t, method = \"quantile\", n = 13)"
-  # "inla.group(z, method = \"quantile\", n = 13)"  
 
-  outputdir = file.path( p$modeldir, p$carstm_model_label, "predicted", "number" )
-  if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-
-  map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
-  map_zoom = 7
-  background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
-
-  plot_crs = st_crs(sppoly)
-
-  vn=c( "random", "space", "combined" )
-  tmatch = ""
-  fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), "png", sep=".") )
-  carstm_map(  res=res, vn=vn, tmatch=tmatch, 
-      sppoly = sppoly, 
-      palette="-RdYlBu",
-      plot_elements=c(  "compass", "scale_bar", "legend" ),
-      additional_features=additional_features,
-      outfilename=fn,
-      # title = paste( title, "spatial effect") ,
-      background = background,
-      transformation=ifelse( grepl("probability", fn_root), NULL, log10) , 
-      tmap_zoom= c(map_centre, map_zoom)  
-  )
-
-  vn="predictions" 
-  for (y in res$time ){
-    time_match = as.character(y) 
-    fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
-    carstm_map(  res=res, vn=vn, tmatch=time_match,
-      sppoly = sppoly, 
-      # breaks=brks,
-      palette="-RdYlBu",
-      plot_elements=c(  "compass", "scale_bar", "legend" ),
-      additional_features=additional_features,
-      title= paste( time_match) , #paste(fn_root, time_match, sep="_"),  
-      outfilename=fn,
-      background = background,
-      transformation=ifelse( grepl("probability", fn_root), NULL, log10) , 
-      scale=1.5,
-      map_mode="view",
-      tmap_zoom= c(map_centre, map_zoom)
-    )
-  }
-
-   
-
-  # ---
-  # NOTE: these can use fit instead of res, but res is faster to load; res are already in use space
-
-  # H marginal effects 
-  
-  dev.new(width=10, height=8, pointsize=16)
-
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(z, method = \"quantile\", n = 11)" ), 
-    # transf=inverse.logit,  
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0, 1) ,
-    xlab="Depth (m)", ylab="Probability", h=0.5  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(t, method = \"quantile\", n = 11)" ), 
-    # transf=inverse.logit,   
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0, 1) ,
-    xlab="Bottom temperature (degrees Celsius)", ylab="Probability", h=0.5  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 11)" ), 
-    # transf=inverse.logit, 
-    ylim=c(0, 1), 
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    xlab="ln(grain size; mm)", ylab="Probability", h=0.5  )
-
-  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
-  carstm_plotxy( res, vn=c( "res", "random", "gear" ), subtype="errorbar", errorbar_labels=gears,
-    type="p",
-    # transf=inverse.logit, 
-    ylim=c(0, 1), 
-    col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0,  
-    adj=0, offs=0,
-    xlab="Gear type", ylab="Probability", h=0.5 )
-
-
-  carstm_plotxy( res, vn=c( "res", "random", "time" ), 
-    # transf=inverse.logit,  # only if from fit and not res
-    type="b", col="slategrey", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0, 1), 
-    xlab="Year", ylab="Probability", h=0.5, v=1992   )
-
-  carstm_plotxy( res, vn=c( "res", "random", "cyclic" ), 
-    # transf=inverse.logit, 
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0, 1),
-    xlab="Season", ylab="Probability", h=0.5  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca1, method = \"quantile\", n = 11)" ), 
-    # transf=inverse.logit, 
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0, 1),
-    xlab="PCA1", ylab="Probability", h=0.5  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca2, method = \"quantile\", n = 11)" ), 
-    # transf=inverse.logit, 
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0, 1),
-    xlab="PCA2", ylab="Probability", h=0.5  )
-
-
-
-  # N marginal effects 
-  
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(z, method = \"quantile\", n = 11)" ), 
-    # transf=exp,  # ylim=c(0, 0.8) ,
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-    xlab="Depth (m)", ylab="Effect size", h=1.0  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(t, method = \"quantile\", n = 11)" ), 
-    # transf=exp,   
-    #ylim=c(0.2, 0.8) ,
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-    xlab="Bottom temperature (degrees Celsius)", ylab="Effect size", h=1.0  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 11)" ), 
-    # transf=exp, # ylim=c(0.35, 0.65), 
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5,
-    xlab="ln(grain size; mm)", ylab="Effect size", h=1.0  )
-
-  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
-  carstm_plotxy( res, vn=c( "res", "random", "gear" ), subtype="errorbar", errorbar_labels=gears,
-    type="p",
-    # transf=exp, 
-    ylim=c(-1., 14), 
-    col="slategray", pch=19, lty=1, lwd=2.5, adj=NULL,
-    xlab="Gear type", ylab="Effect size", h=1.0  )
-
-
-  carstm_plotxy( res, vn=c( "res", "random", "time" ), 
-    ## transf=exp,
-    ylim=c(0,5), 
-     col="slategray", pch=19, lty=1, lwd=2.5, 
-    type="b",  xlab="Year", ylab="Effect size", h=1.0, v=1992   )
-
-  carstm_plotxy( res, vn=c( "res", "random", "cyclic" ), 
-    # transf=exp, 
-    # ylim=c(0.35, 0.65),
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-    xlab="Season", ylab="Effect size", h=1.0  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca1, method = \"quantile\", n = 11)" ), 
-     type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0.4, 1.75),
-    xlab="PCA1", ylab="Effect size", h=0.5  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca2, method = \"quantile\", n = 11)" ), 
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0.4, 1.75 ),
-    xlab="PCA2", ylab="Effect size", h=0.5  )
-
-
-
-
-  # W marginal effects 
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(z, method = \"quantile\", n = 11)" ), 
-    ylim=c(0.6, 2.75) ,
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-    xlab="Depth (m)", ylab="Effect size", h=1.0  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(t, method = \"quantile\", n = 11)" ), 
-    ylim=c(0.8, 1.2) ,
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-    xlab="Bottom temperature (degrees Celsius)", ylab="Effect size", h=1.0  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(log.substrate.grainsize, method = \"quantile\", n = 11)" ), 
-    ylim=c(0.8, 1.2), 
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5,
-    xlab="ln(grain size; mm)", ylab="Effect size", h=1.0  )
-
-  gears = c("Western IIA", "Yankee #36", "US 4seam 3beam",  "Engle", "Campelen 1800", "Nephrops" )
-  carstm_plotxy( res, vn=c( "res", "random", "gear" ), subtype="errorbar", errorbar_labels=gears,
-    type="p",
-    ylim=c(0.3, 1.75), 
-    col="slategray", pch=19, lty=1, lwd=2.5, adj=NULL,
-    xlab="Gear type", ylab="Effect size", h=1.0  )
-
-
-  carstm_plotxy( res, vn=c( "res", "random", "time" ), 
-    ylim=c(0, 7), 
-    col="slategray", pch=19, lty=1, lwd=2.5,
-    type="b",  xlab="Year", ylab="Effect size", h=1.0, v=1992   )
-
-  carstm_plotxy( res, vn=c( "res", "random", "cyclic" ), 
-    ylim=c(0.85, 1.2),
-    type="b", col="slategray", pch=19, lty=1, lwd=2.5, 
-    xlab="Season", ylab="Effect size", h=1.0  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca1, method = \"quantile\", n = 11)" ), 
-     type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0.4, 1.75),
-    xlab="PCA1", ylab="Effect size", h=1.0  )
-
-  carstm_plotxy( res, vn=c( "res", "random", "inla.group(pca2, method = \"quantile\", n = 11)" ), 
-      type="b", col="slategray", pch=19, lty=1, lwd=2.5, cex=1.0, 
-    ylim=c(0.4, 1.75 ),
-    xlab="PCA2", ylab="Effect size", h=1.0  )
-
-
-
-
-
-  # --------------------------------  
-  # maps and plots END
-     
-
-
-
-  # --------------------------------  
-  # Figure XX 3D plot of habitat vs temperature vs depth  via splines
-  
   tvar = "inla.group(t, method = \"quantile\", n = 11)"
   temp_fn = carstm_spline( res, vn=c("random", tvar), statvar="mean" ) 
   temp_fn_lb = carstm_spline( res, vn=c("random", tvar), statvar="quant0.025" ) 
@@ -515,22 +410,21 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   ptz$prob_ub = ptz$prob_t_ub * ptz$prob_z_ub
 
 
-  par(mai=c(0.7, 0.7, 0.4, 0.4)) 
+  dev.new( width=12, height=12, pointsize=18)
+  par(mai=c(1, 1, 0.6, 0.6)) 
   layout( matrix(1:4, ncol=2, byrow=TRUE ))
+
+  plot( depth ~ prob_z, ptz[which(ptz$temp==4),], type="b", pch=19, xlab="probability", ylab="depth", xlim=c(0,0.8))
+  lines( depth ~ prob_z_lb, ptz[which(ptz$temp==4),], lty="dashed")
+  lines( depth ~ prob_z_ub, ptz[which(ptz$temp==4),], lty="dashed")
+
   nx = 100
   ny = 100
   require(MBA)
   Z = mba.surf(ptz[, c("temp", "depth", "prob")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
 
-  image(Z, col = rev(gray.colors(30, gamma=1.75)))
+  image(Z, col = rev(gray.colors(30, gamma=1.75)), xlab="temperature", ylab="depth" )
   contour(Z, add = TRUE, drawlabels = TRUE, lty="dotted")
-  plot( depth ~ prob_z, ptz[which(ptz$temp==4),], type="b", pch=19, xlab="probability", ylab="depth", xlim=c(0,0.8))
-  lines( depth ~ prob_z_lb, ptz[which(ptz$temp==4),], lty="dashed")
-  lines( depth ~ prob_z_ub, ptz[which(ptz$temp==4),], lty="dashed")
-
-  plot( prob_t ~ temp, ptz[which(ptz$depth==-100),], type="b", pch=19, xlab="temperature", ylab="probability")
-  lines( prob_t_lb ~ temp, ptz[which(ptz$depth==-100),], lty="dashed" )
-  lines( prob_t_ub ~ temp, ptz[which(ptz$depth==-100),], lty="dashed" )
 
   library(plot3D)
   # reduce res to see texture in 3D
@@ -539,9 +433,12 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   Z = mba.surf(ptz[, c("temp", "depth", "prob")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
   xx = t(t(rep(1, ny))) %*% Z$x
   yy = t( t(t(rep(1, nx))) %*% Z$y )
-  surf3D( x=xx, y=yy, z=Z$z, colkey = TRUE,  
+  surf3D( x=xx, y=yy, z=Z$z, colkey = TRUE, xlab="temperature", ylab="depth", zlab = "probability",
         box = TRUE, bty = "b", phi = 15, theta = 235, contour=TRUE, ticktype = "detailed") 
 
+  plot( prob_t ~ temp, ptz[which(ptz$depth==-100),], type="b", pch=19, xlab="temperature", ylab="probability")
+  lines( prob_t_lb ~ temp, ptz[which(ptz$depth==-100),], lty="dashed" )
+  lines( prob_t_ub ~ temp, ptz[which(ptz$depth==-100),], lty="dashed" )
 
 
 
