@@ -194,6 +194,14 @@ carstm_plots = function( res, outputdir, fn_root, sppoly, additional_features, b
  
   dev.new(width=10, height=8, pointsize=16)
 
+  tf = identity
+
+  if ( grepl("probability", fn_root) ) tf = identity
+  if ( grepl("numerical", fn_root) )   tf = log10
+  if ( grepl("biomass", fn_root) )     tf = log10
+  if ( grepl("weight", fn_root) )      tf = identity
+
+
   # generic plots
   vn=c( "random", "space", "combined" )
   tmatch = ""
@@ -206,13 +214,13 @@ carstm_plots = function( res, outputdir, fn_root, sppoly, additional_features, b
       outfilename=fn,
       # title = paste( title, "spatial effect") ,
       background = background,
-      transformation=ifelse( grepl("probability", fn_root), NA, log10) , 
+      transformation= tf, 
       tmap_zoom= c(map_centre, map_zoom)  
   )
 
 
   vn="predictions" 
-  brks = pretty( quantile( res[[vn]], probs=c(0.05, 0.95), na.rm=TRUE )  )
+  brks = pretty( quantile( tf( res[[vn]]), probs=c(0.05, 0.95), na.rm=TRUE )  )
   for (y in res$time ){
     time_match = as.character(y) 
     fn = file.path( outputdir, "predictions", paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
@@ -225,7 +233,7 @@ carstm_plots = function( res, outputdir, fn_root, sppoly, additional_features, b
       title= paste( time_match) , #paste(fn_root, time_match, sep="_"),  
       outfilename=fn,
       background = background,
-      transformation=ifelse( grepl("probability", fn_root), NA, log10) , 
+      transformation = tf, 
       scale=1.5,
       map_mode="view",
       tmap_zoom= c(map_centre, map_zoom)
