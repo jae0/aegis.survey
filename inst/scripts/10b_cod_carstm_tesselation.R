@@ -280,7 +280,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   
 
     ( fn = file.path( outputdir, "habitat_timeseries.png") )
-    png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
+    png( filename=fn, width=3072, height=2304, pointsize=20, res=300 )
       plot( mean ~ year, data=RES[[lab]], type="p", pch=20, cex=2, col="slategray", ylab="Probability", xlab="", ylim=c(0,1))
       lines( mean ~ year, data=RES[[lab]], lty="solid", lwd=1, pch=20, col="slateblue" )
       lines( lb025 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
@@ -298,14 +298,14 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   
     # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
     sims = carstm_posterior_simulations( pN=pN, sppoly=sppoly, pa_threshold=0.05 ) 
-    sims = sims * sppoly$au_sa_km2  / 10^6  kg -> kt
+    sims = sims * sppoly$au_sa_km2  / 10^6 # n -> gn
 
     lab = paste(p$carstm_model_type, "number", sep="_")
     RES[[lab]] = carstm_posterior_simulations_summary( sims )  # sum area weighted probs
   
     ( fn = file.path( outputdir, "number_timeseries.png") )
-    png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
-      plot( mean ~ year, data=RES[[lab]], type="p", pch=20, cex=2, col="slategray", ylab="Number, kg", xlab="")
+    png( filename=fn, width=3072, height=2304, pointsize=20, res=300 )
+      plot( mean ~ year, data=RES[[lab]], type="p", pch=20, cex=2, col="slategray", ylab="Number, 10^6", xlab="")
       lines( mean ~ year, data=RES[[lab]], lty="solid", lwd=1, pch=20, col="slateblue" )
       lines( lb025 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
       lines( ub975 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
@@ -326,7 +326,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     RES[[lab]] = carstm_posterior_simulations_summary( sims )  # sum area weighted probs
   
     ( fn = file.path( outputdir, "weight_timeseries.png") )
-    png( filename=fn, width=3072, height=2304, pointsize=12, res=300 )
+    png( filename=fn, width=3072, height=2304, pointsize=20, res=300 )
       plot( mean ~ year, data=RES[[lab]], type="p", pch=20, cex=2, col="slategray", ylab="Weight, kg", xlab="")
       lines( mean ~ year, data=RES[[lab]], lty="solid", lwd=1, pch=20, col="slateblue" )
       lines( lb025 ~ year, data=RES[[lab]], lty="dotted", lwd=2, col="slategray" )
@@ -335,6 +335,9 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 
 
 
+saveRDS( RES, results_file, compress=TRUE )
+# RES = readRDS( results_file )
+  
 
   if (0) {
     fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
@@ -441,37 +444,143 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   lines( prob_t_ub ~ temp, ptz[which(ptz$depth==-100),], lty="dashed" )
 
 
+  # suggests:
+  optimal_habitat = list(temperature=c(4,5), depth=c(0, 80))
 
- 
-     
--- zero-inflated binomial
--- negative binomial ? 
 
-# bring in temperature surface
 
+  # estimate surface area of optimal habitat:
+
+  # domain = sppoly[ which(sppoly$filter==1), ] 
+  # plot(domain[1])
+  # sum( st_area(domain) ) # 183086 [km^2] (total)
+
+  # use a larger domain as sppoly is constrained to sampled locations, 
+  # missing a lot of the inshore areas
+
+  domain = polygon_managementareas( species="maritimes" )
 
   # use highest resolution depths and aggregate temps
+  # "aggregated" == depths aggregated (averaged) to 0.5 km X 0.5 km basis
+  # "complete" = 1x1 km
 
-  # depths aggregated (averaged) to 0.5 km X 0.5 km basis
   Z = aegis.bathymetry::bathymetry_db( 
-    p = aegis.bathymetry::bathymetry_parameters( spatial_domain="canada.east.superhighres" ), 
-    DS ="aggregated_data" 
+    p = aegis.bathymetry::bathymetry_parameters( spatial_domain="SSE", project_class="stmv" ), 
+    DS ="complete" 
   )  
+  Z = planar2lonlat(Z, proj.type=p$aegis_proj4string_planar_km ) 
+  Z$depth = Z$z 
+
   crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
   inside = st_points_in_polygons(
     pts = st_as_sf( Z[, c("lon", "lat")], coords=c("lon","lat"), crs=crs_lonlat ),
-    polys = st_transform( st_union(sppoly), crs_lonlat )
+    polys = st_transform( st_union(domain), crs_lonlat )
   )
 
   Z = Z[which(is.finite(inside)), ]
+  Z$depth[ Z$depth > optimal_habitat$depth[2] ] =  NA
+  Z$depth[ Z$depth < optimal_habitat$depth[1] ] =  NA
 
-  Z = lonlat2planar(Z, proj.type=p$aegis_proj4string_planar_km ) 
+  dr = seq( optimal_habitat$depth[1], optimal_habitat$depth[2], by=5 ) 
+
+  crs_plot = st_crs( p$aegis_proj4string_planar_km )
+  domain = st_transform(domain, crs_plot) 
+  isobaths=c(  10, 100, 200, 300, 400, 800 )
+  isobs = aegis.bathymetry::isobath_db( depths=isobaths, project_to=crs_plot )
+  isobs = st_intersection(isobs, domain)
+ 
+  o = ggplot() +
+      geom_sf( data=isobs, aes(alpha=0.1), colour="lightgray" ) +
+      geom_raster(data = Z, aes(x=plon, y=plat, fill=depth, alpha=1.0) ) +
+      scale_fill_gradientn(name = "Depth", colors =color.code( "seis", dr), na.value=NA ) +
+      guides(fill = guide_colorbar(
+        title.theme = element_text(size = 20),
+        label.theme = element_text(size = 18) ) ) +
+      scale_alpha(range = c(0.9, 0.95), guide = "none") +
+      theme(
+        axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(), 
+        legend.position=c( 0.1, 0.8 ),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank() )
+        ggtitle("Cod depth") +
+        coord_fixed()
+  (o)  
+  length(which(is.finite(Z$depth))) # 63819 km^2  (max)
+
+
+  # add temperature:
+  require(aegis.temperature)
+  year.assessment = 2021
+  pT = temperature_parameters( project_class="carstm", yrs=1970:year.assessment, carstm_model_label="1970_present"  ) 
+ 
+  sppolyT = areal_units( p=pT )  # same
+ 
+  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT  ) # to load currently saved results
+  resT = resT$predictions[,,,"mean"]
+
+  raster_resolution_km = 1 # res of Z (pB$pres)
+
+  require(raster)
+  require(fasterize)
+  require(data.table)
+
+  raster_template = raster(extent(sppoly)) # +1 to increase the area
+  res(raster_template) = raster_resolution_km  # in meters
+  crs(raster_template) = projection(sppoly) # transfer the coordinate system to the raster
+
+  TP = st_transform( sppolyT, crs_plot)  # same
+  TP = st_make_valid( TP )
+  TP = st_cast(TP, "MULTIPOLYGON")
+  TP$rn = 1:nrow(TP)
+  iTP = fasterize( TP, raster_template, field="rn" )
+  
+  bb = raster::bbox(raster_template)
+  
+  # iz = which( is.finite( Z$depth ) )
+  ic = array_map( "xy->1", Z[, c("plon", "plat")], dims=dim(sT)[1:2], res=c(1,1), origin=bb[,"min"] )
+  ZTP = resT[ iTP[ic],,] # select matching row numbers of TP and resT
+  Tprob = ZTP[]*NA
+  j = which(is.finite( ZTP))
+  Tprob[j] = temp_fn(ZTP[j]) 
+  k = which( ZTP > 15 )
+  Tprob[k] = NA
+  Tprob[ Tprob < 0 ] = NA
+ 
+
+  Zprob = Z$z*NA
+  j = which(is.finite( Z$z))
+  Zprob[j] = depth_fn(Z$z[j]) 
+  k = which( Z$z < 10 )  # drop extrapolation 
+  Zprob[k] = NA
+  k = which( Z$z > 500 ) # drop extrapolation
+  Zprob[k] = NA
+  Zprob[ Zprob < 0 ] = NA  # beyond prediction range
+
+  tp = apply(Tprob*Zprob, c(2,3), mean, na.rm=TRUE )
+
+  h_zt = data.frame(yr=p$yrs, habitat=rowMeans(tp) ) 
+
+  dev.new(pointsize=24, width=10, height=8 ) 
+  plot(habitat ~ yr, h_zt, type="b", col="slategray", xlab="Year", ylab="Habitat (depth|temperature)", pch=20, cex=1.5 )
+
+
+
+
+
 
   Z$prob_depth = depth_fn( Z$z.mean )
   Z$prob_depth[ which(Z$prob_depth < 0) ] = 0
   Z$prob_depth[ which(Z$prob_depth > 1) ] = 1
 
-  dr = seq(0,1, by=0.05)
+  dr = seq(0,1, by=0.01)
   aegis_map( xyz=Z[, c("plon", "plat", "prob_depth")], depthcontours=TRUE, pts=NULL,
     annot="Cod habitat depth", annot.cex=1,
     at=dr, col.regions=(color.code( "seis", dr)), corners=p$corners, spatial_domain=p$spatial_domain )
