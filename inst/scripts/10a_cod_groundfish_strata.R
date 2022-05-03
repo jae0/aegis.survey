@@ -29,6 +29,9 @@ if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarning
 
 # sppoly is used for "stratanal_designated_au" method .. which is the survey.db standard
 
+# auid to drop to match Michelle's extraction for "stratanal"
+auid_to_drop = strata_definitions( c("Gulf", "Georges_Bank", "Spring", "Deep_Water") ) 
+
 if (redo_data) {
   sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=TRUE )
   # no data in these areal units: remove .. they seem to be US locations
@@ -39,9 +42,47 @@ if (redo_data) {
 
 # this is to match Michelle's extraction for "Summer RV" 
 sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84")   )
-sppoly = sppoly[ -which( sppoly$AUID %in% auid_to_drop ), ]
-
 plot(sppoly["AUID"] )
+
+sppoly = sppoly[ -which( sppoly$AUID %in% auid_to_drop ), ]
+plot(sppoly["AUID"] )
+
+
+
+
+# plot figure for ms following just creates the background map 
+  
+sppoly$dummy_var = NA
+outfilename = file.path( outputdir , "areal_units.png" )
+carstm_map(  sppoly=sppoly, vn="dummy_var",
+    additional_features=additional_features,
+    # palette="-RdYlBu",
+    plot_elements=c( "compass", "scale_bar", "legend"  ), 
+    scale=1.5,
+    map_mode="plot",
+    tmap_zoom= c(map_centre, map_zoom),
+    outfilename=outfilename
+) 
+
+
+
+# plot figure for ms following just creates the background map 
+# .. must send boundaries of areal units again as a separate feature to plot
+aus =  tm_shape( sppoly ) + tm_borders( col="plum", alpha=0.9, lwd=2)  
+ 
+sppoly$dummy_var = NA
+outfilename = file.path( outputdir , "areal_units_groundfish_strata.png" )
+carstm_map(  sppoly=sppoly, vn="dummy_var",
+    additional_features=additional_features+aus,
+    # palette="-RdYlBu",
+    plot_elements=c( "compass", "scale_bar", "legend"  ), 
+    scale=1.5,
+    map_mode="plot",
+    tmap_zoom= c(map_centre, map_zoom),
+    outfilename=outfilename
+) 
+
+
 
 # RES= list( yr = p$yrs )
 RES = readRDS( results_file )
@@ -202,6 +243,8 @@ dev.new(); plot( log(totno.mean) ~ log(totno.sd), V ); abline(0,1) ## looks like
 ### end basic stranal comparisons ### 
 # ------------------------------------------------
 
+
+# Full Martimes domain (above was for "summer strata")
 
 
  

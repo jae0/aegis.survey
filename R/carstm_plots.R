@@ -199,7 +199,7 @@ carstm_plots = function( res, outputdir, fn_root, sppoly, additional_features, b
   if ( grepl("probability", fn_root) ) tf = identity
   if ( grepl("numerical", fn_root) )   tf = log10
   if ( grepl("biomass", fn_root) )     tf = log10
-  if ( grepl("weight", fn_root) )      tf = identity
+  if ( grepl("weight", fn_root) )      tf = log10
 
 
   # generic plots

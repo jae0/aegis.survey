@@ -207,8 +207,8 @@
 # bbox = c(-71.5, 41, -52.5,  50.5 )
 additional_features = additional_features_tmap( 
     p=p, 
-    isobaths=c( 10, 100, 200, 300, 500, 1000 ), 
-    coastline =  c("canada"), 
+    isobaths=c( 100, 200, 300, 500, 1000, 2000 ), 
+    coastline = c("united states of america", "canada"), 
     xlim=c(-80,-40), 
     ylim=c(38, 60) 
 )

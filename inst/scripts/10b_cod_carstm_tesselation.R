@@ -56,6 +56,28 @@ sppoly = set_surface_area_to_NA( sppoly, auid_to_drop )  # do not drop data .. o
 sppoly$filter = ifelse(is.finite( sppoly$au_sa_km2 ), 1, NA)
 
 
+
+# plot figure for ms following just creates the background map 
+# .. must send boundaries of areal units again as a separate feature to plot
+aus =  
+  tm_shape( sppoly[ which(sppoly$filter==1), ] ) + 
+    tm_borders( col="plum", alpha=0.75, lwd=1)  +
+  tm_shape( sppoly[ which(is.na(sppoly$filter) ), ] ) + 
+    tm_borders( col="lightgray", alpha=0.75, lwd=1)  
+
+sppoly$dummy_var = NA
+outfilename = file.path( outputdir , "areal_units_tesselation.png" )
+carstm_map(  sppoly=sppoly, vn="dummy_var",
+    additional_features=additional_features+aus,
+    # palette="-RdYlBu",
+    plot_elements=c( "compass", "scale_bar", "legend"  ), 
+    scale=1.5,
+    map_mode="plot",
+    tmap_zoom= c(map_centre, map_zoom),
+    outfilename=outfilename
+) 
+
+
 M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, quantile_upper_limit=0.99, 
     fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
 
