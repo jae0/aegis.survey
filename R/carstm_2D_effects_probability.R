@@ -53,9 +53,12 @@ carstm_2D_effects_probability = function( res,
   par(mai=c(1, 1, 0.6, 0.6)) 
   layout( matrix(1:4, ncol=2, byrow=TRUE ))
 
-  plot( y ~ py, PB[which(PB$x==xslice),], type="b", pch=19, xlab=zlab, ylab=ylab, xlim=c(0,1))
-  lines( y ~ py_lb, PB[which(PB$x==xslice),], lty="dashed")
-  lines( y ~ py_ub, PB[which(PB$x==xslice),], lty="dashed")
+  ii = which(PB$x==xslice)
+  if (length(ii) > 0 ) {
+    plot( y ~ py, PB[ii,], type="b", pch=19, xlab=zlab, ylab=ylab, xlim=c(range( PB[, c("py_lb", "py_ub")])))
+    lines( y ~ py_lb, PB[ii,], lty="dashed")
+    lines( y ~ py_ub, PB[ii,], lty="dashed")
+  }
 
   require(MBA)
   Z = mba.surf(PB[, c("x", "y", "pz")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
@@ -64,18 +67,22 @@ carstm_2D_effects_probability = function( res,
   contour(Z, add = TRUE, drawlabels = TRUE, lty="dotted")
 
   library(plot3D)
-  # reduce res to see texture in 3D
+
+  # reduce res to see texture in 3D and redo
   nx = 30
   ny = 30
   Z = mba.surf(PB[, c("x", "y", "pz")], no.X=nx, no.Y=ny, extend=TRUE) $xyz.est
-  xx = t(t(rep(1, ny))) %*% Z$x
-  yy = t( t(t(rep(1, nx))) %*% Z$y )
-  surf3D( x=xx, y=yy, z=Z$z, colkey = TRUE, xlab=xlab, ylab=ylab, zlab =zlab,
+  xx = t( t(rep(1, ny))) %*% Z$y
+  yy = t( t(t(rep(1, nx))) %*% Z$x )
+  surf3D( x=xx, y=yy, z=Z$z, colkey = TRUE, xlab=ylab, ylab=xlab, zlab =zlab,
         box = TRUE, bty = "b", phi = phi, theta = theta, contour=TRUE, ticktype = "detailed") 
 
-  plot( px ~ x, PB[which(PB$y==yslice),], type="b", pch=19, xlab=xlab, ylab=zlab, ylim=c(0,1))
-  lines( px_lb ~ x, PB[which(PB$y==yslice),], lty="dashed" )
-  lines( px_ub ~ x, PB[which(PB$y==yslice),], lty="dashed" )
+  ii = which(PB$y==yslice)
+  if (length(ii) > 0 ) {
+    plot( px ~ x, PB[ii,], type="b", pch=19, xlab=xlab, ylab=zlab, ylim=c(range( PB[, c("px_lb", "px_ub")])))
+    lines( px_lb ~ x, PB[ii,], lty="dashed" )
+    lines( px_ub ~ x, PB[ii,], lty="dashed" )
+  }
 
   out = list(
     PB=PB, 

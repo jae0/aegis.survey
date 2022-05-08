@@ -385,25 +385,50 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   o = carstm_2D_effects_probability( 
     res=res,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
-    yvar = "inla.group(z, method = \"quantile\", n = 11)" 
+    yvar = "inla.group(z, method = \"quantile\", n = 11)" ,
+    xgrid = seq( -1, 10.5, by=0.5),
+    ygrid = seq( 25, 350, by=25),
+    xslice = 4,
+    yslice = -75,
+    nx=200, ny=200,
+    theta = -40,
+    phi = 10
   )
  
-  # use a larger domain than sppoly for the following estimate:
-  # sppoly is constrained to sampled locations, and so missing a lot of the inshore areas
-
-  crs_plot = st_crs( p$aegis_proj4string_planar_km )
-  domain = polygon_managementareas( species="maritimes" )
-  domain = st_transform( domain, crs_plot )
-  x11(); plot(domain[1])  
   
+  
+  
+  crs_plot = st_crs( p$aegis_proj4string_planar_km )
+  # domain = polygon_managementareas( species="maritimes" )
+   domain = st_union( sppoly[which(sppoly$filter==1),1] ) 
+   domain = st_transform( domain, crs_plot )
+   x11(); plot(domain[1])  
+   
+  # This will take 155 GB+ 
   o = carstm_optimal_habitat( 
     res = res,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
     domain=domain, 
-    depths=c(0, 80),   # from visual analysis (carstm_2D_effects_probability)
-    temperatures=c(4,5) # from visual analysis (carstm_2D_effects_probability)
+    season=7, 
+    # depths=c(20, 400),   # range of survey data 
+    # temperatures=c(-1, 12), # range survey data 
+    probs = c(0.2, 1.0)  # range of probs to count for SA counts
   ) 
+  
+  print( o[["depth_plot"]] )
+
+
+  dev.new(width=14, height=8, pointsize=20)
+  library(ggplot2)
+  ggplot( o[["temperature_depth"]], aes(yr, habitat_sa ) ) +
+    geom_ribbon(aes(ymin=habitat_lb_sa, max=habitat_ub_sa), alpha=0.2, colour=NA) +
+    geom_line() +
+    labs(x="Year", y="Habitat SA (depth, temperature; km^2)", size = rel(1.5)) +
+    # scale_y_continuous( limits=c(0, 300) )  
+    theme_light( base_size = 22 ) 
+
+
 
   # estimate of surface area of optimal habitat (depth only):
   # SA = 63819 km^2  (max) 
