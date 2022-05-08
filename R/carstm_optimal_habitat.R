@@ -147,7 +147,7 @@ carstm_optimal_habitat = function(
   k = which(Zprob > 1)
   if (length(k) > 0 ) Zprob[ k ] = 1  
 
-browser()
+
   h_zt = data.frame(yr=pT$yrs  ) 
   Tprob = resT[] * NA 
   j = which(is.finite( resT))
