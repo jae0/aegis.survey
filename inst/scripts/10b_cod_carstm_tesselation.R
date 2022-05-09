@@ -397,27 +397,42 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
  
   
   
+  # add coastline to the data domain (sppoly)
+  crs_plot = st_crs( sppoly )
+  domain = polygon_managementareas( species="maritimes" )
+  domain = st_transform( domain, crs_plot )
+  data_mask = st_union( sppoly[which(sppoly$filter==1),1] ) 
+  # all = st_union( domain, data_mask )
+  nearshore = st_cast( st_difference( domain, data_mask ), "POLYGON")[1]
+  domain_new = st_union( data_mask, nearshore )
+
+  loadfunctions("aegis.survey")
   
-  crs_plot = st_crs( p$aegis_proj4string_planar_km )
-  # domain = polygon_managementareas( species="maritimes" )
-   domain = st_union( sppoly[which(sppoly$filter==1),1] ) 
-   domain = st_transform( domain, crs_plot )
-   x11(); plot(domain[1])  
-   
   # This will take 155 GB+ 
   o = carstm_optimal_habitat( 
     res = res,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
-    domain=domain, 
-    season=7, 
-    # depths=c(20, 400),   # range of survey data 
-    # temperatures=c(-1, 12), # range survey data 
-    probs = c(0.2, 1.0)  # range of probs to count for SA counts
+    season=7,
+    depths = c(10, 500),   # range of survey data for mean habitat estimates 
+    # temperatures=c(4, 5), # range survey data for mean habitat estimates
+    probs = c(0.3, 1.0),  # range of probs to count for SA counts
+    domain=domain_new 
   ) 
-  
-  print( o[["depth_plot"]] )
 
+  print( o[["depth_plot"]] + geom_sf( data=st_transform( polygons_rnaturalearth(), st_crs(sppoly) ), aes(alpha=0.1), colour="lightgray" ) ) 
+
+
+  dev.new(width=14, height=8, pointsize=20)
+  library(ggplot2)
+
+  ggplot( o[["temperature_depth"]], aes(yr, habitat ) ) +
+    geom_ribbon(aes(ymin=habitat_lb, max=habitat_ub), alpha=0.2, colour=NA) +
+    geom_line() +
+    labs(x="Year", y="Habitat probabtility (depth, temperature; km^2)", size = rel(1.5)) +
+    # scale_y_continuous( limits=c(0, 300) )  
+    theme_light( base_size = 22 ) 
+   
 
   dev.new(width=14, height=8, pointsize=20)
   library(ggplot2)
