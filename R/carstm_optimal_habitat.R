@@ -142,11 +142,11 @@ carstm_optimal_habitat = function(
   ny = dim_resT[2]
   nsims = dim_resT[4]
 
-  summ = summh = summ_lb = summh_lb =summ_ub = summh_ub =array( NA, dim=c(ny, nsims) )
+  summ = summh = summ_lb = summh_lb = summ_ub = summh_ub =array( NA, dim=c(ny, nsims) )
 
   for (ss in 1:nsims) {
     
-    print( paste( "Sim: " ss) )
+    print( paste( "Sim: ", ss) )
     
     resY = resT[,,,ss]
     fk = which( is.finite(resY) )
@@ -231,14 +231,14 @@ carstm_optimal_habitat = function(
   }
  
 
-  h_zt$habitat  = rowMeans(summ)   # mean across space then sims
-  h_zt$habitat_sa = rowMeans(summh)
+  h_zt$habitat  = rowMeans(summ, na.rm=TRUE)   # mean across space then sims
+  h_zt$habitat_sa = rowMeans(summh, na.rm=TRUE)
 
-  h_zt$habitat_lb  = rowMeans(summ_lb)   # mean across space then sims
-  h_zt$habitat_sa_lb = rowMeans(summh_lb)
+  h_zt$habitat_lb  = rowMeans(summ_lb, na.rm=TRUE)   # mean across space then sims
+  h_zt$habitat_sa_lb = rowMeans(summh_lb, na.rm=TRUE)
 
   h_zt$habitat_ub  = rowMeans(summ_ub)   # mean across space then sims
-  h_zt$habitat_sa_ub = rowMeans(summh_ub)
+  h_zt$habitat_sa_ub = rowMeans(summh_ub, na.rm=TRUE)
 
  
   dev.new(pointsize=24, width=10, height=8 ) 
