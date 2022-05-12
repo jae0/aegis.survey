@@ -147,7 +147,7 @@ carstm_optimal_habitat = function(
   message("This will take a while ... ")
 
   fn_res = tempfile()
-  save(resT, file=fn_res, compress=FALSE )
+  saveRDS(resT, file=fn_res, compress=FALSE )
 
   for (ss in 1:nsims) {
     
@@ -232,6 +232,18 @@ carstm_optimal_habitat = function(
     summh_ub[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
 
     TPR = NULL
+
+    h_zt$habitat  = rowMeans(summ, na.rm=TRUE)   # mean across space then sims
+    h_zt$habitat_sa = rowMeans(summh, na.rm=TRUE)
+
+    h_zt$habitat_lb  = rowMeans(summ_lb, na.rm=TRUE)   # mean across space then sims
+    h_zt$habitat_sa_lb = rowMeans(summh_lb, na.rm=TRUE)
+
+    h_zt$habitat_ub  = rowMeans(summ_ub)   # mean across space then sims
+    h_zt$habitat_sa_ub = rowMeans(summh_ub, na.rm=TRUE)
+
+    saveRDS( h_zt, file=file.path( work_root, "temp_depth_habitat.RDS") )  # temp save
+  
   }
  
 
