@@ -169,13 +169,9 @@ carstm_optimal_habitat = function(
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1
 
-
     TPR = Tprob[ iitpc,, ] * Z$Zprob  # sp, yr, seas, sim
-  
-    k = which(!is.finite(TPR))  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
-    if (length(k) > 0) TPR[ k ] = NA
-    k = NULL
-
+    # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
+   
     # mean across space then sims
     summ[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
 
@@ -192,13 +188,10 @@ carstm_optimal_habitat = function(
    
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1
-
+    k = NULL
 
     TPR = Tprob[ iitpc,, ] * Z$Zprob_lb  # sp, yr, seas, sim
-  
-    k = which(!is.finite(TPR))  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
-    if (length(k) > 0) TPR[ k ] = NA
-    k = NULL
+    # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
 
     # mean across space then sims
     summ_lb[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
@@ -213,16 +206,14 @@ carstm_optimal_habitat = function(
 
     k = which( Tprob < 0 )
     if (length(k) > 0 ) Tprob[k] = 0
+    k = NULL
    
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1
-
-
-    TPR = Tprob[ iitpc,, ] * Z$Zprob_ub  # sp, yr, seas, sim
-  
-    k = which(!is.finite(TPR))  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
-    if (length(k) > 0) TPR[ k ] = NA
     k = NULL
+ 
+    Tprob = array(NA, dim=dim(resY) )
+    TPR = Tprob[ iitpc,, ] * Z$Zprob_ub  # sp, yr, seas, sim  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
 
     # mean across space then sims
     summ_ub[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
@@ -239,7 +230,7 @@ carstm_optimal_habitat = function(
     h_zt$habitat_lb  = rowMeans(summ_lb, na.rm=TRUE)   # mean across space then sims
     h_zt$habitat_sa_lb = rowMeans(summh_lb, na.rm=TRUE)
 
-    h_zt$habitat_ub  = rowMeans(summ_ub)   # mean across space then sims
+    h_zt$habitat_ub  = rowMeans(summ_ub, na.rm=TRUE)   # mean across space then sims
     h_zt$habitat_sa_ub = rowMeans(summh_ub, na.rm=TRUE)
 
     saveRDS( h_zt, file=file.path( work_root, "temp_depth_habitat.RDS") )  # temp save
@@ -253,7 +244,7 @@ carstm_optimal_habitat = function(
   h_zt$habitat_lb  = rowMeans(summ_lb, na.rm=TRUE)   # mean across space then sims
   h_zt$habitat_sa_lb = rowMeans(summh_lb, na.rm=TRUE)
 
-  h_zt$habitat_ub  = rowMeans(summ_ub)   # mean across space then sims
+  h_zt$habitat_ub  = rowMeans(summ_ub, na.rm=TRUE)   # mean across space then sims
   h_zt$habitat_sa_ub = rowMeans(summh_ub, na.rm=TRUE)
 
  
