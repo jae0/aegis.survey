@@ -394,8 +394,6 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     theta = -40,
     phi = 10
   )
- 
-  
   
   # add coastline to the data domain (sppoly)
   crs_plot = st_crs( sppoly )
@@ -407,24 +405,92 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   domain_new = st_union( data_mask, nearshore )
 
   loadfunctions("aegis.survey")
-  
-  # This will take 155 GB+ 
+  if(0) {
+
+    year.assessment = 2021  
+    xvar = "inla.group(t, method = \"quantile\", n = 11)"   
+    yvar = "inla.group(z, method = \"quantile\", n = 11)" 
+    depths = c( 10, 350 )   # range of survey data for mean habitat estimates 
+    domain=domain_new 
+    probability_limit = 0.25
+
+  }
+
+  # WARNING: This is very slow and RAM intensive too .. temperature posterior sims are very large ~100 GB, several hours 
   o = carstm_optimal_habitat( 
     res = res,
+    year.assessment = 2021 ,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
-    season=7,
-    depths = c(10, 500),   # range of survey data for mean habitat estimates 
-    # temperatures=c(4, 5), # range survey data for mean habitat estimates
-    probs = c(0.3, 1.0),  # range of probs to count for SA counts
+    depths = c( 10, 350 ),   # range of survey data for mean habitat estimates 
     domain=domain_new 
   ) 
+  
+  print( o[["depth_plot"]] )
+  
+  if (plot_map) {
 
-  print( o[["depth_plot"]] + geom_sf( data=st_transform( polygons_rnaturalearth(), st_crs(sppoly) ), aes(alpha=0.1), colour="lightgray" ) ) 
+  require(ggplot2)
+    proj_stmv =  "+proj=utm +ellps=WGS84 +zone=20 +units=km"  # crs of depth from stmv
+    crs_domain = st_crs( proj_stmv )
 
+    domain = st_transform( st_union( st_as_sf(domain_new) ), crs_domain  )
+
+    isobaths = c( 0, 100, 200, 300, 400, 800 )
+    isobs = aegis.bathymetry::isobath_db( depths=isobaths, project_to=crs_domain )
+    isobs = st_intersection(isobs, domain)
+
+    # coastline = st_transform( polygons_rnaturalearth(), st_crs("+proj=utm +ellps=WGS84 +zone=20 +units=km" ) )
+    # coastline = st_intersection(coastline, domain)  
+    # coastline = st_cast( coastline, "MULTILINESTRING" )
+
+    if (is.null(probability_limit)) {
+      zprob = 0
+    } else {
+      zprob = probability_limit
+    }
+
+    plt = ggplot() +
+  #      geom_sf( data=coastline, aes(alpha=0.1), colour="gray90" )  +
+        geom_sf( data=isobs, aes(alpha=0.1), colour="lightgray" ) +
+        geom_raster(data = Z[Z$Zprob>= zprob ,], aes(x=plon, y=plat, fill=Zprob, alpha=1.0) ) +
+        scale_fill_gradientn(name = "Probability (depth)", colors =color.code( "seis", seq( 0, 1, by=0.1 )), na.value=NA ) +
+        guides(fill = guide_colorbar(
+          title.theme = element_text(size = 20),
+          label.theme = element_text(size = 18) ) ) +
+        scale_alpha(range = c(0.9, 0.95), guide = "none") +
+        theme(
+          axis.line=element_blank(),
+          axis.text.x=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks=element_blank(),
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(), 
+          legend.position=c( 0.1, 0.8 ),
+          panel.background=element_blank(),
+          panel.border=element_blank(),
+          panel.grid.major=element_blank(),
+          panel.grid.minor=element_blank(),
+          plot.background=element_blank() )
+          ggtitle("Cod depth") +
+          coord_fixed()
+    
+    dev.new(width=14, height=8, pointsize=20)
+    print(plt)  
+
+    gc()
+    
+  }
+ 
+  
+  u = RES[["full_model_number"]]
+  u$sa = o[["temperature_depth"]]$habitat_sa
+  u$density = u$mean / u$sa
+  plot(density ~ year, u)
 
   dev.new(width=14, height=8, pointsize=20)
   library(ggplot2)
+
 
   ggplot( o[["temperature_depth"]], aes(yr, habitat ) ) +
     geom_ribbon(aes(ymin=habitat_lb, max=habitat_ub), alpha=0.2, colour=NA) +
@@ -437,7 +503,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   dev.new(width=14, height=8, pointsize=20)
   library(ggplot2)
   ggplot( o[["temperature_depth"]], aes(yr, habitat_sa ) ) +
-    geom_ribbon(aes(ymin=habitat_lb_sa, max=habitat_ub_sa), alpha=0.2, colour=NA) +
+    geom_ribbon(aes(ymin=habitat_sa_lb, max=habitat_sa_ub), alpha=0.2, colour=NA) +
     geom_line() +
     labs(x="Year", y="Habitat SA (depth, temperature; km^2)", size = rel(1.5)) +
     # scale_y_continuous( limits=c(0, 300) )  

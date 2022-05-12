@@ -2,20 +2,22 @@
 carstm_optimal_habitat = function( 
     domain, 
     res, 
+    year.assessment = 2021,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
-    season = 5,
     depths=NULL, 
-    temperatures=NULL,
-    probs=c(0, 1.0) 
+    plot_map=FALSE,
+    fun_choice=NULL,
+    probability_limit=NULL
   ) {
 
-  require(ggplot2)
 
-  domain = st_as_sf(domain)
-  crs_domain = st_crs( domain )
+  proj_stmv =  "+proj=utm +ellps=WGS84 +zone=20 +units=km"  # crs of depth from stmv
+  crs_domain = st_crs( proj_stmv )
+
+  domain = st_transform( st_union( st_as_sf(domain) ), crs_domain  )
+
   out = list()
-
 
   x_spline_function = carstm_spline( res, vn=c("random", xvar), statvar="mean" ) 
   x_spline_function_lb = carstm_spline( res, vn=c("random", xvar), statvar="quant0.025" ) 
@@ -25,30 +27,29 @@ carstm_optimal_habitat = function(
   y_spline_function_lb = carstm_spline( res, vn=c("random", yvar), statvar="quant0.025" ) 
   y_spline_function_ub = carstm_spline( res, vn=c("random", yvar), statvar="quant0.975" ) 
 
-    
+  res = NULL
+
   # use highest resolution depths and aggregate temps
   # "aggregated" == depths aggregated (averaged) to 0.5 km X 0.5 km basis
   # "complete" = 1x1 km
+  pZ =  aegis.bathymetry::bathymetry_parameters( spatial_domain="SSE", project_class="stmv" )
 
-  Z = aegis.bathymetry::bathymetry_db( 
-    p = aegis.bathymetry::bathymetry_parameters( spatial_domain="SSE", project_class="stmv" ), 
-    DS ="complete" 
-  )  
+  Z = aegis.bathymetry::bathymetry_db( p=pZ, DS ="complete" )   
 
   if (!is.null(depths)) {
     Z = Z[ which( Z$z > depths[1] ) , ]
     Z = Z[ which( Z$z < depths[2] ) , ]
   }
 
-  proj_stmv = st_crs("+proj=utm +ellps=WGS84 +zone=20 +units=km")
   inside = st_points_in_polygons(
     pts = st_transform( st_as_sf( Z[, c("plon", "plat")], coords=c("plon","plat"), crs=proj_stmv ), crs=crs_domain),
-    polys =  st_union(domain)
+    polys =  domain
   )
 
   Z = Z[which(is.finite(inside)), ]
   inside = NULL; gc()
- 
+
+
   Z$Zprob = y_spline_function(Z$z ) 
   Z$Zprob_lb = y_spline_function_lb(Z$z ) 
   Z$Zprob_ub = y_spline_function_ub(Z$z ) 
@@ -72,69 +73,23 @@ carstm_optimal_habitat = function(
   Z = Z[, c("z", "Zprob", "Zprob_lb", "Zprob_ub", "plon","plat") ]
   Z = Z[ which(is.finite(rowSums(Z) )) , ]
 
-  isobaths = c( 0, 100, 200, 300, 400, 800 )
-  isobs = aegis.bathymetry::isobath_db( depths=isobaths, project_to=crs_domain )
-  isobs = st_intersection(isobs, domain)
-
- 
-  o = ggplot() +
-      geom_sf( data=isobs, aes(alpha=0.1), colour="lightgray" ) +
-      geom_raster(data = Z, aes(x=plon, y=plat, fill=Zprob, alpha=1.0) ) +
-      scale_fill_gradientn(name = "Probability (depth)", colors =color.code( "seis", seq( 0, 1, by=0.1 )), na.value=NA ) +
-      guides(fill = guide_colorbar(
-        title.theme = element_text(size = 20),
-        label.theme = element_text(size = 18) ) ) +
-      scale_alpha(range = c(0.9, 0.95), guide = "none") +
-      theme(
-        axis.line=element_blank(),
-        axis.text.x=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(), 
-        legend.position=c( 0.1, 0.8 ),
-        panel.background=element_blank(),
-        panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        plot.background=element_blank() )
-        ggtitle("Cod depth") +
-        coord_fixed()
-  
+  out[["depths"]] = Z
   
   ntot = nrow(Z)
   
   print( paste( "Surface area for depths: ", length(which(is.finite(Z$z))), "of", ntot ) )
   
-  dev.new(width=14, height=8, pointsize=20)
-  print(o) 
-  out[["depth_plot"]] = o
-  isobs = NULL
-  isobaths = NULL
-  o = NULL
-  gc()
 
 
   # add temperature:
   require(aegis.temperature)
-  year.assessment = 2021
-  pT = temperature_parameters( project_class="carstm", yrs=1970:res$year.assessment, carstm_model_label="1970_present"  ) 
-
-  sppolyT = areal_units( p=pT )  
-
-  res = NULL; gc()
-
-  # to load currently saved results
-  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT )
-  resT = resT$predictions_posterior_simulations[,,season,]
-
   
-  if (!is.null(temperatures)) {
-    # filter our very low pr 
-    resT[ resT > temperatures[2] ] =  NA
-    resT[ resT < temperatures[1] ] =  NA
-  }
+  pT = temperature_parameters( project_class="carstm", yrs=1970:year.assessment, carstm_model_label="1970_present"  ) 
 
+  h_zt = data.frame(yr=pT$yrs  ) 
+
+  sppolyT = st_transform( areal_units( p=pT ), crs=crs_domain )  
+ 
 
   raster_resolution_km = 1 # res of Z (pB$pres)
 
@@ -142,12 +97,13 @@ carstm_optimal_habitat = function(
   require(fasterize)
   require(data.table)
 
-  raster_template = raster(extent(domain)) # +1 to increase the area
+  raster_template = raster(extent(st_as_sf(domain) )) # +1 to increase the area
   res(raster_template) = raster_resolution_km  # in meters
   crs(raster_template) = projection(domain) # transfer the coordinate system to the raster
 
   TP = st_transform( sppolyT, crs_domain)  # same
   TP = st_make_valid( TP )
+  TP = st_buffer( TP, 0)
   TP = st_cast(TP, "MULTIPOLYGON")
   TP$rn = 1:nrow(TP)
   iTP = fasterize( TP, raster_template, field="rn" )
@@ -155,89 +111,141 @@ carstm_optimal_habitat = function(
   gc()
 
   bb = raster::bbox(raster_template)
+
+  # to load currently saved results
+  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT )$predictions_posterior_simulations
+  dim_resT = dim(resT)
+  ic = array_map( "xy->1", Z[, c("plon", "plat")], dims=dim(raster_template)[1:2], res=c(raster_resolution_km,raster_resolution_km), origin=bb[,"min"] ) # map stmv to raster
+  iitpc = iTP[ as.integer(ic) ]
+
+  iTP = ic = NULL 
+  sppolyT = NULL
+  domain = NULL
+  gc()
   
-  ic = array_map( "xy->1", Z[, c("plon", "plat")], dims=dim(resT)[1:2], res=c(1,1), origin=bb[,"min"] )
+  # fast by ignoring na operations
+  mean_fast = function(x) .Internal(mean(x))
+  sum_fast = function(x) .Internal(sum(x))
+  fun_choice = function( x ) {
+    g = which(is.finite(x))
+    if ( length(g)==0) return(NA)
+    y = x[g]
+    return( y[which.min(y)]  )
+  }
+
+  if (!is.null(probability_limit)) {
+    tpr_limit = probability_limit
+  } else {
+    tpr_limit = 0.25
+  }   
+
+  ny = dim_resT[2]
+  nsims = dim_resT[4]
+
+  summ = summh = summ_lb = summh_lb =summ_ub = summh_ub =array( NA, dim=c(ny, nsims) )
+
+  for (ss in 1:nsims) {
+    
+    print( paste( "Sim: " ss) )
+    
+    resY = resT[,,,ss]
+    fk = which( is.finite(resY) )
+
+    Tprob = array(NA, dim=dim(resY) )
+    
+    Tprob[fk] = x_spline_function( resY[fk]  ) 
+
+    k = which( Tprob < 0 )
+    if (length(k) > 0 ) Tprob[k] = 0
+   
+    k = which( Tprob > 1 )
+    if (length(k) > 0 ) Tprob[k] = 1
+
+    k = which(!is.finite(Tprob) )  # in case of infinites
+    if (length(k) > 0 ) Tprob[k] = 0
+
+    TPR = Tprob[ iitpc,, ] * Z$Zprob  # sp, yr, seas, sim
   
+    k = which(!is.finite(TPR))  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
+    if (length(k) > 0) TPR[ k ] = NA
+    k = NULL
 
-  h_zt = data.frame(yr=pT$yrs  ) 
+    # mean across space then sims
+    summ[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
 
-  Tprob = resT[] * NA 
-  j = which(is.finite( resT))
-  Tprob[j] = x_spline_function(resT[j]) 
-
-  # any outside of domain of spline is not supported by data .. assume NA to prevent extrapolation
-  k = which( Tprob < 0 )
-  if (length(k) > 0 ) Tprob[k] = 0
-  l = which( Tprob > 1 )
-  if (length(l) > 0 ) Tprob[l] = 1
-  m = which(!is.finite(Tprob) )  # in case of infinites
-  if (length(m) > 0 ) Tprob[m] = NA
-
-  # Tprob is too large .. break into annual steps
-  h_zt$habitat = NA
-  h_zt$habitat_sa = NA
+    TPR = ifelse( TPR > tpr_limit, 1, 0 )
+    # mean across seasons,  sum across space  
+    summh[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
 
 
-  for ( iy in 1:nrow(h_zt)) {
-    TPR = Tprob[ iTP[ic],iy,]*Z$Zprob
-    h_zt$habitat[iy] = mean( colMeans(TPR, na.rm=TRUE), na.rm=TRUE )
-    i = which( (TPR > probs[1]) & (TPR < probs[2]) )
-    TPR[] = NA
-    if (length(i) > 0)  TPR[ i ] = 1
-    h_zt$habitat_sa[iy] = mean( colSums(TPR, na.rm=TRUE), na.rm=TRUE )  # count area with condition
+    Tprob[fk] = x_spline_function_lb( resY[fk]  ) 
+
+    k = which( Tprob < 0 )
+    if (length(k) > 0 ) Tprob[k] = 0
+   
+    k = which( Tprob > 1 )
+    if (length(k) > 0 ) Tprob[k] = 1
+
+    k = which(!is.finite(Tprob) )  # in case of infinites
+    if (length(k) > 0 ) Tprob[k] = 0
+
+    TPR = Tprob[ iitpc,, ] * Z$Zprob_lb  # sp, yr, seas, sim
+  
+    k = which(!is.finite(TPR))  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
+    if (length(k) > 0) TPR[ k ] = NA
+    k = NULL
+
+    # mean across space then sims
+    summ_lb[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
+
+    TPR = ifelse( TPR > tpr_limit, 1, 0 )
+    # mean across seasons,  sum across space  
+    summh_lb[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
+
+
+    Tprob[fk] = x_spline_function_ub( resY[fk]  ) 
+
+    k = which( Tprob < 0 )
+    if (length(k) > 0 ) Tprob[k] = 0
+   
+    k = which( Tprob > 1 )
+    if (length(k) > 0 ) Tprob[k] = 1
+
+    k = which(!is.finite(Tprob) )  # in case of infinites
+    if (length(k) > 0 ) Tprob[k] = 0
+
+    TPR = Tprob[ iitpc,, ] * Z$Zprob_ub  # sp, yr, seas, sim
+  
+    k = which(!is.finite(TPR))  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
+    if (length(k) > 0) TPR[ k ] = NA
+    k = NULL
+
+    # mean across space then sims
+    summ_ub[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
+
+    TPR = ifelse( TPR > tpr_limit, 1, 0 )
+    # mean across seasons,  sum across space  
+    summh_ub[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
+
+    TPR = NULL
   }
  
-  Tprob = resT[] * NA 
-  j = which(is.finite( resT))
-  Tprob[j] = x_spline_function_lb(resT[j]) 
-  k = which( Tprob < 0 )
-  if (length(k) > 0 ) Tprob[k] = 0
-  l = which( Tprob > 1 )
-  if (length(l) > 0 ) Tprob[l] = 1
-  m = which(!is.finite(Tprob) )
-  if (length(m) > 0 ) Tprob[m] = NA
-  # Tprob is too large .. break into annual steps
 
-  h_zt$habitat_lb = NA
-  h_zt$habitat_lb_sa = NA
+  h_zt$habitat  = rowMeans(summ)   # mean across space then sims
+  h_zt$habitat_sa = rowMeans(summh)
 
-  for ( iy in 1:nrow(h_zt)) {
-    TPR = Tprob[ iTP[ic],iy,] * Z$Zprob_lb
-    h_zt$habitat_lb[iy] = mean( colMeans(TPR, na.rm=TRUE), na.rm=TRUE )
-    i = which( (TPR > probs[1]) & (TPR < probs[2]) )
-    TPR[] = NA
-    if (length(i) > 0)  TPR[ i ] = 1
-    h_zt$habitat_lb_sa[iy] = mean( colSums(TPR, na.rm=TRUE), na.rm=TRUE )  # count area with condition
-  }
+  h_zt$habitat_lb  = rowMeans(summ_lb)   # mean across space then sims
+  h_zt$habitat_sa_lb = rowMeans(summh_lb)
+
+  h_zt$habitat_ub  = rowMeans(summ_ub)   # mean across space then sims
+  h_zt$habitat_sa_ub = rowMeans(summh_ub)
+
  
-
-  Tprob = resT[] * NA 
-  j = which(is.finite( resT))
-  Tprob[j] = x_spline_function_ub(resT[j]) 
-  k = which( Tprob < 0 )
-  if (length(k) > 0 ) Tprob[k] = 0
-  l = which( Tprob > 1 )
-  if (length(l) > 0 ) Tprob[l] = 1
-  m = which(!is.finite(Tprob) )
-  if (length(m) > 0 ) Tprob[m] = NA
-
-  # Tprob is too large .. break into annual steps
-
-  h_zt$habitat_ub = NA
-  h_zt$habitat_ub_sa = NA
-  for ( iy in 1:nrow(h_zt)) {
-    TPR = Tprob[ iTP[ic],iy,]*Z$Zprob_ub
-    h_zt$habitat_ub[iy] = mean( colMeans(TPR, na.rm=TRUE), na.rm=TRUE )
-    i = which( (TPR > probs[1]) & (TPR < probs[2]) )
-    TPR[] = NA
-    if (length(i) > 0)  TPR[ i ] = 1
-    h_zt$habitat_ub_sa[iy] = mean( colSums(TPR, na.rm=TRUE), na.rm=TRUE )  # count area with condition
-  }
-  
   dev.new(pointsize=24, width=10, height=8 ) 
   plot(habitat ~ yr, h_zt, type="b", col="slategray", xlab="Year", ylab="Habitat (depth, temperature)", pch=20, cex=1.5, ylim=range( h_zt[, c("habitat_ub", "habitat_lb")]))
   lines( habitat_lb ~ yr, data=h_zt, lty="dashed", col="gray" )
   lines( habitat_ub  ~ yr, data=h_zt, lty="dashed", col="gray" )
+ 
 
   out[["temperature_depth"]] = h_zt
   out[["total_surface"]] = ntot
