@@ -417,6 +417,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   }
 
   # WARNING: This is very slow and RAM intensive too .. temperature posterior sims are very large ~100 GB, several hours 
+  # worth running in parallel .. eventually 
   o = carstm_optimal_habitat( 
     res = res,
     year.assessment = 2021 ,
@@ -426,6 +427,10 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     domain=domain_new 
   ) 
   
+  fn_optimal = file.path( outputdir, "optimal_habitat.RDS" )
+  saveRDS( o, file=fn_optimal, compress=FALSE )
+  o = read(RDS)
+
   print( o[["depth_plot"]] )
   
   if (plot_map) {

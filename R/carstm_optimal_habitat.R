@@ -144,15 +144,23 @@ carstm_optimal_habitat = function(
 
   summ = summh = summ_lb = summh_lb = summ_ub = summh_ub =array( NA, dim=c(ny, nsims) )
 
+  message("This will take a while ... ")
+
+  fn_res = tempfile()
+  save(resT, file=fn_res, compress=FALSE )
+
   for (ss in 1:nsims) {
     
-    print( paste( "Sim: ", ss) )
+    print( paste( "Sim: ", ss, "of", nsims) )
     
+    if (is.null(resT)) resT = readRDS(fn_res) 
+
     resY = resT[,,,ss]
+    resT = NULL; gc()
+    
     fk = which( is.finite(resY) )
 
     Tprob = array(NA, dim=dim(resY) )
-    
     Tprob[fk] = x_spline_function( resY[fk]  ) 
 
     k = which( Tprob < 0 )
@@ -161,8 +169,6 @@ carstm_optimal_habitat = function(
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1
 
-    k = which(!is.finite(Tprob) )  # in case of infinites
-    if (length(k) > 0 ) Tprob[k] = 0
 
     TPR = Tprob[ iitpc,, ] * Z$Zprob  # sp, yr, seas, sim
   
@@ -178,6 +184,7 @@ carstm_optimal_habitat = function(
     summh[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
 
 
+    Tprob = array(NA, dim=dim(resY) )
     Tprob[fk] = x_spline_function_lb( resY[fk]  ) 
 
     k = which( Tprob < 0 )
@@ -186,8 +193,6 @@ carstm_optimal_habitat = function(
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1
 
-    k = which(!is.finite(Tprob) )  # in case of infinites
-    if (length(k) > 0 ) Tprob[k] = 0
 
     TPR = Tprob[ iitpc,, ] * Z$Zprob_lb  # sp, yr, seas, sim
   
@@ -203,6 +208,7 @@ carstm_optimal_habitat = function(
     summh_lb[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
 
 
+    Tprob = array(NA, dim=dim(resY) )
     Tprob[fk] = x_spline_function_ub( resY[fk]  ) 
 
     k = which( Tprob < 0 )
@@ -211,8 +217,6 @@ carstm_optimal_habitat = function(
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1
 
-    k = which(!is.finite(Tprob) )  # in case of infinites
-    if (length(k) > 0 ) Tprob[k] = 0
 
     TPR = Tprob[ iitpc,, ] * Z$Zprob_ub  # sp, yr, seas, sim
   
