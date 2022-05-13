@@ -405,12 +405,14 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   domain_new = st_union( data_mask, nearshore )
 
   loadfunctions("aegis.survey")
-  if(0) {
+
+  if (0) {
 
     year.assessment = 2021  
     xvar = "inla.group(t, method = \"quantile\", n = 11)"   
     yvar = "inla.group(z, method = \"quantile\", n = 11)" 
-    depths = c( 10, 350 )   # range of survey data for mean habitat estimates 
+    depths = c( 10, 150 )   # range of survey data for mean habitat estimates 150m ~= prob at 0.5
+    nsims = 100,
     domain=domain_new 
     probability_limit = 0.25
 
@@ -423,7 +425,9 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     year.assessment = 2021 ,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
-    depths = c( 10, 350 ),   # range of survey data for mean habitat estimates 
+    depths = c( 10, 150 ),   # range of survey data for mean habitat estimates ;; 150m ~= prob at 0.5
+    probability_limit =0.25,
+    nsims = 100,
     domain=domain_new 
   ) 
   

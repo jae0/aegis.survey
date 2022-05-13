@@ -7,7 +7,7 @@ carstm_optimal_habitat = function(
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
     depths=NULL, 
     plot_map=FALSE,
-    fun_choice=NULL,
+    nsims=100, 
     probability_limit=NULL
   ) {
 
@@ -93,70 +93,69 @@ carstm_optimal_habitat = function(
 
   raster_resolution_km = 1 # res of Z (pB$pres)
 
-  require(raster)
-  require(fasterize)
-  require(data.table)
+  # require(raster)
+  # require(fasterize)
+  # require(data.table)
 
-  raster_template = raster(extent(st_as_sf(domain) )) # +1 to increase the area
-  res(raster_template) = raster_resolution_km  # in meters
-  crs(raster_template) = projection(domain) # transfer the coordinate system to the raster
+  require(stars)
+  raster_resolution_km = 1
 
-  TP = st_transform( sppolyT, crs_domain)  # same
+
+  TP = st_transform( sppolyT["AUID"], crs_domain)  # same
   TP = st_make_valid( TP )
   TP = st_buffer( TP, 0)
-  TP = st_cast(TP, "MULTIPOLYGON")
   TP$rn = 1:nrow(TP)
-  iTP = fasterize( TP, raster_template, field="rn" )
+  TP = st_cast(TP, "MULTIPOLYGON")
+
+  iTP = st_rasterize( TP["rn"], dx=raster_resolution_km, dy=raster_resolution_km )
+
+  zz = st_as_sf(Z[,c("plon", "plat") ], coords=c("plon", "plat") )
+  st_crs(zz) = crs_domain
+  ic = st_extract(iTP, zz )$rn
+
   TP = NULL
-  gc()
-
-  bb = raster::bbox(raster_template)
-
-  # to load currently saved results
-  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT )$predictions_posterior_simulations
-  dim_resT = dim(resT)
-  ic = array_map( "xy->1", Z[, c("plon", "plat")], dims=dim(raster_template)[1:2], res=c(raster_resolution_km,raster_resolution_km), origin=bb[,"min"] ) # map stmv to raster
-  iitpc = iTP[ as.integer(ic) ]
-
-  iTP = ic = NULL 
+  iTP = zz = NULL 
   sppolyT = NULL
   domain = NULL
   gc()
+
+ 
+  # to load currently saved results
+  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT )$predictions_posterior_simulations
+  sims_to_keep = sample.int( dim(resT)[4], nsims )
+  resT = resT[,,,sims_to_keep]  # reduce size to keep RAM from saturating
+
+  dim_resT = dim(resT)
   
   # fast by ignoring na operations
   mean_fast = function(x) .Internal(mean(x))
   sum_fast = function(x) .Internal(sum(x))
-  fun_choice = function( x ) {
-    g = which(is.finite(x))
-    if ( length(g)==0) return(NA)
-    y = x[g]
-    return( y[which.min(y)]  )
-  }
-
+ 
   if (!is.null(probability_limit)) {
     tpr_limit = probability_limit
   } else {
     tpr_limit = 0.25
-  }   
+  }
 
   ny = dim_resT[2]
-  nsims = dim_resT[4]
+  ns = dim_resT[4]
 
-  summ = summh = summ_lb = summh_lb = summ_ub = summh_ub =array( NA, dim=c(ny, nsims) )
+  summ = summh = summ_lb = summh_lb = summ_ub = summh_ub =array( NA, dim=c(ny, ns) )
 
   message("This will take a while ... ")
 
-  fn_res = tempfile()
-  saveRDS(resT, file=fn_res, compress=FALSE )
+  fn_monitor = file.path( work_root, "temp_depth_habitat.RDS")
+  message( "load the following to monitor : u = readRDS(', fn_monitor, ')" ) 
+  
 
-  for (ss in 1:nsims) {
+  for ( ss in 1:ns ) {
     
-    print( paste( "Sim: ", ss, "of", nsims) )
+    print( paste( "Sim: ", ss, "of", ns ) )
     
-    if (is.null(resT)) resT = readRDS(fn_res) 
+    # if (is.null(resT)) resT = readRDS(fn_res) 
 
     resY = resT[,,,ss]
-    resT = NULL; gc()
+    # resT = NULL; gc()
     
     fk = which( is.finite(resY) )
 
@@ -169,15 +168,15 @@ carstm_optimal_habitat = function(
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1
 
-    TPR = Tprob[ iitpc,, ] * Z$Zprob  # sp, yr, seas, sim
+    TPR = Tprob[ ic,, ] * Z$Zprob  # sp, yr, seas, sim
     # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
    
     # mean across space then sims
-    summ[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
+    summ[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE ), na.rm=TRUE )   
 
     TPR = ifelse( TPR > tpr_limit, 1, 0 )
     # mean across seasons,  sum across space  
-    summh[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
+    summh[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE ), na.rm=TRUE )  
 
 
     Tprob = array(NA, dim=dim(resY) )
@@ -187,10 +186,9 @@ carstm_optimal_habitat = function(
     if (length(k) > 0 ) Tprob[k] = 0
    
     k = which( Tprob > 1 )
-    if (length(k) > 0 ) Tprob[k] = 1
-    k = NULL
+    if (length(k) > 0 ) Tprob[k] = 1 
 
-    TPR = Tprob[ iitpc,, ] * Z$Zprob_lb  # sp, yr, seas, sim
+    TPR = Tprob[ ic,, ] * Z$Zprob_lb  # sp, yr, seas, sim
     # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
 
     # mean across space then sims
@@ -205,21 +203,18 @@ carstm_optimal_habitat = function(
     Tprob[fk] = x_spline_function_ub( resY[fk]  ) 
 
     k = which( Tprob < 0 )
-    if (length(k) > 0 ) Tprob[k] = 0
-    k = NULL
+    if (length(k) > 0 ) Tprob[k] = 0 
    
     k = which( Tprob > 1 )
-    if (length(k) > 0 ) Tprob[k] = 1
-    k = NULL
- 
-    Tprob = array(NA, dim=dim(resY) )
-    TPR = Tprob[ iitpc,, ] * Z$Zprob_ub  # sp, yr, seas, sim  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
+    if (length(k) > 0 ) Tprob[k] = 1 
+  
+    TPR = Tprob[ ic,, ] * Z$Zprob_ub  # sp, yr, seas, sim  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
 
-    # mean across space then sims
+    # mean/min across space then sims
     summ_ub[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   
 
     TPR = ifelse( TPR > tpr_limit, 1, 0 )
-    # mean across seasons,  sum across space  
+    # mean/min across seasons,  sum across space  
     summh_ub[,ss] = colSums( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )  
 
     TPR = NULL
@@ -233,7 +228,7 @@ carstm_optimal_habitat = function(
     h_zt$habitat_ub  = rowMeans(summ_ub, na.rm=TRUE)   # mean across space then sims
     h_zt$habitat_sa_ub = rowMeans(summh_ub, na.rm=TRUE)
 
-    saveRDS( h_zt, file=file.path( work_root, "temp_depth_habitat.RDS") )  # temp save
+    saveRDS( h_zt, file=fn_monitor )  # temp save
   
   }
  
@@ -253,7 +248,6 @@ carstm_optimal_habitat = function(
   lines( habitat_lb ~ yr, data=h_zt, lty="dashed", col="gray" )
   lines( habitat_ub  ~ yr, data=h_zt, lty="dashed", col="gray" )
  
-
   out[["temperature_depth"]] = h_zt
   out[["total_surface"]] = ntot
 
