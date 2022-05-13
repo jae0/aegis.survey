@@ -412,7 +412,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     xvar = "inla.group(t, method = \"quantile\", n = 11)"   
     yvar = "inla.group(z, method = \"quantile\", n = 11)" 
     depths = c( 10, 150 )   # range of survey data for mean habitat estimates 150m ~= prob at 0.5
-    nsims = 100,
+    nsims = 100
     domain=domain_new 
     probability_limit = 0.25
 
@@ -425,12 +425,23 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     year.assessment = 2021 ,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
-    depths = c( 10, 150 ),   # range of survey data for mean habitat estimates ;; 150m ~= prob at 0.5
+    depths = c( 10, 350 ),   # range of survey data for mean habitat estimates ;; 150m ~= prob at 0.5
     probability_limit =0.25,
     nsims = 100,
     domain=domain_new 
   ) 
-  
+
+  if (0) {
+    u = readRDS('/home/jae/tmp/temp_depth_habitat.RDS')
+    dev.new()
+    plot( habitat~yr, u, type="b", ylim=c(0.25, 0.375))
+    lines( habitat_lb~yr, u)
+    lines( habitat_ub~yr, u)
+    abline(v=1990)
+    abline(v=2012)
+
+  }
+
   fn_optimal = file.path( outputdir, "optimal_habitat.RDS" )
   saveRDS( o, file=fn_optimal, compress=FALSE )
   o = read(RDS)

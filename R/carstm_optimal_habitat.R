@@ -145,7 +145,7 @@ carstm_optimal_habitat = function(
   message("This will take a while ... ")
 
   fn_monitor = file.path( work_root, "temp_depth_habitat.RDS")
-  message( "load the following to monitor : u = readRDS(', fn_monitor, ')" ) 
+  message( "load the following to monitor : u = readRDS(", fn_monitor, ")" ) 
   
 
   for ( ss in 1:ns ) {
