@@ -92,15 +92,9 @@ carstm_optimal_habitat = function(
  
 
   raster_resolution_km = 1 # res of Z (pB$pres)
-
-  # require(raster)
-  # require(fasterize)
-  # require(data.table)
-
-  require(stars)
-  raster_resolution_km = 1
-
-
+ 
+  require(stars) 
+ 
   TP = st_transform( sppolyT["AUID"], crs_domain)  # same
   TP = st_make_valid( TP )
   TP = st_buffer( TP, 0)
@@ -126,11 +120,7 @@ carstm_optimal_habitat = function(
   resT = resT[,,,sims_to_keep]  # reduce size to keep RAM from saturating
 
   dim_resT = dim(resT)
-  
-  # fast by ignoring na operations
-  mean_fast = function(x) .Internal(mean(x))
-  sum_fast = function(x) .Internal(sum(x))
- 
+   
   if (!is.null(probability_limit)) {
     tpr_limit = probability_limit
   } else {
@@ -188,7 +178,7 @@ carstm_optimal_habitat = function(
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1 
 
-    TPR = Tprob[ ic,, ] * Z$Zprob_lb  # sp, yr, seas, sim
+    TPR = Tprob[ ic,, ] * Z$Zprob  # sp, yr, seas, sim
     # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
 
     # mean across space then sims
@@ -208,7 +198,7 @@ carstm_optimal_habitat = function(
     k = which( Tprob > 1 )
     if (length(k) > 0 ) Tprob[k] = 1 
   
-    TPR = Tprob[ ic,, ] * Z$Zprob_ub  # sp, yr, seas, sim  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
+    TPR = Tprob[ ic,, ] * Z$Zprob  # sp, yr, seas, sim  # na's created due to alignment problems with rasterization .. ignore rather than setting to zero
 
     # mean/min across space then sims
     summ_ub[,ss] =  colMeans( apply(TPR, c(1,2), mean, na.rm=TRUE  ), na.rm=TRUE )   

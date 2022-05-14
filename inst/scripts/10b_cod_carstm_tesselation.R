@@ -404,10 +404,11 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   nearshore = st_cast( st_difference( domain, data_mask ), "POLYGON")[1]
   domain_new = st_union( data_mask, nearshore )
 
-  loadfunctions("aegis.survey")
 
   if (0) {
 
+    loadfunctions("aegis.survey")
+  
     year.assessment = 2021  
     xvar = "inla.group(t, method = \"quantile\", n = 11)"   
     yvar = "inla.group(z, method = \"quantile\", n = 11)" 
@@ -425,7 +426,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     year.assessment = 2021 ,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
-    depths = c( 10, 350 ),   # range of survey data for mean habitat estimates ;; 150m ~= prob at 0.5
+    depths = c( 10, 100 ),   # range of survey data for mean habitat estimates ;; 150m ~= prob at 0.5
     probability_limit =0.25,
     nsims = 100,
     domain=domain_new 
@@ -434,23 +435,32 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   if (0) {
     u = readRDS('/home/jae/tmp/temp_depth_habitat.RDS')
     dev.new()
-    plot( habitat~yr, u, type="b", ylim=c(0.25, 0.375))
+    plot( habitat~yr, u, type="b", ylim=c(0.29, 0.4))
     lines( habitat_lb~yr, u)
     lines( habitat_ub~yr, u)
     abline(v=1990)
     abline(v=2012)
+   
+    dev.new()
+    plot( habitat_sa~yr, u, type="b", ylim=c( 55000, 78000))
+    lines( habitat_sa_lb~yr, u)
+    lines( habitat_sa_ub~yr, u)
+    abline(v=1990)
+    abline(v=2012)
+
+    ll = loess(habitat~yr, u, span=0.25 )
+    pp = predict( ll, u )
+    lines(pp ~ u$yr)
 
   }
 
   fn_optimal = file.path( outputdir, "optimal_habitat.RDS" )
   saveRDS( o, file=fn_optimal, compress=FALSE )
-  o = read(RDS)
-
-  print( o[["depth_plot"]] )
-  
+  o = readRDS(fn_optimal)
+ 
   if (plot_map) {
 
-  require(ggplot2)
+    require(ggplot2)
     proj_stmv =  "+proj=utm +ellps=WGS84 +zone=20 +units=km"  # crs of depth from stmv
     crs_domain = st_crs( proj_stmv )
 
@@ -471,7 +481,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     }
 
     plt = ggplot() +
-  #      geom_sf( data=coastline, aes(alpha=0.1), colour="gray90" )  +
+        geom_sf( data=coastline, aes(alpha=0.1), colour="gray90" )  +
         geom_sf( data=isobs, aes(alpha=0.1), colour="lightgray" ) +
         geom_raster(data = Z[Z$Zprob>= zprob ,], aes(x=plon, y=plat, fill=Zprob, alpha=1.0) ) +
         scale_fill_gradientn(name = "Probability (depth)", colors =color.code( "seis", seq( 0, 1, by=0.1 )), na.value=NA ) +
@@ -515,7 +525,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   ggplot( o[["temperature_depth"]], aes(yr, habitat ) ) +
     geom_ribbon(aes(ymin=habitat_lb, max=habitat_ub), alpha=0.2, colour=NA) +
     geom_line() +
-    labs(x="Year", y="Habitat probabtility (depth, temperature; km^2)", size = rel(1.5)) +
+    labs(x="Year", y="Habitat probabtility", size = rel(1.5)) +
     # scale_y_continuous( limits=c(0, 300) )  
     theme_light( base_size = 22 ) 
    
@@ -525,7 +535,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   ggplot( o[["temperature_depth"]], aes(yr, habitat_sa ) ) +
     geom_ribbon(aes(ymin=habitat_sa_lb, max=habitat_sa_ub), alpha=0.2, colour=NA) +
     geom_line() +
-    labs(x="Year", y="Habitat SA (depth, temperature; km^2)", size = rel(1.5)) +
+    labs(x="Year", y=bquote("Habitat surface area;" ~ km^2), size = rel(1.5)) +
     # scale_y_continuous( limits=c(0, 300) )  
     theme_light( base_size = 22 ) 
 
