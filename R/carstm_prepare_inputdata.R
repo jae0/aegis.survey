@@ -249,7 +249,6 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   if ("temperature" %in% lookup_parameters_names) {
     require(aegis.temperature)
-
     message( "lookup: temperature observations")
 
     vn = "t"
