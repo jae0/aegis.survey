@@ -940,7 +940,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           isc = bio.snowcrab::filter.class( x=det_sc, type=p$selection$biologicals_using_snowcrab_filter_class )
           if (length(isc) > 0) det_sc = det_sc[isc, c("individual", "filter.class") ]
           isc = NULL
-          det = merge( det, det_sc, by="individual", all.x=TRUE, all.y=FALSE )
+          det = merge( det, det_sc, by="individual_id", all.x=TRUE, all.y=FALSE, suffixes=c("", "det_sc") )          
           det = det[ !is.na(det$filter.class), ]
         }
 
@@ -1200,6 +1200,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     data_source_base = "det"
 
+
+
     # indiviudal measurements filter
     if (exists("selection", p)) {
       if (exists("biologicals", p$selection)) {  # filter biologicals
@@ -1226,7 +1228,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       set$totno_adjusted = set$totno * set$cf_cat
       set$totwgt_adjusted = set$totwgt * set$cf_cat
     }
-
+    
     if (data_source_base=="det") {
       # weight and number summaries from det (overwrite those from cat as there is a subsampling)
       # --- NOTE det was not always determined and so totals from det mass != totals from cat nor set for all years
@@ -1242,7 +1244,6 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
         if (exists("biologicals_using_snowcrab_filter_class", p$selection)) {  # filter biologicals using snow crab short-form ID
           warning( "Filtering using snow crab 'types' requires more data than is carried by survey_db. \n 
             .. Adding data directly from snowcrab.db .. this also means dropping other sources of data \n")
-
           det_sc = bio.snowcrab::snowcrab.db( DS ="det.georeferenced" )
           det_sc$spec = 2526
           det_sc$spec_bio =  taxonomy.recode( from="spec", to="parsimonious", tolookup=det_sc$spec ) # snow crab using groundfish codes
@@ -1252,10 +1253,11 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           if (length(isc) > 0) det_sc = det_sc[isc, c("individual_id", "filter.class") ]
           isc = NULL
           det$individual_id = paste( det$id2, det$individual, sep=".")
-          det = merge( det, det_sc, by="individual_id", all.x=TRUE, all.y=FALSE )
+          det = merge( det, det_sc, by="individual_id", all.x=TRUE, all.y=FALSE, suffixes=c("", "det_sc") )
           det = det[ !is.na(det$filter.class), ]
         }
       }
+      
       setDT(set)
       setDT(det)
       det_summary = det[, .(
