@@ -39,9 +39,12 @@ if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarning
 # auid to drop to match Michelle's extraction for "stratanal"
 
 if (redo_data) {
-  # tesselation
-  sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=TRUE  )  # required to reset save location
+ 
+  xydata = survey_db( p=p, DS="areal_units_input", redo=TRUE )
   
+  # tesselation
+  sppoly = areal_units( p=p, xydata=xydata[ which(xydata$yr %in% p$yrs), ], redo=TRUE, verbose=TRUE, hull_noise=1e-2 )  # create constrained polygons with neighbourhood as an attribute
+ 
 
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE, quantile_upper_limit=0.99, 
     fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
