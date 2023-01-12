@@ -12,6 +12,7 @@
 # set up the run parameters
 
 parameter_set = "stratanal"  # used by 10_cod_workspace to defined parameter subsets
+year.assessment = 2022
 
 source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 

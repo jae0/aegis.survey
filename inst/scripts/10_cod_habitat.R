@@ -12,10 +12,12 @@
   
   
   parameter_set = "habitat_paper"  # used by 10_cod_workspace to defined parameter subsets
+  year.assessment = 2022
+
 
   source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
-
+  # NOTE: requires bathymetry, substrate, groundfish, snowcrab, temperature, survey, speciescomposition
 
 
   # --------------------------------  

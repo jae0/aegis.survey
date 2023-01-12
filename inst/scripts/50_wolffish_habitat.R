@@ -13,6 +13,9 @@
 # ----------------------------------------------
 # define model_forms: params are stored in  survey_parameter_list()
 
+year.assessment = 2022
+
+
 # adding settype 2 and 5 (comparative tows, and generic surveys) 
 
 

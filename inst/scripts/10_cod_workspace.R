@@ -13,7 +13,10 @@
   groundfish_survey_species_code = 10 # cod
 
   spatial_domain = "SSE"
-  yrs = 1970:2021
+  
+  yrs = 1970:year.assessment
+  # yrs = 1970:2022
+
   runtype = "1970_present"
  
 

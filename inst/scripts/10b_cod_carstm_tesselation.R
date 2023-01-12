@@ -21,13 +21,15 @@
 
 # parameter_set = "stratanal_iid"  # used by 10_cod_workspace to load a defined parameter subset
 parameter_set = "tesselation"  # used by 10_cod_workspace to defined parameter subsets
+year.assessment = 2022
+
 
 source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
 outputdir = file.path( dirname(results_file), p$carstm_model_label  )
 if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
-
+# require(tmap)
   
 # ----------------------------------------------
 # Atlantic cod with a CAR (ICAR/BYM) Poisson process models with tesselation
@@ -93,7 +95,16 @@ pN = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="abundanc
 pW = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="meansize" )
 pH = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="habitat" )
 
- 
+if (0) {
+  # debugging for windows
+  inla.setOption(
+    num.threads="1:1",
+    mc.cores=1, 
+    blas.num.threads=1,
+    inla.mode="classic",
+    mkl=TRUE
+  )
+}
 # size model
 fit = NULL; gc()
 fit = carstm_model( p=pW, data=M[iw,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
@@ -107,7 +118,7 @@ fit = NULL; gc()
 fit = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
   #theta=c(1.131, 0.767, 2.593, -0.659, -1.411, -1.689, -0.254, -2.234, 3.394, -2.381, -1.399, 0.371) ,
   # control.inla = list( strategy='adaptive', int.strategy="eb" ), 
-  num.threads="4:2", mc.cores=2 
+  num.threads="1:1", mc.cores=1 
 )  
 
 # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
