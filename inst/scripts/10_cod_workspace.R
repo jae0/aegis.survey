@@ -15,12 +15,10 @@
   spatial_domain = "SSE"
   
   yrs = 1970:year.assessment
-  # yrs = 1970:2022
 
-  runtype = "1970_present"
+  runtype = "1970_present" #   NOTE:  must use "1970_present" for cod
+
  
-
-
   global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "Atlantic_cod" )
   if ( !file.exists(global_output_directory)) dir.create( global_output_directory, recursive=TRUE, showWarnings=FALSE )
 

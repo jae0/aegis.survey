@@ -17,9 +17,10 @@
 
   source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
+  # NOTE:  must use "1970_present" for cod
   # NOTE: requires bathymetry, substrate, groundfish, snowcrab, temperature, survey, speciescomposition
-
-
+  
+ 
   # --------------------------------  
   # choose design
 
@@ -121,6 +122,7 @@
 
     redo_survey_data = FALSE
     # redo_survey_data = TRUE
+    sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=FALSE, areal_units_constraint="survey", verbose=TRUE )
     M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, fn=file.path( p$modeldir, p$speciesname,  "carstm_inputs_tesselation.rdata" )  )
 
 
@@ -136,7 +138,7 @@
   
 
   # Figure 1. average bottom temperature of prediction surface (1 July)
-  Mp  = data.table( M[which(M$tag=="predictions"),] )
+  Mp  = data.table( M[which(M$tag=="predictions" & is.finite(M$t) ),] )
   o = Mp[, list(mean=mean(t), lb025=quantile(t, probs=0.025), ub975=quantile(t, probs=0.975)), by=yr]
   trange = range( o[,c("mean","lb025", "ub975")]) * c(0.9, 1.1)
   plot( mean ~ yr, o, type="b", ylim = trange, ylab="Bottom temperature, bottom deg C", xlab="year", lwd=1.5)
