@@ -1,4 +1,7 @@
 
+# NOTE ::  this is just for the cod habitat paper. 
+# it is now redundant as habitat is also done in 10b_cod_carstm_tessilation.R  via a Hurdle type model
+ 
  
 # ------------------------------------------------
 # Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
@@ -495,7 +498,7 @@
     require(aegis.temperature)
 
 
-  yrs=1970:2021
+  yrs=1970:year.assessment
 
   polys = st_sf( st_union( st_geometry( sppoly ) ) )
   polys$AUID = 0

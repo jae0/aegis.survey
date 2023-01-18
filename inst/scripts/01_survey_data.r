@@ -8,7 +8,7 @@
 
   require( aegis.survey )
 
-  year.assessment = 2021
+  year.assessment = 2022
   yrs = 1970:year.assessment
 
 # ----------------------------------------

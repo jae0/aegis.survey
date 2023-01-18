@@ -107,7 +107,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       fraction_good_bad = 0.8,
       nAU_min = 5,
       carstm_modelengine = "inla",  # {model engine}.{label to use to store}
-      carstm_model_label = "1970_present",  # careful ..
+      carstm_model_label = "1970_present",  # in case it is not set, default to all data .. 
+      carstm_model_label_lookup = "1970_present",  # careful .. this is used for lookup process
       carstm_inputs_prefilter = "sampled",
       carstm_inputs_prefilter_n = 100,
       vars_to_retain = c("totno", "totwgt", "pa", "meansize", "data_offset", "gear", "data.source", "id")
@@ -115,20 +116,22 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
 
     if ( !exists("carstm_prediction_surface_parameters", p))  {
-        # generics using "default" carstm models and stmv solutions for spatial effects
+        # generics :  carstm models ("1970_present") and stmv ("default") solutions for spatial effects
+        # generally better to specify exactly rather than relying upon generics
+        message("survey_parameters :: data lookups are using generic settings, you might want to specify labels directly for more control.")
         p$carstm_prediction_surface_parameters = list()
         p$carstm_prediction_surface_parameters = parameters_add_without_overwriting(   p$carstm_prediction_surface_parameters,
           bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
           substrate = aegis.substrate::substrate_parameters(   project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
-          temperature = aegis.temperature::temperature_parameters( project_class="carstm", carstm_model_label=p$carstm_model_label, yrs=p$yrs ),
-          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label=p$carstm_model_label, variabletomodel="pca1", yrs=p$yrs  ),
-          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label=p$carstm_model_label, variabletomodel="pca2", yrs=p$yrs  )
+          temperature = aegis.temperature::temperature_parameters( project_class="carstm", carstm_model_label=p$carstm_model_label_lookup, yrs=p$yrs ),
+          speciescomposition_pca1 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label=p$carstm_model_label_lookup, variabletomodel="pca1", yrs=p$yrs  ),
+          speciescomposition_pca2 = aegis.speciescomposition::speciescomposition_parameters(  project_class="carstm", carstm_model_label=p$carstm_model_label_lookup, variabletomodel="pca2", yrs=p$yrs  )
         )
     }
 
 
     if ( grepl("inla", p$carstm_modelengine) ) {
-      if ( !exists("carstm_model_label", p))  p$carstm_model_label = "production"
+
       if ( !exists("formula", p)  ) {
         p$formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',

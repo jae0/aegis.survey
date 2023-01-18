@@ -142,7 +142,7 @@
       trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
       carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal",   # default = 1970:present, alt: 1999_present 
       outputdir = file.path( global_output_directory, "stratanal" ),
-      yrs=1970:2021,
+      yrs=1970:year.assessment,
       areal_units_type = "stratanal_polygons_pre2014",
       areal_units_proj4string_planar_km = projection_proj4string("utm20"), #projection_proj4string("omerc_nova_scotia") ,
       areal_units_overlay = "none",

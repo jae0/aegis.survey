@@ -21,6 +21,7 @@
 
 # parameter_set = "stratanal_iid"  # used by 10_cod_workspace to load a defined parameter subset
 parameter_set = "tesselation"  # used by 10_cod_workspace to defined parameter subsets
+
 year.assessment = 2022
 
 
@@ -28,9 +29,8 @@ source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspa
 
 outputdir = file.path( dirname(results_file), p$carstm_model_label  )
 if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-
-# require(tmap)
-  
+ 
+   
 # ----------------------------------------------
 # Atlantic cod with a CAR (ICAR/BYM) Poisson process models with tesselation
 
@@ -255,7 +255,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 # Figure 1alt. average bottom temperature of prediction surface (whole year spatial and temporal variability)
   pt = temperature_parameters( 
       project_class="carstm", 
-      yrs=1970:2021, 
+      yrs=1970:year.assessment, 
       carstm_model_label="1970_present" 
     ) 
   tspol = areal_units( p=pt )
@@ -423,7 +423,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 
     loadfunctions("aegis.survey")
   
-    year.assessment = 2021  
+    year.assessment = year.assessment  
     xvar = "inla.group(t, method = \"quantile\", n = 11)"   
     yvar = "inla.group(z, method = \"quantile\", n = 11)" 
     depths = c( 10, 150 )   # range of survey data for mean habitat estimates 150m ~= prob at 0.5
@@ -437,7 +437,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   # worth running in parallel .. eventually 
   o = carstm_optimal_habitat( 
     res = res,
-    year.assessment = 2021 ,
+    year.assessment = year.assessment ,
     xvar = "inla.group(t, method = \"quantile\", n = 11)",  
     yvar = "inla.group(z, method = \"quantile\", n = 11)",
     depths = c( 10, 100 ),   # range of survey data for mean habitat estimates ;; 150m ~= prob at 0.5

@@ -12,7 +12,7 @@
   require(aegis.polygons)
   require(carstm)
 
-  year.assessment=2017
+  year.assessment=2022
   p = aegis.survey::survey_parameters( yrs=1970:year.assessment )
 
   # set up default map projection
