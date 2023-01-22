@@ -252,7 +252,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 # end
 # ------------------------------------------------
  
-# Figure 1alt. average bottom temperature of prediction surface (whole year spatial and temporal variability)
+# Figure 1 alt. average bottom temperature of prediction surface (whole year spatial and temporal variability)
   pt = temperature_parameters( 
       project_class="carstm", 
       yrs=1970:year.assessment, 

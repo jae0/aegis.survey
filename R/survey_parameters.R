@@ -118,7 +118,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
     if ( !exists("carstm_prediction_surface_parameters", p))  {
         # generics :  carstm models ("1970_present") and stmv ("default") solutions for spatial effects
         # generally better to specify exactly rather than relying upon generics
-        message("survey_parameters :: data lookups are using generic settings, you might want to specify labels directly for more control.")
+        message("\n survey_parameters :: data lookups are using generic settings, you might want to specify labels directly for more control. \n")
         p$carstm_prediction_surface_parameters = list()
         p$carstm_prediction_surface_parameters = parameters_add_without_overwriting(   p$carstm_prediction_surface_parameters,
           bathymetry = aegis.bathymetry::bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default" ),
