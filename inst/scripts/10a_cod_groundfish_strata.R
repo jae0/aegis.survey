@@ -75,9 +75,10 @@ sppoly$dummy_var = NA
 outfilename = file.path( outputdir , "areal_units_groundfish_strata.png" )
 carstm_map(  sppoly=sppoly, vn="dummy_var",
     additional_features=additional_features+aus,
-    # palette="-RdYlBu",
+    # palette=NA,
     plot_elements=c( "compass", "scale_bar", "legend"  ), 
     scale=1.5,
+    alpha=0.5,
     map_mode="plot",
     tmap_zoom= c(map_centre, map_zoom),
     outfilename=outfilename
@@ -91,7 +92,7 @@ RES = readRDS( results_file )
 for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
 for ( tu in c( "standardtow", "towdistance", "sweptarea" ) ) {  
   # data selection (depending upon methods, sa estimates, etc)
-  set = stratanal_data( toget=data_approach, selection=selection, trawlable_units=tu, sppoly=sppoly ) 
+  set = stratanal_data( toget=data_approach, selection=p$selection, trawlable_units=tu, sppoly=sppoly ) 
   # compute stratanal (stratum-surface area weighted sums)
   bi = strata_timeseries(
     set=set, variable="totwgt", speciesname=p[["speciesname"]], yrs=p$yrs,

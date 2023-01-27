@@ -268,11 +268,12 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   res_mean = apply(res, 2, mean, na.rm=TRUE )
   res_q025 = apply(res, 2, quantile, probs=0.025, na.rm=TRUE )
   res_q975 = apply(res, 2, quantile, probs=0.975, na.rm=TRUE )
-  
+  tyrs = as.numeric( dimnames(res)[["time"]] )
+
   trange = range(  c(res_q975, res_q025) ) * c(0.9, 1.1)
-  plot( res_mean ~ RES$yr, type="b", pch=19, col="slategray", ylim = trange, ylab="Bottom temperature, Celsius", xlab="Year", lwd=1.5)
-  lines( res_q025 ~RES$yr, col="darkgray", lty="dashed")
-  lines( res_q975 ~RES$yr, col="darkgray", lty="dashed")
+  plot( res_mean ~ tyrs, type="b", pch=19, col="slategray", ylim = trange, ylab="Bottom temperature, Celsius", xlab="Year", lwd=1.5)
+  lines( res_q025 ~tyrs, col="darkgray", lty="dashed")
+  lines( res_q975 ~tyrs, col="darkgray", lty="dashed")
 
 
 
@@ -298,9 +299,9 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     )
 
     plot( 0 , 0, type="n", ylab="Probability", xlab="Year", ylim=c(0, 1), xlim=range( RES$yr)   )
-    lines( preds$mean ~ RES$yr, lty=1, lwd=2.5, col="slategray" )
-    lines( preds$q025 ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
-    lines( preds$q975 ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+    lines( preds$mean ~ res$yr, lty=1, lwd=2.5, col="slategray" )
+    lines( preds$q025 ~ res$yr, lty="dotted", lwd=1, col="slategray"  )
+    lines( preds$q975 ~ res$yr, lty="dotted", lwd=1, col="slategray"  )
 
     abline( h=0.5, lty="dashed",  col="slategray" )
 
@@ -389,7 +390,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 
 
 # --------------------------------  
-# Figure  3D plot of habitat vs temperature vs depth  via splines
+# Figure  3D plot of habitat vs temperature vs depth  via splines .. slow (skip if not required)
 
   p = pH
   fn_root = "Predicted_habitat_probability"
@@ -487,6 +488,9 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     # coastline = st_transform( polygons_rnaturalearth(), st_crs("+proj=utm +ellps=WGS84 +zone=20 +units=km" ) )
     # coastline = st_intersection(coastline, domain)  
     # coastline = st_cast( coastline, "MULTILINESTRING" )
+    
+    coastline = st_transform( polygons_rnaturalearth(countries=c("united states of america", "canada"),
+       xlim=c(-80,-40), ylim=c(38, 60)), st_crs(crs_domain) )   
 
     if (is.null(probability_limit)) {
       zprob = 0
@@ -494,6 +498,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
       zprob = probability_limit
     }
 
+    # incomplete:: must add Z (prob hab)
     plt = ggplot() +
         geom_sf( data=coastline, aes(alpha=0.1), colour="gray90" )  +
         geom_sf( data=isobs, aes(alpha=0.1), colour="lightgray" ) +
