@@ -1487,6 +1487,12 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     M$vessel= as.numeric( factor( M$vessel, levels=vessels ) )
     attr( M$vessel, "levels" ) = vessels
 
+# check this
+    M$space = M$AUID
+    M$time = M$year    
+    M$space_time = M$space  # copy for space_time component (INLA does not like to re-use the same variable in a model formula) 
+    M$time_space = M$time  # copy for space_time component (INLA does not like to re-use the same variable in a model formula) 
+
     
     save( M, file=fn, compress=TRUE )
 
