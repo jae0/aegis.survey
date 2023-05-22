@@ -897,9 +897,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     if ( !exists("tiyr", APS) ) APS$tiyr = lubridate::decimal_date ( APS$timestamp )
     if ( exists("timestamp", APS) ) APS$timestamp = NULL  # time-based matching finished (if any)
   }
-  
-
-
+ 
   # combined observations with prediction surface (for inla)
   vvv = intersect( names(APS), names(M) )
   M = rbind( M[, vvv, with=FALSE ], APS[, vvv, with=FALSE ] )
@@ -909,11 +907,13 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   # M$uid = 1:nrow(M)  # seems to require an iid model for each obs for stability .. use this for iid
   M$AUID  = as.character(M$AUID)  # revert to factors -- should always be a character
   M$space = as.character( M$AUID)
+  M$space_time = as.character( M$AUID)
  
   if (exists("tiyr", M)) {
     M$tiyr  = trunc( M$tiyr / p$tres )*p$tres    # discretize for inla .. midpoints
     M$yr = trunc( M$tiyr)
     M$time = as.character( M$yr )  # copy for INLA
+    M$time_space = as.character( M$yr )  # copy for INLA
 
     # do not sepraate out as season can be used even if not predicted upon
     ii = which( M$dyear > 1) 
@@ -921,9 +921,9 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
     M$dyri = discretize_data( M[["dyear"]], discretizations()[["dyear"]] )
     M$cyclic = as.character( M$dyri )  # copy for carstm/INLA
+    M$tiyr = NULL
   }
   
-  M$tiyr = NULL
 
     message( "Number of initial observations:  ", nS  )
     message( "Number of observations in domain:  ", nM  )
