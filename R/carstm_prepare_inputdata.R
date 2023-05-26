@@ -589,7 +589,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
   
 
-  if ( grepl( "year", p$dimensionality ) ) {
+  if ( grepl( "time", p$dimensionality ) ) {
     if (!exists("year", M)) {
       if (exists("yr", M)) names(M)[which(names(M)=="yr") ] = "year"
     }
@@ -715,7 +715,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   # prediction surface in time
   # to this point APS is static, now add time dynamics (teperature),  expand APS to all time slices
-  if ( grepl( "year", p$dimensionality ) | (grepl( "season", p$dimensionality )  ) ) {
+  if ( grepl( "time", p$dimensionality ) | (grepl( "cyclic", p$dimensionality )  ) ) {
     n_aps = nrow(APS)
     APS = cbind( APS[ rep.int(1:n_aps, p$nt), ], rep.int( p$prediction_ts, rep(n_aps, p$nt )) )
     names(APS)[ncol(APS)] = "tiyr"
@@ -889,7 +889,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
   # just in case missing in input data, generate and clean up
-  if ( grepl( "year", p$dimensionality ) | (grepl( "season", p$dimensionality )  ) ) {
+  if ( grepl( "time", p$dimensionality ) | (grepl( "cyclic", p$dimensionality )  ) ) {
     if ( !exists("tiyr", M) ) M$tiyr = lubridate::decimal_date ( M$timestamp )
     if ( exists("timestamp", M) ) M$timestamp = NULL  # time-based matching finished (if any)
     if ( !exists("tiyr", APS) ) APS$tiyr = lubridate::decimal_date ( APS$timestamp )
