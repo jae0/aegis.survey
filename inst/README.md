@@ -57,7 +57,7 @@ survey_params$label = model_label
             + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid))
 #            + f( gear, model="iid",  hyper=H$iid )
             + f( time, model="ar1",  hyper=H$ar1 )
-            # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   )
+#          ' + f( S, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )',
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
 #            + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
@@ -77,7 +77,7 @@ survey_params$label = model_label
           meansize ~ 1
             + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid))
             + f( time, model="ar1",  hyper=H$ar1 )
-           # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   )
+#           + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
 #            + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
@@ -264,7 +264,7 @@ survey_params$label = model_label
             + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid))
 #            + f( gear, model="iid",  hyper=H$iid )
             + f( time, model="ar1",  hyper=H$ar1 )
-            # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   )
+#           + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
 #            + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
@@ -284,7 +284,7 @@ survey_params$label = model_label
           meansize ~ 1
             + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid))
             + f( time, model="ar1",  hyper=H$ar1 )
-           # + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic =TRUE, values=cyclic_values   )
+#           + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )
             + f( inla.group( t, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
             + f( inla.group( z, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)
 #            + f( inla.group( substrate.grainsize, method="quantile", n=11 ), model="rw2", scale.model=TRUE, hyper=H$rw2)

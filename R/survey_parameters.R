@@ -135,7 +135,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       if ( !exists("formula", p)  ) {
         p$formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',
-            ' + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic=TRUE, values=cyclic_values ) ',
+            ' + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  ) ',
             ' + as.factor(time) ',
             ' + f( inla.group( t, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',
             ' + f( inla.group( z, method="quantile", n=9 ), model="rw2", scale.model=TRUE, hyper=H$rw2) ',

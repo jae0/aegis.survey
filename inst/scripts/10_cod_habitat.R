@@ -103,7 +103,7 @@
     p$formula = formula( 
         pa ~ 1 
           + f( time, model="ar1",  hyper=H$ar1 ) 
-          + f( cyclic, model="rw2", scale.model=TRUE, hyper=H$rw2, cyclic=TRUE, values=cyclic_values ) 
+          + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )
           + f( gear, model="iid",  hyper=H$iid ) 
           + f( inla.group( t, method="quantile", n=13 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
           + f( inla.group( z, method="quantile", n=13 ), model="rw2", scale.model=TRUE, hyper=H$rw2) 
