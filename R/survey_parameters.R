@@ -29,7 +29,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
   p = parameters_add_without_overwriting( p,
     spatial_domain = "SSE",
     spatial_domain_subareas = c( "SSE.mpa" , "snowcrab"),  # this is for bathymetry_db, not stmv
-    dimensionality="space-time-cyclic"
+    dimensionality="space-time"
   )
 
   p = spatial_parameters( p=p )  # default grid and resolution

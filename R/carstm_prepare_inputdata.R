@@ -25,6 +25,14 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   # degreedays = number of degree days in a given year – annual
 
 
+  if (is.null(dimensionality)) {
+    if (exists("dimensionality", p)) {
+      dimensionality = p$dimensionality
+    }
+  }
+ 
+  if (is.null(dimensionality)) stop("dimensionality of prediction surface needs to be specified")  
+
   if ( is.null(carstm_prediction_surface_parameters)) {
     if (exists("carstm_prediction_surface_parameters", p)) carstm_prediction_surface_parameters = p$carstm_prediction_surface_parameters
   }  
@@ -589,7 +597,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
   
 
-  if ( grepl( "time", p$dimensionality ) ) {
+  if ( grepl( "time", dimensionality ) ) {
     if (!exists("year", M)) {
       if (exists("yr", M)) names(M)[which(names(M)=="yr") ] = "year"
     }
@@ -613,7 +621,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   
   message( "Creating prediction surface ... ")
 
-  if (grepl("space", p$dimensionality)) {
+  if (grepl("space", dimensionality)) {
 
     APS = st_drop_geometry(sppoly)
     setDT(APS)
@@ -712,17 +720,22 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     )  
  
   }
+ 
 
   # prediction surface in time
   # to this point APS is static, now add time dynamics (teperature),  expand APS to all time slices
-  if ( grepl( "time", p$dimensionality ) | (grepl( "cyclic", p$dimensionality )  ) ) {
+  # time or time-cyclic is defined by length of nt and prediction_ts 
+  if ( grepl( "time", dimensionality ) | (grepl( "cyclic", dimensionality )  ) ) {
+    # time and cyclic
     n_aps = nrow(APS)
     APS = cbind( APS[ rep.int(1:n_aps, p$nt), ], rep.int( p$prediction_ts, rep(n_aps, p$nt )) )
     names(APS)[ncol(APS)] = "tiyr"
     APS$timestamp = lubridate::date_decimal( APS$tiyr, tz=p$timezone )
     APS$year = trunc( APS$tiyr)
     APS$dyear = APS$tiyr - APS$year
-  }
+
+  }  
+
 
   # ---------------------
   if ( "temperature" %in% lookup_parameters_names ) {
@@ -889,7 +902,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   }
 
   # just in case missing in input data, generate and clean up
-  if ( grepl( "time", p$dimensionality ) | (grepl( "cyclic", p$dimensionality )  ) ) {
+  if ( grepl( "time", dimensionality ) | (grepl( "cyclic", dimensionality )  ) ) {
     if ( !exists("tiyr", M) ) M$tiyr = lubridate::decimal_date ( M$timestamp )
     if ( exists("timestamp", M) ) M$timestamp = NULL  # time-based matching finished (if any)
     if ( !exists("tiyr", APS) ) APS$tiyr = lubridate::decimal_date ( APS$timestamp )
