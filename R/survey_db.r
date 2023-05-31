@@ -1487,7 +1487,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     M$vessel= as.numeric( factor( M$vessel, levels=vessels ) )
     attr( M$vessel, "levels" ) = vessels
  
-    M$space = M$AUID
+    M$space = match( M$AUID, sppoly$AUID) 
     M$space_time = M$space  # copy for space_time component (INLA does not like to re-use the same variable in a model formula) 
 
     M$time = M$year    
