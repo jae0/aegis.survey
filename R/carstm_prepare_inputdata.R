@@ -24,7 +24,8 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
   # degreedays = number of degree days in a given year – annual
 
-
+  dimensionality = NULL
+  
   if (is.null(dimensionality)) {
     if (exists("dimensionality", p)) {
       dimensionality = p$dimensionality
