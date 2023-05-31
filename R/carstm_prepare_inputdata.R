@@ -918,23 +918,16 @@ carstm_prepare_inputdata = function( p, M, sppoly,
 
   # M$uid = 1:nrow(M)  # seems to require an iid model for each obs for stability .. use this for iid
   M$AUID  = as.character(M$AUID)  # revert to factors -- should always be a character
-  M$space = as.character( M$AUID)
-  M$space_time = as.character( M$AUID)
  
   if (exists("tiyr", M)) {
     M$tiyr  = trunc( M$tiyr / p$tres )*p$tres    # discretize for inla .. midpoints
     M$yr = trunc( M$tiyr)
     
-    M$time = M$yr    # copy for INLA
-    M$time_space =  M$time   # copy for INLA
-
     # do not sepraate out as season can be used even if not predicted upon
     ii = which( M$dyear > 1) 
     if (length(ii) > 0) M$dyear[ii] = 0.99 # cap it .. some surveys go into the next year
 
     M$dyri = discretize_data( M[["dyear"]], discretizations()[["dyear"]] )
-    cyclic_levels = factor(p$dyears + diff(p$dyears)[1]/2, ordered=TRUE )
-    M$cyclic = factor( as.character( M$dyri ), levels =levels(cyclic_levels) )   # copy for carstm/INLA
     M$tiyr = NULL
   }
   

@@ -1486,13 +1486,15 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     vessels = c( vessels_ref, setdiff( vessels, vessels_ref ) ) # reorder
     M$vessel= as.numeric( factor( M$vessel, levels=vessels ) )
     attr( M$vessel, "levels" ) = vessels
-
-# check this
+ 
     M$space = M$AUID
-    M$time = M$year    
     M$space_time = M$space  # copy for space_time component (INLA does not like to re-use the same variable in a model formula) 
+
+    M$time = M$year    
     M$time_space = M$time  # copy for space_time component (INLA does not like to re-use the same variable in a model formula) 
 
+    cyclic_levels = factor(p$dyears + diff(p$dyears)[1]/2, ordered=TRUE )
+    M$cyclic = factor( as.character( M$dyri ), levels =levels(cyclic_levels) )   # copy for carstm/INLA
     
     save( M, file=fn, compress=TRUE )
 
