@@ -924,15 +924,17 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   if (exists("tiyr", M)) {
     M$tiyr  = trunc( M$tiyr / p$tres )*p$tres    # discretize for inla .. midpoints
     M$yr = trunc( M$tiyr)
-    M$time = as.character( M$yr )  # copy for INLA
-    M$time_space = as.character( M$yr )  # copy for INLA
+    
+    M$time = M$yr    # copy for INLA
+    M$time_space =  M$time   # copy for INLA
 
     # do not sepraate out as season can be used even if not predicted upon
     ii = which( M$dyear > 1) 
     if (length(ii) > 0) M$dyear[ii] = 0.99 # cap it .. some surveys go into the next year
 
     M$dyri = discretize_data( M[["dyear"]], discretizations()[["dyear"]] )
-    M$cyclic = as.character( M$dyri )  # copy for carstm/INLA
+    cyclic_levels = factor(p$dyears + diff(p$dyears)[1]/2, ordered=TRUE )
+    M$cyclic = factor( as.character( M$dyri ), levels =levels(cyclic_levels) )   # copy for carstm/INLA
     M$tiyr = NULL
   }
   
