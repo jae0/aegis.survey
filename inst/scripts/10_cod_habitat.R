@@ -220,7 +220,7 @@
   vars_to_copy = c(  "space", "time", "dyears" )  # needed for plotting 
   for ( vn in vars_to_copy ) params[[vn]] = res[[vn]]
 
-  pa = res[["predictions_posterior_simulations"]]
+  pa = res[["sims"]][["predictions"]]
   # pa = inverse.logit(pa)
   pa[!is.finite(pa)] = NA
  

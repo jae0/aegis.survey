@@ -115,7 +115,7 @@ carstm_optimal_habitat = function(
 
  
   # to load currently saved results
-  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT )$predictions_posterior_simulations
+  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT ) [["sims"]][["predictions"]]
   sims_to_keep = sample.int( dim(resT)[4], nsims )
   resT = resT[,,,sims_to_keep]  # reduce size to keep RAM from saturating
 
