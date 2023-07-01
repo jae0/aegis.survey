@@ -104,7 +104,6 @@
       areal_units_overlay = "none",
       areal_units_timeperiod = "none",  # only relevent for groundfish polys
       tus="yr",
-      hull_alpha = 15,
       fraction_todrop = 0.05,
       fraction_cv = 1.0,  # just under poisson (binomial)
       fraction_good_bad = 0.9,
