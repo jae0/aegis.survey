@@ -65,7 +65,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   if (!is.null(vars_to_retain)) {
     vv = setdiff(  vars_to_retain, names(M) ) 
     if (length(vv) > 0) {
-      print( "Some variables to retain not found:")
+      print( "Some variables to retain not found in observations, they will be looked up:")
       print( paste0(vv, sep=" ") )
     }
   }
