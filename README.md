@@ -1,9 +1,10 @@
 
 # aegis.survey
 
-This package integrates data from various surveys. Currently they include:
+This R-package integrates data from various surveys. Currently they include:
 
 - ![Groundfish RV surveys](https://github.com/jae0/aegis.survey/blob/master/R/groundfish_survey_db.R); and,
+
 - ![Snow crab surveys](https://github.com/jae0/bio.snowcrab/blob/master/README.md).
 
 but of course is readily extended to any other survey. Use the above as guides.
@@ -39,7 +40,7 @@ filter_data is the core function that does the pattern matching. However, it als
 
 For example, with Atlantic cod in the Martimes Region of Canada, one can specify:
 
-```
+```r
 require(aegis.survey)
 
 spatial_domain = "SSE"  # short for Scotian Shelf Ecosystem or NAFO Div. 4VWX)
@@ -68,7 +69,7 @@ selection = list(
 
 The criteria are then passed along with other parameters related to spatial domain and other parameters related to the polygons of the areal units in the domain, normalizing factors (e.g., towdistance) and other treatment of the data:
 
-```
+```r
 
 p = survey_parameters(
   project_class = "stratanal",
@@ -99,7 +100,7 @@ set = stratanal_data(
 
 To replicate the "stranal" method used by many groundfish assessments,
 
-```
+```r
 results = strata_timeseries(
   set=set,
   variable="totwgt",
@@ -114,14 +115,14 @@ plot( results$Y ~ p[["yrs"]] )
 
 Usually, one just wants the data, aggregated at each set level and not the backwards compatible "Stratanal" solution. This is accomplished via:
 
-```
+```r
 set = survey_db( p=p, DS="filter"  ) 
 
 ```
 
 If catch-level or individual-level results are required: 
 
-```
+```r
 cat = survey_db( p=p, DS="cat.filter"  ) 
 det = survey_db( p=p, DS="det.filter"  )
 ```
