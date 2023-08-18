@@ -149,10 +149,18 @@
   lines (ub975~yr, o, col="darkgray", lty="dashed")
   
  
+
+  p$space_name = sppoly$AUID 
+  p$space_id = 1:nrow(sppoly)
+
+  p$time_name = as.character(p$yrs)
+  p$time_id =  1:p$ny
+
+  p$cyclic_name = as.character(p$cyclic_levels)
+  p$cyclic_id = 1:p$nw
+
+
   res = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
-    space_id = sppoly$AUID,
-    time_id =  p$yrs,
-    cyclic_id = p$cyclic_levels,
     posterior_simulations_to_retain="predictions", 
     control.family=list( control.link=list(model="logit") ), ## this is the default for binomial, just here to show wher to use it
     theta = c(0.773, 3.539, 1.854, 0.849, 1.791, 0.699, -0.676, 4.617, -0.314, 3.963, 2.988), # 2021 solution
@@ -402,6 +410,8 @@
 
     (additional_features)
 
+    ---> convert above to ggplot2:: TODO
+
 
 
   fn_root = "Predicted_habitat_probability"
@@ -432,12 +442,9 @@
 
   carstm_map(  res=res, vn=vn, tmatch=tmatch, 
       sppoly = sppoly, 
-      # palette="-RdYlBu",
-      plot_elements=c(  "compass", "scale_bar", "legend" ),
+      colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
       additional_features=additional_features,
       outfilename=fn,
-      background = background,
-      tmap_zoom= c(map_centre, map_zoom),
       title ="Probability"
   )
 
@@ -458,17 +465,10 @@
     fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
     carstm_map(  res=res, vn=vn, tmatch=time_match,
       sppoly = sppoly, 
-      # breaks=brks,
-      # palette="RdYlBu",
-      plot_elements=c(  "compass", "scale_bar", "legend" ),
+      colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
       additional_features=additional_features,
       title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
-      outfilename=fn,
-      background = background,
-      # vwidth = 1600,
-      # vheight=1000,
-      map_mode="view",
-      tmap_zoom= c(map_centre, map_zoom)
+      outfilename=fn
     )
   }
 
@@ -483,23 +483,16 @@
     fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
     carstm_map(  res=RES[[mf]], vn=vn, tmatch=time_match,
       sppoly = sppoly, 
-      # breaks=brks,
-      # palette="RdYlBu",
-      plot_elements=c(  "compass", "scale_bar", "legend" ),
+      colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
       additional_features=additional_features,
       title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
-      outfilename=fn,
-      background = background,
-      # vwidth = 1600,
-      # vheight=1000,
-      map_mode="view",
-      tmap_zoom= c(map_centre, map_zoom)
+      outfilename=fn
     )
   }
 
 
   # temperature timeseries
-    require(aegis.temperature)
+  require(aegis.temperature)
 
 
   yrs=1970:year.assessment

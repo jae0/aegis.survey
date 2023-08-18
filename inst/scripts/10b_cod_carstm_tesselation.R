@@ -74,11 +74,8 @@ sppoly$dummy_var = NA
 outfilename = file.path( outputdir , "areal_units_tesselation.png" )
 carstm_map(  sppoly=sppoly, vn="dummy_var",
     additional_features=additional_features+aus,
-    # palette="-RdYlBu",
-    plot_elements=c( "compass", "scale_bar", "legend"  ), 
+    colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
     scale=1.5,
-    map_mode="plot",
-    tmap_zoom= c(map_centre, map_zoom),
     outfilename=outfilename
 ) 
 
@@ -94,6 +91,37 @@ iw = unique( c( which( M$totno > 30), ip ) ) # subset to positive definite data 
 pN = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="abundance" )
 pW = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="meansize" )
 pH = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="habitat" )
+
+
+
+  pN$space_name = sppoly$AUID 
+  pN$space_id = 1:nrow(sppoly)  # must match M$space
+
+  pN$time_name = as.character(pN$yrs)
+  pN$time_id =  1:pN$ny
+
+  pN$cyclic_name = as.character(pN$cyclic_levels)
+  pN$cyclic_id = 1:pN$nw
+
+  pW$space_name = sppoly$AUID 
+  pW$space_id = 1:nrow(sppoly)  # must match M$space
+
+  pW$time_name = as.character(pW$yrs)
+  pW$time_id =  1:pW$ny
+
+  pW$cyclic_name = as.character(pW$cyclic_levels)
+  pW$cyclic_id = 1:pW$nw
+
+  pH$space_name = sppoly$AUID 
+  pH$space_id = 1:nrow(sppoly)  # must match M$space
+
+  pH$time_name = as.character(pH$yrs)
+  pH$time_id =  1:pH$ny
+
+  pH$cyclic_name = as.character(pH$cyclic_levels)
+  pH$cyclic_id = 1:pH$nw
+
+
 
 if (0) {
   # debugging for windows
@@ -177,11 +205,8 @@ carstm_map(  sppoly=sppoly, vn=vn,
     breaks=brks,
     additional_features=additional_features,
 #    title= y, #paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
-    palette="-RdYlBu",
-    plot_elements=c( "compass", "scale_bar", "legend" ), 
+    colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
     scale=1.5,
-    map_mode="view",
-    tmap_zoom= c(map_centre, map_zoom),
     outfilename=outfilename
 ) 
  
@@ -196,11 +221,8 @@ for (i in 1:length(pN$yrs) ){
       breaks=brks,
       additional_features=additional_features,
       title= y, #paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
-      palette="-RdYlBu",
-      plot_elements=c( "compass", "scale_bar", "legend" ), 
+      colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
       scale=1.5,
-      map_mode="view",
-      tmap_zoom= c(map_centre, map_zoom), 
       outfilename=outfilename
   )
 }

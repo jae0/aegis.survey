@@ -205,9 +205,9 @@
 
 
 # bbox = c(-71.5, 41, -52.5,  50.5 )
-additional_features = additional_features_tmap( 
+additional_features = features_to_add( 
     p=p, 
-    isobaths=c( 100, 200, 300, 500, 1000, 2000 ), 
+    isobaths=c( 100, 200, 300, 400, 500 ), 
     coastline = c("united states of america", "canada"), 
     xlim=c(-80,-40), 
     ylim=c(38, 60) 
@@ -216,6 +216,7 @@ additional_features = additional_features_tmap(
 
 map_centre = c( (p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2   )
 map_zoom = 7
+
 background = tmap::tm_basemap(leaflet::providers$CartoDB.Positron, alpha=0.8) 
 
 
