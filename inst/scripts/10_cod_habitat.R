@@ -459,7 +459,7 @@
   
   tmatch="2000"
 
-  for (y in res$time ){
+  for (y in res$time_name ){
     time_match = as.character(y) 
     
     fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
@@ -477,7 +477,7 @@
   #preds from simulations
   vn="predictions" 
   
-  for (y in res$time ){
+  for (y in res$time_name ){
     time_match = as.character(y) 
     
     fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )

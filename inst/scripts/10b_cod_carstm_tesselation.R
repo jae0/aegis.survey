@@ -136,9 +136,6 @@ if (0) {
 # size model
 res = NULL; gc()
 res = carstm_model( p=pW, data=M[iw,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
-    space_id = sppoly$AUID,
-    time_id =  p$yrs,
-    cyclic_id = p$cyclic_levels,
     theta= c( 0.088, 2.950, 0.943, 3.230, 3.676, 4.382, 3.781, 3.952, 3.313, 2.603, -0.044, 2.566, 3.194),
   # control.inla = list( strategy='adaptive' ), 
   num.threads="4:2" 
@@ -147,9 +144,6 @@ res = carstm_model( p=pW, data=M[iw,], sppoly=sppoly,  posterior_simulations_to_
 # numerical model
 res = NULL; gc()
 res = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_retain="predictions",
-    space_id = sppoly$AUID,
-    time_id =  p$yrs,
-    cyclic_id = p$cyclic_levels,
   #theta=c(1.131, 0.767, 2.593, -0.659, -1.411, -1.689, -0.254, -2.234, 3.394, -2.381, -1.399, 0.371) ,
   # control.inla = list( strategy='adaptive', int.strategy="eb" ), 
   num.threads="1:1" 
@@ -160,9 +154,6 @@ res = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_
 # habitat model
 res = NULL; gc()
 res = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain="predictions", 
-    space_id = sppoly$AUID,
-    time_id =  p$yrs,
-    cyclic_id = p$cyclic_levels,
   # control.inla = list( strategy='adaptive' ), 
   num.threads="4:2"    
 ) 

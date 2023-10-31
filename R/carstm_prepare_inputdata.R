@@ -1,5 +1,5 @@
 
-carstm_prepare_inputdata = function( p, M, sppoly, 
+carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
   carstm_prediction_surface_parameters = NULL, 
   lookup_projects=c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" ), 
   APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE, 
@@ -24,7 +24,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
   # degreedays = number of degree days in a given year – annual
 
-  dimensionality = NULL
+  
   
   if (is.null(dimensionality)) {
     if (exists("dimensionality", p)) {
@@ -37,7 +37,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
   if ( is.null(carstm_prediction_surface_parameters)) {
     if (exists("carstm_prediction_surface_parameters", p)) carstm_prediction_surface_parameters = p$carstm_prediction_surface_parameters
   }  
-  
+ 
   if ( is.null(carstm_prediction_surface_parameters)) {
     # these params are for observation data
     carstm_prediction_surface_parameters = list()
@@ -736,7 +736,7 @@ carstm_prepare_inputdata = function( p, M, sppoly,
     APS$dyear = APS$tiyr - APS$year
 
   }  
-
+  
 
   # ---------------------
   if ( "temperature" %in% lookup_parameters_names ) {

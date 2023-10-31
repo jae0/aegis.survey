@@ -221,7 +221,7 @@ carstm_plots = function( res, outputdir, fn_root, sppoly, additional_features, b
 
   vn="predictions" 
   brks = pretty( quantile( tf( res[[vn]]), probs=c(0.05, 0.95), na.rm=TRUE )  )
-  for (y in res$time ){
+  for (y in res$time_name ){
     time_match = as.character(y) 
     fn = file.path( outputdir, "predictions", paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
     carstm_map(  res=res, vn=vn, tmatch=time_match,
