@@ -764,8 +764,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
 
   if ( "speciescomposition_pca1" %in% lookup_parameters_names ) {
-
-
+ 
     require(aegis.speciescomposition)
     message( "lookup: speciescomposition pca1 predictions")
 
