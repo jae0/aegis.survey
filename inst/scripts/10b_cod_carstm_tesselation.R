@@ -141,7 +141,8 @@ res = carstm_model( p=pW, data=M[iw,], sppoly=sppoly,  posterior_simulations_to_
   num.threads="4:2" 
 )  
 
-# numerical model
+# numerical model ..       # CARSTM does log transformation so do not log transform
+
 res = NULL; gc()
 res = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_retain="predictions",
   #theta=c(1.131, 0.767, 2.593, -0.659, -1.411, -1.689, -0.254, -2.234, 3.394, -2.381, -1.399, 0.371) ,
