@@ -7,8 +7,8 @@ landings_parameters = function( p=NULL, project_name=NULL, project_class="core",
 
   # ---------------------
   # create/update library list
-  p$libs = c( p$libs, RLibrary ( "colorspace",  "fields", "geosphere", "lubridate",  "lattice",
-    "parallel",  "GADMTools" ) )
+  p$libs = c( p$libs, RLibrary ( "colorspace",  "fields", "lubridate",  "lattice",
+    "parallel" ) )
   p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.survey", "netmensuration" ) )
 
   p$project_class = project_class

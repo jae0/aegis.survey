@@ -159,3 +159,27 @@ The folowing is the code to be run to generate some plots :
 
 
 The utility of the above is that it is quite simple once the parameters are understood. Further, individual level information can e filtered resulting in a fast interface for data extraction and routine modelling. Examples of the latter are found in the ![scripts directory](./inst/README.md)
+
+
+## Installation
+
+
+To install, run the following:
+
+```r
+  remotes::install_github( "jae0/aegis")  # helper functions
+  remotes::install_github( "jae0/aegis.survey")
+``` 
+
+You probably will want to have an Rprofile set up properly such as:
+
+```r
+homedir = path.expand("~")
+code_root = file.path( homedir, "bio" )   ### replace with correct path to the parent directory of your git-projects
+data_root = file.path( homedir, "bio.data" )   ### replace with correct path to your data
+
+require( aegis )
+require( aegis.survey )
+
+```
+ 
