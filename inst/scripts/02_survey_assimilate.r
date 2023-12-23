@@ -12,9 +12,7 @@
 # ----------------------------------------
 # assimilate survey raw data into aegis and lookup some environmental that has been processed by aegis.*
 ## NOTE resolution is fixed at SSE for the following
-
-  require(aegis.survey)
-
+ 
   p = survey_parameters( yrs=yrs )
 
   o = survey_db( DS="set.init", p=p, redo=TRUE ) ; head(o)
