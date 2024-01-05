@@ -627,7 +627,8 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
     gshyd = groundfish_survey_db( DS="gshyd.profiles.rawdata", yrs=p$yrs )
     gshyd$id = paste(gshyd$mission, gshyd$setno, sep=".")
-    gshyd = gshyd[, c("id", "sdepth", "temp", "sal", "oxyml" )]
+    gshyd = gshyd[, c("id", "sdepth", "
+    ", "sal", "oxyml" )]
     save(gshyd, file=fn, compress=T)
     return( fn )
   }
