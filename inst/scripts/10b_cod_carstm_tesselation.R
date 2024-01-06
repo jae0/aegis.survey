@@ -512,7 +512,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     # coastline = st_intersection(coastline, domain)  
     # coastline = st_cast( coastline, "MULTILINESTRING" )
     
-    coastline = st_transform( polygons_rnaturalearth(countries=c("united states of america", "canada"),
+    coastline = st_transform( polygons_rnaturalearth(countries=c("United States of America", "Canada"),
        xlim=c(-80,-40), ylim=c(38, 60)), st_crs(crs_domain) )   
 
     if (is.null(probability_limit)) {
