@@ -1,4 +1,34 @@
+---
+title: "Netmensuration Historical Data"
+author: "Jae S. Choi"
+toc: true
+number-sections: true
+highlight-style: pygments
+editor:
+  render-on-save: false
+format:
+  html: 
+    code-fold: true
+    html-math-method: katex
+    embed-resources: true
+  pdf:
+    pdf-engine: lualatex
+  docx: default 
+---
  
+
+<!-- This is a Markdown/Quarto document -->
+
+<!-- 
+Copy this file to a work directory (e.g., ~/tmp/ ) 
+and run Quarto from there:
+
+# quarto render *.qmd --to html 
+
+Can add "--to docx --to pdf" as additional documents, but their formatting is awkward and will require more work.  
+-->
+
+```r 
     # set up libs and bio functions
     p = aegis.survey::groundfish_parameters( year.assessment=2016 )
 
@@ -235,3 +265,4 @@
     plot( wingspread ~ timestamp, xx )
     plot( doorspread ~ timestamp, xx )
 
+```

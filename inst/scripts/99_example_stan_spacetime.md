@@ -1,11 +1,42 @@
+---
+title: "Example Stan spacetime model"
+author: "Jae S. Choi"
+toc: true
+number-sections: true
+highlight-style: pygments
+editor:
+  render-on-save: false
+format:
+  html: 
+    code-fold: true
+    html-math-method: katex
+    embed-resources: true
+  pdf:
+    pdf-engine: lualatex
+  docx: default 
+---
+ 
 
-# Example analysis to model and create probablity distributions of species in some geometry
-# borrows from CARstan .. see 00_example.R for standard examples.
+<!-- This is a Markdown/Quarto document -->
 
-# this is a spatial-temporal example with multiple stations in AU's and unique TU's temporal components
+<!-- 
+Copy this file to a work directory (e.g., ~/tmp/ ) 
+and run Quarto from there:
+
+# quarto render *.qmd --to html 
+
+Can add "--to docx --to pdf" as additional documents, but their formatting is awkward and will require more work.  
+-->
 
 
 
+Example analysis to model and create probablity distributions of species in some geometry
+borrows from CARstan .. see 00_example.R for standard examples.
+
+this is a spatial-temporal example with multiple stations in AU's and unique TU's temporal components
+
+
+```r
   require(sf)
   require(cmdstanr)
 
@@ -273,3 +304,4 @@ fit_loo_1
   vn = "mu"
   brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
   spplot( as(sppoly, "Spatial"), vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent", xlim=p$boundingbox$xlim, ylim=p$boundingbox$ylim )
+```

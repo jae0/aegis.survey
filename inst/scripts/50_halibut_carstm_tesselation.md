@@ -1,5 +1,34 @@
-
+---
+title: "Altantic halibut ... placeholder  ... incomplete"
+author: "Jae S. Choi"
+toc: true
+number-sections: true
+highlight-style: pygments
+editor:
+  render-on-save: false
+format:
+  html: 
+    code-fold: true
+    html-math-method: katex
+    embed-resources: true
+  pdf:
+    pdf-engine: lualatex
+  docx: default 
+---
  
+
+<!-- This is a Markdown/Quarto document -->
+
+<!-- 
+Copy this file to a work directory (e.g., ~/tmp/ ) 
+and run Quarto from there:
+
+# quarto render *.qmd --to html 
+
+Can add "--to docx --to pdf" as additional documents, but their formatting is awkward and will require more work.  
+-->
+
+```r 
 # ------------------------------------------------
 # Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
 # using sweptarea only on a lattice system with environmental covariates.
@@ -29,8 +58,9 @@ source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspa
 
 outputdir = file.path( dirname(results_file), p$carstm_model_label  )
 if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
- 
-   
+
+# require(tmap)
+  
 # ----------------------------------------------
 # Atlantic cod with a CAR (ICAR/BYM) Poisson process models with tesselation
 
@@ -75,7 +105,6 @@ outfilename = file.path( outputdir , "areal_units_tesselation.png" )
 carstm_map(  sppoly=sppoly, vn="dummy_var",
     additional_features=additional_features+aus,
     colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
-    scale=1.5,
     outfilename=outfilename
 ) 
 
@@ -91,8 +120,6 @@ iw = unique( c( which( M$totno > 30), ip ) ) # subset to positive definite data 
 pN = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="abundance" )
 pW = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="meansize" )
 pH = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="habitat" )
-
-
 
   pN$space_name = sppoly$AUID 
   pN$space_id = 1:nrow(sppoly)  # must match M$space
@@ -121,8 +148,6 @@ pH = survey_parameter_list( p=p, model_label=p$carstm_model_type, type="habitat"
   pH$cyclic_name = as.character(pH$cyclic_levels)
   pH$cyclic_id = 1:pH$nw
 
-
-
 if (0) {
   # debugging for windows
   inla.setOption(
@@ -136,21 +161,20 @@ if (0) {
 # size model
 res = NULL; gc()
 res = carstm_model( p=pW, data=M[iw,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
-    theta= c( 0.088, 2.950, 0.943, 3.230, 3.676, 4.382, 3.781, 3.952, 3.313, 2.603, -0.044, 2.566, 3.194),
+  #theta= c( 0.088, 2.950, 0.943, 3.230, 3.676, 4.382, 3.781, 3.952, 3.313, 2.603, -0.044, 2.566, 3.194),
   # control.inla = list( strategy='adaptive' ), 
-  num.threads="4:2" 
+  num.threads="4:2"  
 )  
 
-# numerical model ..       # CARSTM does log transformation so do not log transform
-
+# numerical model
 res = NULL; gc()
-res = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_retain="predictions",
+res = carstm_model( p=pN, data=M[iq,], sppoly=sppoly,  posterior_simulations_to_retain="predictions", 
   #theta=c(1.131, 0.767, 2.593, -0.659, -1.411, -1.689, -0.254, -2.234, 3.394, -2.381, -1.399, 0.371) ,
   # control.inla = list( strategy='adaptive', int.strategy="eb" ), 
-  num.threads="1:1" 
+  num.threads="1:1"
 )  
 
-# plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
+# plot(res, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
 
 # habitat model
 res = NULL; gc()
@@ -158,6 +182,7 @@ res = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain
   # control.inla = list( strategy='adaptive' ), 
   num.threads="4:2"    
 ) 
+
 # plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
 
 
@@ -166,7 +191,7 @@ RES = readRDS( results_file )
 
 # NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
 # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
-sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, sppoly=sppoly, pa_threshold=0.05 ) * sppoly$au_sa_km2 / 10^6  
+sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, pa_threshold=0.05 ) * sppoly$au_sa_km2 / 10^6  
 RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
 
 
@@ -198,7 +223,6 @@ carstm_map(  sppoly=sppoly, vn=vn,
     additional_features=additional_features,
 #    title= y, #paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
     colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
-    scale=1.5,
     outfilename=outfilename
 ) 
  
@@ -214,7 +238,6 @@ for (i in 1:length(pN$yrs) ){
       additional_features=additional_features,
       title= y, #paste( "log_10( Predicted biomass density; kg/km^2 )", y ),
       colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
-      scale=1.5,
       outfilename=outfilename
   )
 }
@@ -275,7 +298,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 # end
 # ------------------------------------------------
  
-# Figure 1 alt. average bottom temperature of prediction surface (whole year spatial and temporal variability)
+# Figure 1alt. average bottom temperature of prediction surface (whole year spatial and temporal variability)
   pt = temperature_parameters( 
       project_class="carstm", 
       yrs=1970:year.assessment, 
@@ -291,12 +314,11 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   res_mean = apply(res, 2, mean, na.rm=TRUE )
   res_q025 = apply(res, 2, quantile, probs=0.025, na.rm=TRUE )
   res_q975 = apply(res, 2, quantile, probs=0.975, na.rm=TRUE )
-  tyrs = as.numeric( dimnames(res)[["time"]] )
-
+  
   trange = range(  c(res_q975, res_q025) ) * c(0.9, 1.1)
-  plot( res_mean ~ tyrs, type="b", pch=19, col="slategray", ylim = trange, ylab="Bottom temperature, Celsius", xlab="Year", lwd=1.5)
-  lines( res_q025 ~tyrs, col="darkgray", lty="dashed")
-  lines( res_q975 ~tyrs, col="darkgray", lty="dashed")
+  plot( res_mean ~ RES$yr, type="b", pch=19, col="slategray", ylim = trange, ylab="Bottom temperature, Celsius", xlab="Year", lwd=1.5)
+  lines( res_q025 ~RES$yr, col="darkgray", lty="dashed")
+  lines( res_q975 ~RES$yr, col="darkgray", lty="dashed")
 
 
 
@@ -322,9 +344,9 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     )
 
     plot( 0 , 0, type="n", ylab="Probability", xlab="Year", ylim=c(0, 1), xlim=range( RES$yr)   )
-    lines( preds$mean ~ res$yr, lty=1, lwd=2.5, col="slategray" )
-    lines( preds$q025 ~ res$yr, lty="dotted", lwd=1, col="slategray"  )
-    lines( preds$q975 ~ res$yr, lty="dotted", lwd=1, col="slategray"  )
+    lines( preds$mean ~ RES$yr, lty=1, lwd=2.5, col="slategray" )
+    lines( preds$q025 ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
+    lines( preds$q975 ~ RES$yr, lty="dotted", lwd=1, col="slategray"  )
 
     abline( h=0.5, lty="dashed",  col="slategray" )
 
@@ -332,7 +354,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   # from sims:
   
     # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
-    sims = carstm_posterior_simulations( pH=pH, sppoly=sppoly, pa_threshold=0.05 ) 
+    sims = carstm_posterior_simulations( pH=pH, pa_threshold=0.05 ) 
     sims = sims * sppoly$au_sa_km2 / sum(  sppoly$au_sa_km2, na.rm=TRUE )  # area weighted average
 
     lab = paste(p$carstm_model_type, "habitat", sep="_")
@@ -356,7 +378,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
  # from sims:
   
     # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
-    sims = carstm_posterior_simulations( pN=pN, sppoly=sppoly, pa_threshold=0.05 ) 
+    sims = carstm_posterior_simulations( pN=pN, pa_threshold=0.05 ) 
     sims = sims * sppoly$au_sa_km2  / 10^6 # n -> G n  # expand densities to number and then sum below (carstm_posterior_simulations_summary)
 
     lab = paste(p$carstm_model_type, "number", sep="_")
@@ -378,7 +400,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
   carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom)
   
-    sims = carstm_posterior_simulations( pW=pW, sppoly=sppoly, pa_threshold=0.05 ) 
+    sims = carstm_posterior_simulations( pW=pW, pa_threshold=0.05 ) 
     sims = sims * sppoly$au_sa_km2 / sum(  sppoly$au_sa_km2, na.rm=TRUE )  # area weighted average
 
     lab = paste(p$carstm_model_type, "weight", sep="_")
@@ -413,7 +435,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 
 
 # --------------------------------  
-# Figure  3D plot of habitat vs temperature vs depth  via splines .. slow (skip if not required)
+# Figure  3D plot of habitat vs temperature vs depth  via splines
 
   p = pH
   fn_root = "Predicted_habitat_probability"
@@ -511,9 +533,6 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     # coastline = st_transform( polygons_rnaturalearth(), st_crs("+proj=utm +ellps=WGS84 +zone=20 +units=km" ) )
     # coastline = st_intersection(coastline, domain)  
     # coastline = st_cast( coastline, "MULTILINESTRING" )
-    
-    coastline = st_transform( polygons_rnaturalearth(countries=c("United States of America", "Canada"),
-       xlim=c(-80,-40), ylim=c(38, 60)), st_crs(crs_domain) )   
 
     if (is.null(probability_limit)) {
       zprob = 0
@@ -521,7 +540,6 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
       zprob = probability_limit
     }
 
-    # incomplete:: must add Z (prob hab)
     plt = ggplot() +
         geom_sf( data=coastline, aes(alpha=0.1), colour="gray90" )  +
         geom_sf( data=isobs, aes(alpha=0.1), colour="lightgray" ) +
@@ -683,4 +701,6 @@ lnk_function = inla.link.logit
 lnk_function_predictions = inla.link.identity  # binomial seems to be treated differently by INLA
 
 
+
+```
 

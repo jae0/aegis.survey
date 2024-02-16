@@ -1,8 +1,38 @@
+---
+title: "Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models"
+author: "Jae S. Choi"
+toc: true
+number-sections: true
+highlight-style: pygments
+editor:
+  render-on-save: false
+format:
+  html: 
+    code-fold: true
+    html-math-method: katex
+    embed-resources: true
+  pdf:
+    pdf-engine: lualatex
+  docx: default 
+---
+ 
 
-# NOTE ::  this is just for the cod habitat paper. 
-# it is now redundant as habitat is also done in 10b_cod_carstm_tessilation.R  via a Hurdle type model
+<!-- This is a Markdown/Quarto document -->
+
+<!-- 
+Copy this file to a work directory (e.g., ~/tmp/ ) 
+and run Quarto from there:
+
+# quarto render *.qmd --to html 
+
+Can add "--to docx --to pdf" as additional documents, but their formatting is awkward and will require more work.  
+-->
+
+
+NOTE ::  this is just for the cod habitat paper. 
+NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilation.R  via a Hurdle type model
  
- 
+```r
 # ------------------------------------------------
 # Atlantic cod comparison of CAR (ICAR/BYM) Poisson process models
 # using sweptarea only on a lattice system with environmental covariates.
@@ -675,3 +705,6 @@ Rho for time                                                                   R
 GroupRho for space_time                                             GroupRho for space_time
 Phi for space                                                                 Phi for space
 Phi for space_time                                                       Phi for space_time
+
+
+```
