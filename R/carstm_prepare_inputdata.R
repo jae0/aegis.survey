@@ -779,7 +779,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
       output_format = "areal_units",
       variable_name= switch( pc, carstm=list("predictions"), stmv=vn, vn ) ,
       statvars=c("mean"),
-      space_resolution=p$pres ,
+      space_resolution=p$pres,
       year.assessment=p$year.assessment,
       returntype = "vector"
     ) 

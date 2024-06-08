@@ -462,9 +462,9 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
 
   # spatial only
 
-  vn=c( "random", "space", "iid" )
-  vn=c( "random", "space", "bym2" )
-  vn=c( "random", "space", "combined" )
+  vn=c( "random", "space", "ue" )
+  vn=c( "random", "space", "ne" )
+  vn=c( "random", "space", "re" )
 
   tmatch = ""
 
@@ -482,9 +482,9 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   # space_time
 
   # attr( RES[[mf]][["predictions"]], "units")
-  vn=c( "random", "space_time", "iid" )
+  vn=c( "random", "space_time", "ue" )
   vn=c( "random", "space_time", "bym2" )
-  vn=c( "random", "space_time", "combined" )
+  vn=c( "random", "space_time", "re" )
   vn="predictions" 
   
   tmatch="2000"

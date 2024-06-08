@@ -203,7 +203,7 @@ carstm_plots = function( res, outputdir, fn_root, sppoly, additional_features, b
 
 
   # generic plots
-  vn=c( "random", "space", "combined" )
+  vn=c( "random", "space", "re" )
   tmatch = ""
   fn = file.path( outputdir, "predictions", paste(fn_root, paste0(vn, collapse="_"), "png", sep=".") )
   carstm_map(  res=res, vn=vn, tmatch=tmatch, 
