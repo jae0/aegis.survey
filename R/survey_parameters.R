@@ -107,8 +107,8 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
       fraction_good_bad = 0.8,
       nAU_min = 5,
       carstm_modelengine = "inla",  # {model engine}.{label to use to store}
-      carstm_model_label = "1970_present",  # in case it is not set, default to all data .. 
-      carstm_model_label_lookup = "1970_present",  # careful .. this is used for lookup processes with space time component
+      carstm_model_label = "default",  # in case it is not set, default to all data .. 
+      carstm_model_label_lookup = "default",  # careful .. this is used for lookup processes with space time component
       carstm_inputs_prefilter = "sampled",
       carstm_inputs_prefilter_n = 100,
       vars_to_retain = c("totno", "totwgt", "pa", "meansize", "data_offset", "gear", "data.source", "id")
@@ -116,7 +116,7 @@ survey_parameters = function( p=NULL, project_name=NULL, project_class="core", .
 
 
     if ( !exists("carstm_prediction_surface_parameters", p))  {
-        # generics :  carstm models ("1970_present") and stmv ("default") solutions for spatial effects
+        # generics :  carstm models ("default") and stmv ("default") solutions for spatial effects
         # generally better to specify exactly rather than relying upon generics
         message("\n survey_parameters :: data lookups are using generic settings, you might want to specify labels directly for more control. \n")
         p$carstm_prediction_surface_parameters = list()

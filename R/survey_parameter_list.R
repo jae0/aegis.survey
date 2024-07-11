@@ -13,7 +13,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-          totno ~ 1 + offset( data_offset )
+          totno ~ 1 + offset( data_offset )  # CARSTM does log-transformation internally 
             + as.factor(space)
             + as.factor(time)
         )
@@ -53,7 +53,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-            totno ~ 1 + offset( data_offset )
+            totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
               + as.factor(space) * as.factor(time)
         )
       }
@@ -78,7 +78,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-            totno ~ 1 + offset( data_offset )
+            totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
               + as.factor(space) : as.factor(time)
               + f( space_time, model="iid",  group=time_space, hyper=H$iid )  # required to stabilize missing combos
   #            + f( space_time, model="iid",  group=time_space, hyper=H$iid, control.group=list(model="ar1", hyper=H$ar1_group))  # required to stabilize missing combos
@@ -107,8 +107,8 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$carstm_model_label = model_label
         p$variabletomodel = "totno"  
         p$family = "poisson" 
-        p$formula = formula( 
-            totno ~ 1 + offset( data_offset )
+        p$formula = formula(  
+            totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
               + as.factor(space) * as.factor(time)
               + f( space_time, model="iid",  group=time_space, hyper=H$iid, control.group=list(model="iid", hyper=H$iid))  # required to stabilize missing combos
         )
@@ -135,7 +135,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-            totno ~ 1 + offset( data_offset )
+            totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
               + f(space, model="iid", hyper=H$iid)
               + f(time,  model="iid", hyper=H$iid )
         )
@@ -176,7 +176,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-            totno ~ 1 + offset( data_offset )
+            totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
             + f(space, model="iid", hyper=H$iid)
             + f(time,  model="iid", hyper=H$iid )
             + f(space_time, model="iid", group=time_space, hyper=H$iid)
@@ -221,7 +221,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-            totno ~ 1 + offset( data_offset )
+            totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
               + as.factor(time)  
   #            + f( time, model="ar1",  hyper=H$ar1 ) 
               + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )
@@ -287,7 +287,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-          totno ~ 1 + offset( data_offset )
+          totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
               + f( gear, model="iid",  hyper=H$iid ) 
               + f( time, model="ar1",  hyper=H$ar1 ) 
               + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )
@@ -347,7 +347,7 @@ survey_parameter_list = function( p, model_label, type="abundance" ) {
         p$variabletomodel = "totno"  
         p$family = "poisson" 
         p$formula = formula( 
-          totno ~ 1 + offset( data_offset )
+          totno ~ 1 + offset( data_offset ) # CARSTM does log-transformation internally 
               + f( gear, model="iid",  hyper=H$iid ) 
               + f( time, model="ar1",  hyper=H$ar1 ) 
               + f( cyclic, model="seasonal", scale.model=TRUE, season.length=10, hyper=H$iid  )

@@ -74,7 +74,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
   
   yrs = 1970:year.assessment
 
-  runtype = "1970_present" #   NOTE:  must use "1970_present" for cod
+  runtype = "default" #   NOTE:  must use "default" for cod
 
  
   global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "NorthernStoneCrab" )
@@ -149,7 +149,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       project_name="survey",  
       speciesname = "NorthernStoneCrab",
       trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
-      carstm_model_label="NorthernStoneCrab_summer_RV_1970_present_stratanal",   # default = 1970:present, alt: 1999_present 
+      carstm_model_label="NorthernStoneCrab_summer_RV_default_stratanal",   # default = 1970:present, alt: 1999_present 
       outputdir = file.path( global_output_directory, "stratanal" ),
       yrs=1970:year.assessment,
       areal_units_type = "stratanal_polygons_pre2014",
@@ -237,7 +237,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
 
 
     # RES= list( yr = p$yrs )
-    RES = readRDS( results_file )
+    RES = aegis::read_write_fast( results_file )
 
     # for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
     
@@ -259,8 +259,8 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
     
     # }}
 
-    saveRDS( RES, results_file, compress=TRUE )
-    # RES = readRDS( results_file )
+    read_write_fast( data=RES, results_file )
+    # RES = aegis::read_write_fast( results_file )
     
 
     # --------- 
@@ -422,7 +422,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       speciesname = "NorthernStoneCrab",
       label ="NorthernStoneCrab stratanal polygons",
       trawlable_units = "direct_number",  
-      carstm_model_label="NorthernStoneCrab_summer_RV_1970_present_stratanal_polygons_iid",   # default = 1970:present, alt: 1999_present 
+      carstm_model_label="NorthernStoneCrab_summer_RV_default_stratanal_polygons_iid",   # default = 1970:present, alt: 1999_present 
       carstm_model_type="S_iid.T_iid",
       outputdir = file.path( global_output_directory, "stratanal_iid" ),
       yrs = yrs,
@@ -460,7 +460,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       speciesname = "NorthernStoneCrab",
       label ="NorthernStoneCrab tesselation",
       trawlable_units = "direct_number",  
-      carstm_model_label="NorthernStoneCrab_summer_RV_1970_present_tesselation",   # default = 1970:present, alt: 1999_present 
+      carstm_model_label="NorthernStoneCrab_summer_RV_default_tesselation",   # default = 1970:present, alt: 1999_present 
       carstm_model_type="full_model",
       outputdir = file.path( global_output_directory, "full_model" ),
       yrs = yrs,
@@ -639,7 +639,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
 
 
     # reload collator
-    RES = readRDS( results_file )
+    RES = aegis::read_write_fast( results_file )
 
     # NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
     # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
@@ -647,8 +647,8 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
     RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
 
 
-    saveRDS( RES, results_file, compress=TRUE )
-    # RES = readRDS( results_file )
+    read_write_fast( data=RES, file=results_file )
+    # RES = aegis::read_write_fast( results_file )
       
 
 
@@ -756,7 +756,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       pt = temperature_parameters( 
           project_class="carstm", 
           yrs=1970:year.assessment, 
-          carstm_model_label="1970_present" 
+          carstm_model_label="default" 
         ) 
       tspol = areal_units( p=pt )
       tspol = set_surface_area_to_NA( tspol, auid_to_drop )  # do not drop data .. only set areas beyond domain to NA
@@ -783,10 +783,10 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
     
       p = pH
       fn_root = "Predicted_habitat_probability"
-      title = "Predicted habitat probability"
-      res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
       
-      carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom)
+      carstm_plot_marginaleffects( p, outputdir, fn_root)
+
+      
 
       # posterior predictions: timeseries 
       preds = res[["predictions"]] * sppoly$filter # space x year (in 1 JULY)
@@ -827,9 +827,9 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
 
       p = pN
       fn_root = "Predicted_numerical_density"
-      title = "Predicted numerical density"
-      res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
-      carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom )
+       
+      carstm_plot_marginaleffects( p, outputdir, fn_root)
+
     # from sims:
       
         # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
@@ -851,10 +851,9 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
 
       p = pW
       fn_root = "Predicted_mean_weight"
-      title = "Predicted mean weight"
-      res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
-      carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom)
-      
+     
+      carstm_plot_marginaleffects( p, outputdir, fn_root)
+
         sims = carstm_posterior_simulations( pW=pW, pa_threshold=0.05 ) 
         sims = sims * sppoly$au_sa_km2 / sum(  sppoly$au_sa_km2, na.rm=TRUE )  # area weighted average
 
@@ -870,12 +869,12 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
         dev.off()
     
 
-      saveRDS( RES, results_file, compress=TRUE )
-      # RES = readRDS( results_file )
+      read_write_fast( data=RES, file=results_file  )
+      # RES = aegis::read_write_fast( results_file )
         
 
       if (0) {
-        fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
+        fit = carstm_model( p=p, DS="modelled_fit", sppoly=sppoly )
         names( fit$summary.random)
         res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
         names( res[["random"]])
@@ -948,7 +947,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       ) 
 
       if (0) {
-        u = readRDS('/home/jae/tmp/temp_depth_habitat.RDS')
+        u = aegis::read_write_fast('/home/jae/tmp/temp_depth_habitat.RDS')
         dev.new()
         plot( habitat~yr, u, type="b", ylim=c(0.29, 0.4))
         lines( habitat_lb~yr, u)
@@ -970,8 +969,8 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       }
 
       fn_optimal = file.path( outputdir, "optimal_habitat.RDS" )
-      saveRDS( o, file=fn_optimal, compress=FALSE )
-      o = readRDS(fn_optimal)
+      read_write_fast( data=o, file=fn_optimal )
+      o = aegis::read_write_fast(fn_optimal)
     
       if (plot_map) {
 

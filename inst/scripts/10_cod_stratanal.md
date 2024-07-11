@@ -45,7 +45,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
   
   yrs = 1970:year.assessment
 
-  runtype = "1970_present" #   NOTE:  must use "1970_present" for cod
+  runtype = "default" #   NOTE:  must use "default" for cod
 
  
   global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "Atlantic_cod" )
@@ -119,7 +119,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
       speciesname = "Atlantic_cod",
       label ="Atlantic cod tesselation",
       trawlable_units = "direct_number",  
-      carstm_model_label="Atlantic_cod_summer_RV_1970_present_tesselation",   # default = 1970:present, alt: 1999_present 
+      carstm_model_label="Atlantic_cod_summer_RV_default_tesselation",   # default = 1970:present, alt: 1999_present 
       carstm_model_type="full_model",
       outputdir = file.path( global_output_directory, "full_model" ),
       yrs = yrs,
@@ -168,7 +168,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
       project_name="survey",  
       speciesname = "Atlantic_cod",
       trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  # arbitrary for below
-      carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal",   # default = 1970:present, alt: 1999_present 
+      carstm_model_label="Atlantic_cod_summer_RV_default_stratanal",   # default = 1970:present, alt: 1999_present 
       outputdir = file.path( global_output_directory, "stratanal" ),
       yrs=1970:year.assessment,
       areal_units_type = "stratanal_polygons_pre2014",
@@ -205,7 +205,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
       speciesname = "Atlantic_cod",
       label ="Atlantic cod stratanal polygons",
       trawlable_units = "direct_number",  
-      carstm_model_label="Atlantic_cod_summer_RV_1970_present_stratanal_polygons_iid",   # default = 1970:present, alt: 1999_present 
+      carstm_model_label="Atlantic_cod_summer_RV_default_stratanal_polygons_iid",   # default = 1970:present, alt: 1999_present 
       carstm_model_type="S_iid.T_iid",
       outputdir = file.path( global_output_directory, "stratanal_iid" ),
       yrs = yrs,
@@ -342,7 +342,7 @@ carstm_map(  sppoly=sppoly, vn="dummy_var",
 
 
 # RES= list( yr = p$yrs )
-RES = readRDS( results_file )
+RES = aegis::read_write_fast( results_file )
 
 for ( data_approach in c( "stratanal_direct", "stratanal_designated_au", "stratanal" ) ) {
 for ( tu in c( "standardtow", "towdistance", "sweptarea" ) ) {  
@@ -359,8 +359,8 @@ for ( tu in c( "standardtow", "towdistance", "sweptarea" ) ) {
   RES[[model_label]]$label = model_label
 }}
 
-saveRDS( RES, results_file, compress=TRUE )
-# RES = readRDS( results_file )
+read_write_fast( data=RES, results_file )
+# RES = aegis::read_write_fast( results_file )
  
 
 # --------- 

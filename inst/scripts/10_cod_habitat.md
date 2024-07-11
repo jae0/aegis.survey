@@ -50,7 +50,7 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
 
   source( file.path( code_root, "aegis.survey", "inst", "scripts", "10_cod_workspace.R" ) )
 
-  # NOTE:  must use "1970_present" for cod
+  # NOTE:  must use "default" for cod
   # NOTE: requires bathymetry, substrate, groundfish, snowcrab, temperature, survey, speciescomposition
   
  
@@ -201,11 +201,11 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
  
  
 
-  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )
-  names(res[["random"]])
+  randomeffects = carstm_model( p=p, DS="carstm_randomeffects"  )
+  names(randomeffects )
 
 
-  fit = carstm_model( p=p, DS="carstm_modelled_fit",  sppoly = sppoly )  # extract currently saved model fit
+  fit = carstm_model( p=p, DS="modelled_fit"  )  # extract currently saved model fit
   names(  fit$summary.random)
   i = 1
   plot(inverse.logit(fit$summary.random[[i]]$mean) ~ fit$summary.random[[i]]$ID, ylab="probability", xlab=names(fit$summary.random)[i])
@@ -216,7 +216,7 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   i = "inla.group(t, method = \"quantile\", n = 13)"
   i = "inla.group(z, method = \"quantile\", n = 13)" "space"
 
-  dta = res$random[[i]]
+  dta = randomeffects[[i]]
 
   plot( mean ~ ID , dta, type="b", ylim=c(0,1))
   lines( quant0.025 ~ ID, dta, lty="dashed")
@@ -229,9 +229,8 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   lines( inverse.logit(dta[,6]) ~ dta$ID,  lty="dashed")
 
 
-  # Figure 2. Habitat vs time - marginal
-  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-  ts = res$random$time
+  # Figure 2. Habitat vs time - marginal 
+  ts = randomeffects$time
   vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
   ts[, vns] = ts[, vns] 
   plot( mean ~ ID, ts, type="b", ylim=c(0,1) , lwd=1.5, xlab="year")
@@ -239,32 +238,27 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   lines( quant0.975 ~ ID, ts, col="gray", lty="dashed")
 
 
-  # Figure 2. Habitat vs season
-  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-  ts = res$random$cyclic
+  # Figure 2. Habitat vs season 
+  ts = randomeffects$cyclic
   vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
   ts[, vns] = ts[, vns] 
   plot( mean ~ID, ts, type="b", ylim=c(0,1), lwd=1.5, xlab="fractional year")
   lines( quant0.025 ~ID, ts, col="gray", lty="dashed")
   lines( quant0.975 ~ID, ts, col="gray", lty="dashed")
 
-
-
-
-
-
-
+ 
   params = list()
   vars_to_copy = c(  "space", "time", "dyears" )  # needed for plotting 
-  for ( vn in vars_to_copy ) params[[vn]] = res[[vn]]
+  for ( vn in vars_to_copy ) params[[vn]] = randomeffects[[vn]]
 
-  pa = res[["sims"]][["predictions"]]
+  pa = carstm_model( p=p, DS="carstm_samples"  )[["predictions"]]
+ 
   # pa = inverse.logit(pa)
   pa[!is.finite(pa)] = NA
  
   # create for mapping .. in probability
-  oo = simplify2array(pa)
-  params[["predictions"]] = res[[ "predictions" ]] * NA
+  oo = simplify2array(pa) 
+  params[["predictions"]] = carstm_model( p=p, DS="carstm_predictions" )[[ "predictions" ]] * NA
   params[["predictions"]][,,1]  = apply( oo, c(1,2), mean, na.rm=TRUE ) 
   params[["predictions"]][,,2]  = apply( oo, c(1,2), sd, na.rm=TRUE ) 
   params[["predictions"]][,,3]  = apply( oo, c(1,2), quantile, probs=0.025, na.rm=TRUE ) 
@@ -296,8 +290,7 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
 
   # to reload:
-  fit = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_fit", sppoly=sppoly )
-  res = carstm_model( p=RES[[mf]]$pH, DS="carstm_modelled_summary", sppoly=sppoly )
+  fit = carstm_model( p=RES[[mf]]$pH, DS="modelled_fit" ) 
 
 
   # analysis and output END
@@ -330,9 +323,8 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   axis(1)
   axis(2)
 
-  # Figure 2. Habitat vs time - marginal
-  b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-  ts = res$random$time
+  # Figure 2. Habitat vs time - marginal 
+  ts = randomeffects$time
   vns = c("mean", "quant0.025", "quant0.5", "quant0.975" ) 
   ts[, vns] = ts[, vns] 
   plot( mean ~ ID, ts, type="b", ylim=c(0,1) , lwd=1.5, xlab="year", col="red")
@@ -462,16 +454,15 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
 
   # spatial only
 
-  vn=c( "random", "space", "iid" )
-  vn=c( "random", "space", "bym2" )
-  vn=c( "random", "space", "combined" )
+  vn=c( "random", "space", "re_unstructured" )
+  vn=c( "random", "space", "re_neighbourhood" )
+  vn=c( "random", "space", "re_total" )
 
   tmatch = ""
 
   fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse=" "),  "png", sep=".") )
 
-  carstm_map(  res=res, vn=vn, tmatch=tmatch, 
-      sppoly = sppoly, 
+  carstm_map(  res=randomeffects, vn=vn, tmatch=tmatch, 
       colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
       additional_features=additional_features,
       outfilename=fn,
@@ -479,35 +470,33 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   )
 
 
-  # space_time
-
-  # attr( RES[[mf]][["predictions"]], "units")
-  vn=c( "random", "space_time", "iid" )
-  vn=c( "random", "space_time", "bym2" )
-  vn=c( "random", "space_time", "combined" )
-  vn="predictions" 
-  
-  tmatch="2000"
-
-  for (y in res$time_name ){
-    time_match = as.character(y) 
+  if (0) {  # attr( RES[[mf]][["predictions"]], "units")
+    # space_time -- more a nuisance effect
+    vn=c( "random", "space_time", "re_unstructured" )
+    vn=c( "random", "space_time", "re_neighbourhood" )
+    vn=c( "random", "space_time", "re_total" )
+    vn="predictions" 
     
-    fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
-    carstm_map(  res=res, vn=vn, tmatch=time_match,
-      sppoly = sppoly, 
-      colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
-      additional_features=additional_features,
-      title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
-      outfilename=fn
-    )
-  }
+    tmatch="2000"
 
+    for (y in randomeffects$time_name ){
+      time_match = as.character(y) 
+      
+      fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
+      carstm_map(  res=randomeffects, vn=vn, tmatch=time_match,
+         colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
+        additional_features=additional_features,
+        title= paste("habitat", time_match) , #paste(fn_root, time_match, sep="_"),  
+        outfilename=fn
+      )
+    }
+  }
 
 
   #preds from simulations
   vn="predictions" 
-  
-  for (y in res$time_name ){
+  predictions = carstm_model( p=p, DS="carstm_predictions"  )
+  for (y in predictions$time_name ){
     time_match = as.character(y) 
     
     fn = file.path( outputdir, paste(fn_root, paste0(vn, collapse="_"), time_match, "png", sep=".") )
@@ -535,7 +524,7 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   pt = temperature_parameters( 
       project_class="carstm", 
       yrs=yrs, 
-      carstm_model_label="1970_present"
+      carstm_model_label="default"
   ) 
 
   tss = aegis_lookup(  
@@ -585,11 +574,9 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
 
 # Figure XX 3D plot of habitat vs temperature vs depth  
  
-
-b0 = res$summary$fixed_effects["(Intercept)", "mean"]
-
-pt = res$random$'inla.group(t, method = "quantile", n = 13)'
-pz = res$random$'inla.group(z, method = "quantile", n = 13)'
+ 
+pt = randomeffects$'inla.group(t, method = "quantile", n = 13)'
+pz = randomeffects$'inla.group(z, method = "quantile", n = 13)'
  
 
 

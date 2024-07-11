@@ -130,7 +130,7 @@ This requires DFO oracle database connectivity. Adapt to your own data base syst
         # these are now obsolete, only here for historical reasons
         #groundfish_survey_db( DS="gshyd.profiles.redo", yrs=yrs  )
         #groundfish_survey_db( DS="gshyd.redo", yrs=yrs  )
-        #groundfish_survey_db( DS="gshyd.georef.redo", yrs=yrs  )  # not used here but used in temperature re-analysis
+        #groundfish_survey_db( DS="gshyd.georef.redo", yrs=yrs  )  # not used here but used in temperature re_total-analysis
 
         # lookupregion = lookup.strata()  # create strata vs region lookup table
         Vn = as.character(c(440:442))   # these are alphanumeric codes

@@ -84,7 +84,7 @@ carstm_optimal_habitat = function(
   # add temperature:
   require(aegis.temperature)
   
-  pT = temperature_parameters( project_class="carstm", yrs=1970:year.assessment, carstm_model_label="1970_present"  ) 
+  pT = temperature_parameters( project_class="carstm", yrs=1970:year.assessment, carstm_model_label="default"  ) 
 
   h_zt = data.frame(yr=pT$yrs  ) 
 
@@ -115,7 +115,7 @@ carstm_optimal_habitat = function(
 
  
   # to load currently saved results
-  resT = carstm_model( p=pT, DS="carstm_modelled_summary", sppoly=sppolyT ) [["sims"]][["predictions"]]
+  resT = carstm_model( p=pT, DS="carstm_samples", sppoly=sppolyT )[["predictions"]]
   sims_to_keep = sample.int( dim(resT)[4], nsims )
   resT = resT[,,,sims_to_keep]  # reduce size to keep RAM from saturating
 
@@ -135,17 +135,14 @@ carstm_optimal_habitat = function(
   message("This will take a while ... ")
 
   fn_monitor = file.path( work_root, "temp_depth_habitat.RDS")
-  message( "load the following to monitor : u = readRDS(", fn_monitor, ")" ) 
+  message( "load the following to monitor : u = aegis::read_write_fast(", fn_monitor, ")" ) 
   
 
   for ( ss in 1:ns ) {
     
     print( paste( "Sim: ", ss, "of", ns ) )
-    
-    # if (is.null(resT)) resT = readRDS(fn_res) 
-
-    resY = resT[,,,ss]
-    # resT = NULL; gc()
+     
+    resY = resT[,,,ss] 
     
     fk = which( is.finite(resY) )
 
@@ -218,7 +215,7 @@ carstm_optimal_habitat = function(
     h_zt$habitat_ub  = rowMeans(summ_ub, na.rm=TRUE)   # mean across space then sims
     h_zt$habitat_sa_ub = rowMeans(summh_ub, na.rm=TRUE)
 
-    saveRDS( h_zt, file=fn_monitor )  # temp save
+    read_write_fast( data=h_zt, file=fn_monitor )  # temp save
   
   }
  

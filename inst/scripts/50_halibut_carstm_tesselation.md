@@ -187,7 +187,7 @@ res = carstm_model( p=pH, data=M, sppoly=sppoly, posterior_simulations_to_retain
 
 
 # reload collator
-RES = readRDS( results_file )
+RES = aegis::read_write_fast( results_file )
 
 # NOTE: below we divide by 10^6 to convert  kg -> kt;; kt/km^2
 # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
@@ -195,8 +195,8 @@ sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, pa_threshold=0.05 ) * 
 RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
 
 
-saveRDS( RES, results_file, compress=TRUE )
-# RES = readRDS( results_file )
+read_write_fast( data=RES, file=results_file  )
+# RES = aegis::read_write_fast( results_file )
   
 
 
@@ -302,7 +302,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   pt = temperature_parameters( 
       project_class="carstm", 
       yrs=1970:year.assessment, 
-      carstm_model_label="1970_present" 
+      carstm_model_label="default" 
     ) 
   tspol = areal_units( p=pt )
   tspol = set_surface_area_to_NA( tspol, auid_to_drop )  # do not drop data .. only set areas beyond domain to NA
@@ -327,11 +327,10 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 # maps and plots
  
   p = pH
-  fn_root = "Predicted_habitat_probability"
-  title = "Predicted habitat probability"
-  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
+  fn_root = "Predicted_habitat_probability" 
   
-  carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom)
+  carstm_plot_marginaleffects( p, outputdir, fn_root)
+
 
   # posterior predictions: timeseries 
   preds = res[["predictions"]] * sppoly$filter # space x year (in 1 JULY)
@@ -372,10 +371,10 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 
   p = pN
   fn_root = "Predicted_numerical_density"
-  title = "Predicted numerical density"
-  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
-  carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom )
- # from sims:
+  
+  carstm_plot_marginaleffects( p, outputdir, fn_root)
+
+
   
     # with "habitat" at habitat definition of prob=0.05 (hurdle process)  
     sims = carstm_posterior_simulations( pN=pN, pa_threshold=0.05 ) 
@@ -395,11 +394,10 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     
 
   p = pW
-  fn_root = "Predicted_mean_weight"
-  title = "Predicted mean weight"
-  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
-  carstm_plots( res, outputdir, fn_root, sppoly, additional_features, background, map_centre, map_zoom)
+  fn_root = "Predicted_mean_weight" 
   
+  carstm_plot_marginaleffects( p, outputdir, fn_root)
+
     sims = carstm_posterior_simulations( pW=pW, pa_threshold=0.05 ) 
     sims = sims * sppoly$au_sa_km2 / sum(  sppoly$au_sa_km2, na.rm=TRUE )  # area weighted average
 
@@ -415,12 +413,12 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     dev.off()
  
 
-  saveRDS( RES, results_file, compress=TRUE )
-  # RES = readRDS( results_file )
+  read_write_fast( data=RES, file=results_file )
+  # RES = aegis::read_write_fast( results_file )
     
 
   if (0) {
-    fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )
+    fit = carstm_model( p=p, DS="modelled_fit", sppoly=sppoly )
     names( fit$summary.random)
     res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  )  # NOTE: res contains estimates on user scale
     names( res[["random"]])
@@ -493,7 +491,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   ) 
 
   if (0) {
-    u = readRDS('/home/jae/tmp/temp_depth_habitat.RDS')
+    u = aegis::read_write_fast('/home/jae/tmp/temp_depth_habitat.RDS')
     dev.new()
     plot( habitat~yr, u, type="b", ylim=c(0.29, 0.4))
     lines( habitat_lb~yr, u)
@@ -515,8 +513,8 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   }
 
   fn_optimal = file.path( outputdir, "optimal_habitat.RDS" )
-  saveRDS( o, file=fn_optimal, compress=FALSE )
-  o = readRDS(fn_optimal)
+  read_write_fast( data=o, file=fn_optimal )
+  o = aegis::read_write_fast(fn_optimal)
  
   if (plot_map) {
 

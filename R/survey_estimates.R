@@ -3,10 +3,10 @@ survey_estimates = function( pW=NULL, pN=NULL, pH=NULL, sppoly=NULL, AUID_sa="au
     out = list( pW=pW, pN=pN, pH=pH, sppoly=sppoly, extrapolation_limits=extrapolation_limits, AUID_sa="au_sa_km2", AUID_subset=AUID_subset, AUID_sa_subset=NULL )
 
     if (!is.null(pW)) {
-      resw = carstm_model( p=pW, DS="carstm_modelled_summary", sppoly=sppoly )
+      resw = carstm_model( p=pW, DS="carstm_samples", sppoly=sppoly )
       vars_to_copy = c(  "space", "time", "dyears" )
       for ( vn in vars_to_copy ) out[[vn]] = resw[[vn]]
-      wgts = resw[["sims"]][["predictions"]]
+      wgts = resw[["predictions"]]
       wgts[!is.finite(wgts)] = NA
       wgts[wgts<0] = NA
       if (!is.null(extrapolation_limits) ) {
@@ -16,10 +16,10 @@ survey_estimates = function( pW=NULL, pN=NULL, pH=NULL, sppoly=NULL, AUID_sa="au
     }    
 
     if (!is.null(pN)) {
-      resn = carstm_model( p=pN, DS="carstm_modelled_summary", sppoly=sppoly )
+      resn = carstm_model( p=pN, DS="carstm_samples", sppoly=sppoly )
       vars_to_copy = c(  "space", "time", "dyears" )
       for ( vn in vars_to_copy ) out[[vn]] = resn[[vn]]
-      nums = resn[["sims"]][["predictions"]]   # numerical density (per km^2)
+      nums = resn[["predictions"]]   # numerical density (per km^2)
       nums[!is.finite(nums)] = NA
       if (!is.null(extrapolation_limits) ) {
         nums[nums < extrapolation_limits$nums[1] ] = extrapolation_limits$nums[1]
@@ -28,10 +28,10 @@ survey_estimates = function( pW=NULL, pN=NULL, pH=NULL, sppoly=NULL, AUID_sa="au
     }
 
     if (!is.null(pH)) {
-      resh = carstm_model( p=params$pH, DS="carstm_modelled_summary" )
+      resh = carstm_model( p=params$pH, DS="carstm_samples" )
       vars_to_copy = c(  "space", "time", "dyears" )
       for ( vn in vars_to_copy ) params[[vn]] = resh[[vn]]
-      pa = resh[["sims"]][["predictions"]]
+      pa = resh[["predictions"]]
       # pa = inverse.logit(pa)
       pa[!is.finite(pa)] = NA
     }
@@ -42,7 +42,7 @@ survey_estimates = function( pW=NULL, pN=NULL, pH=NULL, sppoly=NULL, AUID_sa="au
     if (!is.null(pW) & is.null(pN)) {
       # weights only
       out[["W"]] = resw  # already computed and redundant but here for completeness
-      out[["W"]][["sims"]][["predictions"]] = wgts  # ower-write with filtered results
+      out[["W"]][["predictions"]] = wgts  # ower-write with filtered results
       if (!is.null(AUID_subset)) {
         ss = which( sppoly$AUID %in% AUID_subset )
         if (length(ss) > 0) {
@@ -68,7 +68,7 @@ survey_estimates = function( pW=NULL, pN=NULL, pH=NULL, sppoly=NULL, AUID_sa="au
     if (is.null(pW) & !is.null(pN)) {
       # numbers only
       out[["N"]] = resn  # already computed and redundant but here for completeness
-      out[["N"]][["sims"]][["predictions"]] = nums  # ower-write with filtered results
+      out[["N"]][["predictions"]] = nums  # ower-write with filtered results
       if (!is.null(AUID_subset)) {
         ss = which( sppoly$AUID %in% AUID_subset )
         if (length(ss) > 0) {

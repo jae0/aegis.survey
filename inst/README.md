@@ -8,7 +8,8 @@ For example, to conduct a simple Conditional Autogressive Model (BYM) on Atlanti
 Then one can create the model input data and output prediction locations, both concatentated into data frame M:
 
 ```r
-
+  runtype = "default"
+  
   p = survey_parameters(
     project_class = "carstm",
     project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
@@ -54,7 +55,7 @@ survey_params$label = model_label
       survey_params$pN$variabletomodel = "totno"
       survey_params$pN$family = "poisson"
       survey_params$pN$formula = formula(
-        totno ~ 1 + offset( data_offset )
+        totno ~ 1 + offset( data_offset )  # CARSTM does log-transformation internally 
             + f( vessel, model="iid",  hyper=H$iid, group=gear, control.group=list(model="iid", hyper=H$iid))
 #            + f( gear, model="iid",  hyper=H$iid )
             + f( time, model="ar1",  hyper=H$ar1 )
