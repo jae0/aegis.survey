@@ -929,12 +929,14 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
     M$dyri = discretize_data( M[["dyear"]], discretizations()[["dyear"]] )
     M$tiyr = NULL
   }
-  
 
-    message( "Number of initial observations:  ", nS  )
-    message( "Number of observations in domain:  ", nM  )
-    message( "Number of observations final:  ", length(which(M$tag=="observations" )) )
-    message( "Number of predictions:  ", length(which(M$tag=="predictions" )) )
+  # could filter earlier for speed but here it is more compact  
+  if (exists("carstm_input_time_limit", p))  M = M[ which( M$yr >= p$carstm_input_time_limit), ]   
+
+  message( "Number of initial observations:  ", nS  )
+  message( "Number of observations in domain:  ", nM  )
+  message( "Number of observations final:  ", length(which(M$tag=="observations" )) )
+  message( "Number of predictions:  ", length(which(M$tag=="predictions" )) )
 
   return(M)
 }
