@@ -188,14 +188,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
 
   # --------------------------
-
-# browser()
-
+ 
   if ("substrate" %in% lookup_parameters_names) {
     require(aegis.substrate)
 
     message( "lookup: substrate observations")
-
+ 
     vn = "substrate.grainsize"
     aegis_project = "substrate"
     pL = carstm_prediction_surface_parameters[[aegis_project]]
@@ -216,6 +214,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM > 0)) {
       M[[vn]][iM] = aegis_lookup(  
+        pL=pL,
         parameters="substrate",    
         LOCS=M[ iM, c("lon", "lat")],  
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="stmv", DS="complete", pL=pL ),
