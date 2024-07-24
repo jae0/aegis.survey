@@ -128,8 +128,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     if ( !(exists( vn, M )))  M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[vn]][iM] = aegis_lookup(  
+    if (length(iM) > 0) {
+      alu = aegis_lookup(  
         pL=pL,    
         LOCS=M[ iM, c("lon", "lat")],  
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="aggregated_data", pL=pL ),
@@ -139,11 +139,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype="vector"
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[vn]][iM] = aegis_lookup(  
+    if (length(iM) > 0) {
+       alu = aegis_lookup(  
         pL=pL,    
         LOCS=M[ iM, c("lon", "lat")],  
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="stmv", DS="complete", pL=pL ),
@@ -153,6 +154,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres, 
         returntype="vector" 
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+
     }
  
     p_bathymetry_stmv = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
@@ -200,8 +203,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[vn]][iM]  = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL=pL,  
         LOCS=M[iM, c("lon", "lat")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="aggregated_data", pL=pL ),
@@ -209,11 +212,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         output_format="points",  
         variable_name="substrate.grainsize.mean" 
       )  
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }   
     
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[vn]][iM] = aegis_lookup(  
+    if (length(iM) > 0) {
+      alu = aegis_lookup(  
         pL=pL,
         parameters="substrate",    
         LOCS=M[ iM, c("lon", "lat")],  
@@ -224,6 +228,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres, 
         returntype="vector" 
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
     # due to limited spatial range, resort to using some of the modelled results as well to fill in some gaps
 
@@ -272,8 +277,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
     
-    if (length(iM > 0)) {
-      M[[vn]][iM] = aegis_lookup(  
+    if (length(iM) > 0) {
+      alu = aegis_lookup(  
         pL =pL,  
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="aggregated_data", pL=pL ),
@@ -285,11 +290,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         tz=tz,
         year.assessment=p$year.assessment
       )
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
  
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[ vn ]][iM] = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL=pL, 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="carstm", DS="carstm_predictions", pL=pL ),
@@ -304,6 +310,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         tz=tz, 
         returntype = "vector"
       )
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
 
     if (NA_remove) {
@@ -333,8 +340,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[vn]][iM] = aegis_lookup(  
+    if (length(iM) > 0) {
+      alu = aegis_lookup(  
         pL =pL,  
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="speciescomposition", pL=pL ),
@@ -344,11 +351,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         tz=tz,
         year.assessment=p$year.assessment
       )
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[ vn ]][iM] = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL=pL, 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="carstm", DS="carstm_predictions", pL=pL ),
@@ -361,6 +369,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype = "vector"
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
     if (NA_remove) {
       ii = which( !is.finite( M[[ vn]] ))
@@ -381,8 +390,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-        M[[vn]][iM]  = aegis_lookup(  
+    if (length(iM) > 0) {
+        alu = aegis_lookup(  
         pL =pL,  
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="speciescomposition", pL=pL ),
@@ -392,11 +401,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         tz=tz 
       )
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[ vn ]][iM] = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL=pL, 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="carstm", DS="carstm_predictions", pL=pL ),
@@ -409,6 +419,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype = "vector"
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
     if (NA_remove) {
       ii = which( !is.finite( M[[ vn]] ))
@@ -430,8 +441,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-        M[[vn]][iM]  = aegis_lookup(  
+    if (length(iM) > 0) {
+        alu  = aegis_lookup(  
           pL =pL,  
           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
           LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="speciescomposition", pL=pL ),
@@ -441,10 +452,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
           variable_name=vn, 
           tz=tz 
         )
+        if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[ vn ]][iM] = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL =pL,  
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="carstm", DS="carstm_predictions", pL=pL ),
@@ -457,6 +469,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype = "vector"
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
     if (NA_remove) {
       ii = which( !is.finite( M[[ vn]] ))
@@ -478,8 +491,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
  
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[vn]][iM] = aegis_lookup(  
+    if (length(iM) > 0) {
+      alu = aegis_lookup(  
         pL =pL,  
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="speciescomposition", pL=pL ),
@@ -489,11 +502,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         variable_name=vn, 
         tz=tz 
       )
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[ vn ]][iM] = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL=pL, 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="carstm", DS="carstm_predictions", pL=pL ),
@@ -505,7 +519,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         year.assessment=p$year.assessment,
         returntype = "vector"
-      )     
+      )    
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu 
     }
       
     if (NA_remove) {
@@ -527,8 +542,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
  
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-        M[[vn]][iM]  = aegis_lookup(  
+    if (length(iM) > 0) {
+        alu = aegis_lookup(  
         pL =pL,  
         LOCS=M[ iM, c("lon", "lat", "timestamp")],
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="speciescomposition", pL=pL ),
@@ -538,11 +553,12 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         tz=tz 
       )
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[ vn ]][iM] = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL=pL, 
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="carstm", DS="carstm_predictions", pL=pL ),
@@ -555,6 +571,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         returntype = "vector"
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
       
     if (NA_remove) {
@@ -577,8 +594,8 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-        M[[vn]][iM]  = aegis_lookup(  
+    if (length(iM) > 0) {
+        alu  = aegis_lookup(  
           pL =pL,  
           LOCS=M[ iM, c("lon", "lat", "timestamp")], 
           LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="speciescomposition", pL=pL ),
@@ -588,10 +605,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
           year.assessment=p$year.assessment,
           tz=tz 
         )
+        if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
     iM = which(!is.finite( M[[vn]] ))
-    if (length(iM > 0)) {
-      M[[ vn ]][iM] = aegis_lookup( 
+    if (length(iM) > 0) {
+      alu = aegis_lookup( 
         pL =pL,  
         LOCS=M[ iM , c("AUID", "timestamp")], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="carstm", DS="carstm_predictions", pL=pL ),
@@ -604,6 +622,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         returntype = "vector"
       ) 
+      if (length(alu) == length(iM))   M[[vn]][iM] = alu
     }
       
     if (NA_remove) {
@@ -708,6 +727,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
               space_resolution=p$pres ,
               returntype = "vector"
             ) 
+            
         }
       }
 
