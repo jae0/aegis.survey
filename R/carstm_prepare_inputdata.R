@@ -124,7 +124,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "z"
     aegis_project = "bathymetry"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
 
     if ( !(exists( vn, M )))  M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -189,6 +189,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
   # --------------------------
 
+# browser()
 
   if ("substrate" %in% lookup_parameters_names) {
     require(aegis.substrate)
@@ -197,7 +198,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "substrate.grainsize"
     aegis_project = "substrate"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
 
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -267,7 +268,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "t"
     aegis_project = "temperature"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
  
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -329,7 +330,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "pca1"
     aegis_project = "speciescomposition_pca1"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
 
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -377,7 +378,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "pca2"
     aegis_project = "speciescomposition_pca2"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
 
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -426,7 +427,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "pca3"
     aegis_project = "speciescomposition_pca3"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
 
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -474,7 +475,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "ca1"
     aegis_project = "speciescomposition_ca1"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
  
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -523,7 +524,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "ca2"
     aegis_project = "speciescomposition_ca2"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
  
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -573,7 +574,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "ca3"
     aegis_project = "speciescomposition_ca3"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
 
     if (!(exists(vn, M ))) M[,vn] = NA
     iM = which(!is.finite( M[[vn]] ))
@@ -675,7 +676,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "z"
     aegis_project = "bathymetry"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
 
     APS[[vn]] = aegis_lookup( 
@@ -739,7 +740,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "substrate.grainsize"
     aegis_project = "substrate"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
 
     APS[[vn]]  = aegis_lookup( 
@@ -796,7 +797,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "t"
     aegis_project = "temperature"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
 
     APS[[ vn ]] = aegis_lookup( 
@@ -823,7 +824,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
  
     vn = "pca1"
     aegis_project = "speciescomposition_pca1"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
  
     APS[[ vn ]] = aegis_lookup( 
@@ -848,7 +849,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "pca2"
     aegis_project = "speciescomposition_pca2"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
  
     APS[[ vn ]] = aegis_lookup( 
@@ -872,7 +873,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "pca3"
     aegis_project = "speciescomposition_pca3"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
  
     APS[[ vn ]] = aegis_lookup( 
@@ -897,7 +898,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     vn = "ca1"
     aegis_project = "speciescomposition_ca1"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
   
     APS[[ vn ]] = aegis_lookup( 
@@ -922,7 +923,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
     
     vn = "ca2"
     aegis_project = "speciescomposition_ca2"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
   
     APS[[ vn ]] = aegis_lookup( 
@@ -945,7 +946,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
     
     vn = "ca3"
     aegis_project = "speciescomposition_ca3"
-    pL = carstm_prediction_surface_parameters[aegis_project]
+    pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
   
     APS[[ vn ]] = aegis_lookup( 
