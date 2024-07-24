@@ -7,17 +7,14 @@ For example, to conduct a simple Conditional Autogressive Model (BYM) on Atlanti
 
 Then one can create the model input data and output prediction locations, both concatentated into data frame M:
 
-```r
-  runtype = "default"
-  
+```r 
   p = survey_parameters(
     project_class = "carstm",
     project_name="survey",  # "survey" == keyword used to bring in domain of martimes boundaries groundfish surveys; otherwise use xydata
     label ="Atlantic cod summer",
     speciesname = "Atlantic_cod",
     trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],
-    carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present
-    runtype=runtype,
+    carstm_model_label="default",   # default = 1970:present, alt: 1999_present
     yrs = yrs,
     selection = selection,
     variabletomodel = "totno",

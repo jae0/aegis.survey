@@ -45,7 +45,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
   
   yrs = 1970:year.assessment
 
-  runtype = "default" #   NOTE:  must use "default" for cod
+  carstm_model_label = "default" #   NOTE:  must use "default" for cod
 
  
   global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "Atlantic_cod" )
@@ -78,9 +78,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
       label ="Atlantic cod summer",
       speciesname = "Atlantic_cod",
       trawlable_units = c( "standardtow", "towdistance", "sweptarea")[2],  
-      # carstm_model_label = "full_model"   ## <<----- 
-      carstm_model_label=runtype,   # default = 1970:present, alt: 1999_present 
-      runtype=runtype,
+      carstm_model_label=carstm_model_label,   # default = 1970:present, alt: 1999_present 
       yrs = yrs,
       type="habitat",
       variabletomodel = "pa",  
