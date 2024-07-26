@@ -139,7 +139,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype="vector"
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
@@ -154,7 +158,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres, 
         returntype="vector" 
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
 
     }
  
@@ -212,7 +220,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         output_format="points",  
         variable_name="substrate.grainsize.mean" 
       )  
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }   
     
     iM = which(!is.finite( M[[vn]] ))
@@ -228,7 +240,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres, 
         returntype="vector" 
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
     # due to limited spatial range, resort to using some of the modelled results as well to fill in some gaps
 
@@ -290,7 +306,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         tz=tz,
         year.assessment=p$year.assessment
       )
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
  
     iM = which(!is.finite( M[[vn]] ))
@@ -310,7 +330,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         tz=tz, 
         returntype = "vector"
       )
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
 
     if (NA_remove) {
@@ -351,7 +375,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         tz=tz,
         year.assessment=p$year.assessment
       )
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
@@ -369,7 +397,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype = "vector"
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
     if (NA_remove) {
       ii = which( !is.finite( M[[ vn]] ))
@@ -401,7 +433,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         tz=tz 
       )
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
@@ -419,7 +455,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype = "vector"
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
     if (NA_remove) {
       ii = which( !is.finite( M[[ vn]] ))
@@ -452,7 +492,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
           variable_name=vn, 
           tz=tz 
         )
-        if (length(alu) == length(iM))   M[[vn]][iM] = alu
+        if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM) > 0) {
@@ -469,7 +513,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         space_resolution=p$pres,
         returntype = "vector"
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
     if (NA_remove) {
       ii = which( !is.finite( M[[ vn]] ))
@@ -502,7 +550,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         variable_name=vn, 
         tz=tz 
       )
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
@@ -520,7 +572,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         returntype = "vector"
       )    
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu 
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu 
     }
       
     if (NA_remove) {
@@ -553,7 +609,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         tz=tz 
       )
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
 
     iM = which(!is.finite( M[[vn]] ))
@@ -571,7 +631,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         returntype = "vector"
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
       
     if (NA_remove) {
@@ -605,7 +669,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
           year.assessment=p$year.assessment,
           tz=tz 
         )
-        if (length(alu) == length(iM))   M[[vn]][iM] = alu
+        if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM) > 0) {
@@ -622,7 +690,11 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         year.assessment=p$year.assessment,
         returntype = "vector"
       ) 
-      if (length(alu) == length(iM))   M[[vn]][iM] = alu
+      if (length(alu) != length(iM)) {
+        message("Error: number of data points and lookups do not match")
+        browser()  
+      }
+      M[[vn]][iM] = alu
     }
       
     if (NA_remove) {
@@ -798,7 +870,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
   # to this point APS is static, now add time dynamics (teperature),  expand APS to all time slices
   # time or time-cyclic is defined by length of nt and prediction_ts 
   if ( grepl( "time", dimensionality ) | (grepl( "cyclic", dimensionality )  ) ) {
-    # time and cyclic
+    # time and cyclic 
     n_aps = nrow(APS)
     APS = cbind( APS[ rep.int(1:n_aps, p$nt), ], rep.int( p$prediction_ts, rep(n_aps, p$nt )) )
     names(APS)[ncol(APS)] = "tiyr"
@@ -1022,10 +1094,10 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     M$dyri = discretize_data( M[["dyear"]], discretizations()[["dyear"]] )
     M$tiyr = NULL
+    if (exists("carstm_input_time_limit", p))  M = M[ which( M$yr >= p$carstm_input_time_limit), ]   
   }
 
   # could filter earlier for speed but here it is more compact  
-  if (exists("carstm_input_time_limit", p))  M = M[ which( M$yr >= p$carstm_input_time_limit), ]   
 
   message( "Number of initial observations:  ", nS  )
   message( "Number of observations in domain:  ", nM  )
