@@ -548,7 +548,7 @@ carstm_plot_marginaleffects( p, outputdir, fn_root)
           axis.ticks=element_blank(),
           axis.title.x=element_blank(),
           axis.title.y=element_blank(), 
-          legend.position.inside=c( 0.1, 0.8 ),
+          legend.position="inside", legend.position.inside=c( 0.1, 0.8 ),
           panel.background=element_blank(),
           panel.border=element_blank(),
           panel.grid.major=element_blank(),
