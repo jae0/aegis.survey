@@ -394,15 +394,27 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # merge depth
     iM = which( !is.finite(set$z) )
     if (length(iM > 0)) {
-      set$z[iM] = aegis_lookup( parameters="bathymetry", LOCS=set[ iM, c("lon", "lat")], project_class="core", output_format="points", DS="aggregated_data", space_resolution=p$pres*2, variable_name="z.mean"  ) # core==unmodelled
-      }
+      pL = aegis.bathymetry::bathymetry_parameters( project_class="core"  )
+      LUT= aegis_survey_lookuptable( aegis_project="bathymetry", 
+        project_class="core", DS="aggregated_data", pL=pL )
+
+      set$z[iM] = aegis_lookup( pL=pL, LOCS=set[ iM, c("lon", "lat")], LUT=LUT,
+        project_class="core", output_format="points",  
+        space_resolution=p$pres*2, variable_name="z.mean"  ) # core==unmodelled
+    }
 
     # substrate lookup
     pS = substrate_parameters( p=parameters_reset(p), project_class="core"  )
     if (!(exists(pS$variabletomodel, set ))) set[,pS$variabletomodel] = NA
     iM = which(!is.finite( set[, pS$variabletomodel] ))
     if (length(iM > 0)) {
-      set[iM, pS$variabletomodel] = aegis_lookup( parameters="substrate", LOCS=set[iM, c("lon", "lat")], project_class="core", output_format="points" , DS="aggregated_data", space_resolution=p$pres*2, variable_name="substrate.grainsize.mean"  )
+ 
+      LUT= aegis_survey_lookuptable( aegis_project="substrate", 
+        project_class="core", DS="aggregated_data", pL=pS )
+
+      set[iM, pS$variabletomodel] = aegis_lookup( pL=pS, LOCS=set[iM, c("lon", "lat")], LUT=LUT,
+        project_class="core", output_format="points" , 
+        space_resolution=p$pres*2, variable_name="substrate.grainsize.mean"  )
     }
 
     # merge temperature
@@ -410,8 +422,13 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (!(exists(pT$variabletomodel, set ))) set[,pT$variabletomodel] = NA
     iM = which(!is.finite( set[, pT$variabletomodel] ))
     if (length(iM > 0)) {
-      set[iM, pT$variabletomodel] = aegis_lookup( parameters="temperature", LOCS=set[ iM, c("lon", "lat", "timestamp")], project_class="core", output_format="points", DS="aggregated_data", variable_name="t.mean", space_resolution=p$pres*2, time_resolution=p$tres*2, year.assessment=p$year.assessment,
-          tz="America/Halifax" )
+      LUT= aegis_survey_lookuptable( aegis_project="temperature", 
+        project_class="core", DS="aggregated_data", pL=pT )
+
+      set[iM, pT$variabletomodel] = aegis_lookup( pL=pT, LOCS=set[ iM, c("lon", "lat", "timestamp")], 
+        LUT=LUT, project_class="core", output_format="points",  
+        variable_name="t.mean", space_resolution=p$pres*2, time_resolution=p$tres*2, 
+        year.assessment=p$year.assessment, tz="America/Halifax" )
     }
 
     set$oxysat = oxygen_concentration_to_saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)

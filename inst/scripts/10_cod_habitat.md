@@ -526,9 +526,12 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
       yrs=yrs, 
       carstm_model_label="default"
   ) 
+ 
+    LUT= aegis_survey_lookuptable( aegis_project="temperature", 
+        project_class="carstm", DS="carstm_predictions", pL=pt )
 
   tss = aegis_lookup(  
-    parameters=list( temperature = pt ), 
+    pt = pt, LUT=LUT, 
     LOCS=expand.grid( AUID=polys$AUID, timestamp=pt$yrs + 0.75 ), LOCS_AU=polys, 
     project_class="carstm", output_format="areal_units", 
     variable_name=list( "predictions" ), statvars=c("mean", "sd"), space_resolution=pt$pres, year.assessment=pt$year.assessment,
