@@ -176,7 +176,7 @@ Prepare snowcrab data for assimilation by running:
 
 require( aegis.survey )
 
-year.assessment = 2023
+year.assessment = 2024
 yrs = 1970:year.assessment
 
 
