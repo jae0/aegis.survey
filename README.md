@@ -120,17 +120,22 @@ set = survey_db( p=p, DS="filter"  )
 
 ```
 
-If catch-level or individual-level results are required: 
+If filtering catch-level results and summarizing to set-level: 
 
 ```r
-cat = survey_db( p=p, DS="cat.filter"  ) 
-det = survey_db( p=p, DS="det.filter"  )
+set = survey_db( p=p, DS="cat.filter"  ) 
+```
+
+Or, filtering individual-level results summarized to set level:
+
+```r
+set = survey_db( p=p, DS="det.filter"  )
 ```
 
 
 <!--
 
-The folowing is the code to be run to generate some plots :
+The following is the code to be run to generate some plots :
 
 ```
 

@@ -1166,6 +1166,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 # ----------------------------------
 
   if (DS == "filter" ) {
+    # really 'set.filter' .. i.e., summarize to set-level
     # selected for a given set of species  and size and sex and maturity
     # wrapper around survey_db and groundfish_survey_db to permit abundance data to be passed, including zero valued locations
     # selected for a given set of species  and size and sex and maturity
