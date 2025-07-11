@@ -51,7 +51,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
   global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "Atlantic_cod" )
   if ( !file.exists(global_output_directory)) dir.create( global_output_directory, recursive=TRUE, showWarnings=FALSE )
 
-  results_file = file.path( global_output_directory, "RES.RDS" )
+  results_file = file.path( global_output_directory, "RES.rdw" )
 
 
   # settype:
@@ -101,7 +101,7 @@ Can add "--to docx --to pdf" as additional documents, but their formatting is aw
       )
     )
 
-    results_file = file.path( p$modeldir, p$speciesname , "RES_habitat_comparisons.rdata" )
+    results_file = file.path( p$modeldir, p$speciesname , "RES_habitat_comparisons.rdz" )
     RES= list( yr = yrs )
 
   }

@@ -22,9 +22,9 @@ netmensuration.marport = function( DS, p, YRS=NULL ){
       out = NULL
       for ( YR in YRS ) {
         basedata=NULL
-        fn = file.path( p$marport,  "basedata",  paste( "marport", "basedata", YR, "rdata", sep="." ))
+        fn = file.path( p$marport,  "basedata",  paste( "marport", "basedata", YR, "rdz", sep="." ))
         if ( file.exists(fn)) {
-          load(fn)
+          basedata = read_write_fast(fn)
           out = rbind( out, basedata )
         }
       }
@@ -34,7 +34,7 @@ netmensuration.marport = function( DS, p, YRS=NULL ){
 
     for ( YR in YRS ) {
       basedata = NULL
-      fn = file.path( p$marport,  "basedata",  paste( "marport", "basedata", YR, "rdata", sep="." ))
+      fn = file.path( p$marport,  "basedata",  paste( "marport", "basedata", YR, "rdz", sep="." ))
 
       rawdata.dir = file.path( p$marport, "marport.logs", YR )
 
@@ -102,7 +102,7 @@ netmensuration.marport = function( DS, p, YRS=NULL ){
       basedata$trip = substring(basedata$mission, 8,10)
       basedata$trip = as.numeric(basedata$trip)
 
-      save(basedata, file=fn, compress= TRUE)
+      read_write_fast(basedata, file=fn )
       print( fn)
     }
 
@@ -115,9 +115,9 @@ netmensuration.marport = function( DS, p, YRS=NULL ){
 
   if(DS %in% c("gated", "gated.redo"))  {
     nm=NULL
-    fn=file.path( p$marport.dir, paste( "gated", "rdata", sep="." ))
+    fn=file.path( p$marport.dir, paste( "gated", "rdz", sep="." ))
     if(DS == "gated"){
-      if (file.exists(fn)) load(fn)
+      if (file.exists(fn)) nm = read_write_fast(fn)
       return(nm)
     }
       nm = netmensuration.marport( DS="marport",  p=p ) # QA/QC of data
@@ -133,7 +133,7 @@ netmensuration.marport = function( DS, p, YRS=NULL ){
       nm$DepthScanmar = filter.nets("depth.range", nm$DepthScanmar)
 
 
-    save(nm, file=fn, compress=TRUE)
+    read_write_fast(nm, file=fn)
     return(fn)
   }
 

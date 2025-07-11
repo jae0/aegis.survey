@@ -80,7 +80,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
   global_output_directory = file.path( data_root, "aegis", "survey", "modelled", "NorthernStoneCrab" )
   if ( !file.exists(global_output_directory)) dir.create( global_output_directory, recursive=TRUE, showWarnings=FALSE )
 
-  results_file = file.path( global_output_directory, "RES.RDS" )
+  results_file = file.path( global_output_directory, "RES.rdz" )
 
 
   # settype:
@@ -130,7 +130,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       )
     )
 
-    results_file = file.path( p$modeldir, p$speciesname , "RES_habitat_comparisons.rdata" )
+    results_file = file.path( p$modeldir, p$speciesname , "RES_habitat_comparisons.rdz" )
     RES= list( yr = yrs )
 
   }
@@ -525,7 +525,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
     
 
       M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE, quantile_upper_limit=0.99, 
-        fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
+        fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdz" ) )
     }
 
 
@@ -557,7 +557,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
 
 
     M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, quantile_upper_limit=0.99, 
-        fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
+        fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdz" ) )
 
     ip = which(M$tag == "predictions")
     io = which(M$tag == "observations")
@@ -645,7 +645,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
     RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
 
 
-    read_write_fast( data=RES, file=results_file )
+    read_write_fast( data=RES, fn=results_file )
     # RES = aegis::read_write_fast( results_file )
       
 
@@ -867,7 +867,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
         dev.off()
     
 
-      read_write_fast( data=RES, file=results_file  )
+      read_write_fast( data=RES, fn=results_file  )
       # RES = aegis::read_write_fast( results_file )
         
 
@@ -945,7 +945,7 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
       ) 
 
       if (0) {
-        u = aegis::read_write_fast('/home/jae/tmp/temp_depth_habitat.RDS')
+        u = aegis::read_write_fast('/home/jae/tmp/temp_depth_habitat.rdz')
         dev.new()
         plot( habitat~yr, u, type="b", ylim=c(0.29, 0.4))
         lines( habitat_lb~yr, u)
@@ -966,8 +966,8 @@ map.set.information( p, variables=bc.vars, mapyears=1999:p$year.assessment, outd
 
       }
 
-      fn_optimal = file.path( outputdir, "optimal_habitat.RDS" )
-      read_write_fast( data=o, file=fn_optimal )
+      fn_optimal = file.path( outputdir, "optimal_habitat.rdz" )
+      read_write_fast( data=o, fn=fn_optimal )
       o = aegis::read_write_fast(fn_optimal)
     
       if (plot_map) {

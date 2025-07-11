@@ -20,36 +20,36 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
   if(DS %in% c("perley", "perley.datadump", "perley.redo" )) {
 
     # fn1= old data, fn2= new data and fn3= merged data (old and new)
-    fn1= file.path(p$scanmar.dir,"scanmar_rawdata_perley0.rdata")
-    fn2= file.path(p$scanmar.dir,"scanmar_rawdata_perley1.rdata")
-    fn3= file.path(p$scanmar.dir,"scanmar.perley.merged.rdata")
+    fn1= file.path(p$scanmar.dir,"scanmar_rawdata_perley0.rdz")
+    fn2= file.path(p$scanmar.dir,"scanmar_rawdata_perley1.rdz")
+    fn3= file.path(p$scanmar.dir,"scanmar.perley.merged.rdz")
 
     if(DS=="perley"){
       nm = NULL
-      if (file.exists(fn3)) load(fn3)
+      if (file.exists(fn3)) nm = read_write_fast(fn3)
       return(nm)
     }
 
     if(DS=="perley.redo"){
 
       if (file.exists( fn1) ) {
-        load(fn1)
+        scanmar = read_write_fast(fn1)
       } else {
         require (ROracle)
         connect = dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.perley.db, username=oracle.perley.user, password=oracle.perley.password, believeNRows=F)
         scanmar = dbGetQuery(connect, "select * from   groundfish.perleyp_SCANMAR", as.is=T)
         dbDisconnect(connect)
-        save(scanmar, file=fn1, compress=T)
+        read_write_fast(scanmar, file=fn1)
       }
 
       if (file.exists( fn2) ) {
-        load(fn2)
+        scanmarnew = read_write_fast(fn2)
       } else {
         require (ROracle)
         connect = dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.perley.db, username=oracle.perley.user, password=oracle.perley.password, believeNRows=F)
         scanmarnew = dbGetQuery(connect, "select * from   groundfish.perleyp_NEWSCANMAR", as.is=T)
         dbDisconnect(connect)
-        save(scanmarnew, file=fn2, compress=T)
+        read_write_fast(scanmarnew, file=fn2)
       }
 
       nm = scanmar
@@ -183,7 +183,7 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
       v.to.drop = c("vesel", "empty", "logtime", "cspd", "fspd", "settype", "dist", "edate" )
       for ( v in v.to.drop) nm[,v] = NULL
 
-      save(nm, file=fn3,compress=TRUE)
+      read_write_fast(nm, file=fn3 )
     }
   }
 
@@ -199,9 +199,9 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
       out = NULL
       for ( YR in YRS ) {
         basedata=NULL
-        fn = file.path( p$scanmar.dir,  "basedata",  paste( "scanmar", "basedata", YR, "rdata", sep="." ))
+        fn = file.path( p$scanmar.dir,  "basedata",  paste( "scanmar", "basedata", YR, "rdz", sep="." ))
         if ( file.exists(fn)) {
-          load(fn)
+          basedata = read_write_fast(fn)
           out = rbind( out, basedata )
         }
       }
@@ -215,7 +215,7 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
 
     for ( YR in YRS ) {
       basedata = NULL
-      fn = file.path( p$scanmar.dir, "basedata", paste( "scanmar", "basedata", YR, "rdata", sep="." ))
+      fn = file.path( p$scanmar.dir, "basedata", paste( "scanmar", "basedata", YR, "rdz", sep="." ))
 
       if (YR %in% c( perley.years0, perley.years1)  ) {
         nm = netmensuration.scanmar( DS="perley", p=p )
@@ -263,7 +263,7 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
         }
       }
       if (!is.null( basedata) ) {
-        save(basedata, file=fn, compress= TRUE)
+        read_write_fast(basedata, file=fn )
         print(fn)
       }
     }
@@ -286,9 +286,9 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
       out = NULL
       for ( YR in YRS ) {
         gf = NULL
-        fnYR = file.path( p$scanmar.dir, "basedata.lookuptable", paste( "scanmar", "basedata.lookuptable", YR, "rdata", sep= "."))
+        fnYR = file.path( p$scanmar.dir, "basedata.lookuptable", paste( "scanmar", "basedata.lookuptable", YR, "rdz", sep= "."))
         if ( file.exists(fnYR)) {
-          load(fnYR)
+          gf = read_write_fast(fnYR)
           out = rbind( out, gf )
         }
       }
@@ -309,7 +309,7 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
 
     for ( YR in YRS ) {
       print( YR )
-      fnYR = file.path( p$scanmar.dir, "basedata.lookuptable", paste( "scanmar", "basedata.lookuptable", YR, "rdata", sep= "."))
+      fnYR = file.path( p$scanmar.dir, "basedata.lookuptable", paste( "scanmar", "basedata.lookuptable", YR, "rdz", sep= "."))
       skipyear = FALSE
       # Incorporation of newer data, combining timestamp
 
@@ -568,7 +568,7 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
 
       } # end if skipyear
 
-      save(gf, file= fnYR, compress= TRUE)
+      read_write_fast(gf, file= fnYR )
       print( paste(fnYR))
       print( paste("Matched:", length(which(!is.na(gf$id))), " -- Total", nrow(gf)) )
     }  # end loop for YRS
@@ -590,9 +590,9 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
       out = NULL
       for ( YR in YRS ) {
         nm = NULL
-        fn = file.path( p$scanmar.dir, "sanity.checked", paste("scanmar.sanity.checked", YR, "rdata", sep=".") )
+        fn = file.path( p$scanmar.dir, "sanity.checked", paste("scanmar.sanity.checked", YR, "rdz", sep=".") )
         if ( file.exists(fn)) {
-          load(fn)
+          nm = read_write_fast(fn)
           out = rbind( out, nm )
         }
       }
@@ -754,8 +754,8 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
       nm$trip = as.numeric(nm$trip)
       nm$year= lubridate::year(nm$timestamp)
 
-      fn = file.path( p$scanmar.dir, "sanity.checked", paste("scanmar.sanity.checked", YR, "rdata", sep=".") )
-      save( nm, file=fn, compress=TRUE)
+      fn = file.path( p$scanmar.dir, "sanity.checked", paste("scanmar.sanity.checked", YR, "rdz", sep=".") )
+      read_write_fast( nm, file=fn)
       print(fn)
       print( paste("Sets with usable data:", length(unique(nm$id)), " -- Logs found:", nnm0, " -- Total sets in gsinf", ngf ) )
     }
@@ -777,17 +777,17 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
 
     if ( DS=="bottom.contact"){
       if ( !is.null( setid ) ) {
-        fn.bc = file.path( scanmar.bc.dir, "results", paste( "bc", setid, "rdata", sep=".") )
+        fn.bc = file.path( scanmar.bc.dir, "results", paste( "bc", setid, "rdz", sep=".") )
         bc = NULL
-        if (file.exists(fn.bc)) load(fn.bc)
+        if (file.exists(fn.bc)) bc = read_write_fast(fn.bc)
         return(bc)
       }
 
       out = NULL
       for ( YR in YRS ) {
         gsinf=NULL
-        fn= file.path( scanmar.bc.dir, paste( "gsinf.bottom.contact", YR, "rdata", sep=".")  )
-        if (file.exists(fn)) load(fn)
+        fn= file.path( scanmar.bc.dir, paste( "gsinf.bottom.contact", YR, "rdz", sep=".")  )
+        if (file.exists(fn)) gsinf = read_write_fast(fn)
         out = rbind( out, gsinf )
       }
       gsinf0 = groundfish_survey_db( DS="gsinf" )
@@ -997,16 +997,16 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
           }
         }
 
-        fn.bc = file.path( scanmar.bc.dir, "results", paste( "bc", id, "rdata", sep=".") )
-        save ( bc, file=fn.bc, compress=TRUE )
+        fn.bc = file.path( scanmar.bc.dir, "results", paste( "bc", id, "rdz", sep=".") )
+        read_write_fast ( bc, file=fn.bc )
       }
       if (is.null(debugid))  {
-        # save only if not debug
+        # read_write_fast only if not debug
         ## END of re-run area ...
         gsinf.tokeep = setdiff( names( gsinf), setdiff(gsinf0.names, "id") )
         gsinf = gsinf[ , gsinf.tokeep ]
-        fn = file.path( scanmar.bc.dir, paste( "gsinf.bottom.contact", YR, "rdata", sep=".")  )
-        save(gsinf, file=fn, compress= TRUE)
+        fn = file.path( scanmar.bc.dir, paste( "gsinf.bottom.contact", YR, "rdz", sep=".")  )
+        read_write_fast(gsinf, file=fn )
       }
 
     }  # end for years
@@ -1042,8 +1042,8 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
       res = NULL
       for ( YR in YRS ) {
         out = NULL
-        fn = file.path( scanmar.filtered.dir, paste( "scanmar.filtered.indices", YR, "rdata", sep=".")  )
-        if (file.exists(fn)) load(fn)
+        fn = file.path( scanmar.filtered.dir, paste( "scanmar.filtered.indices", YR, "rdz", sep=".")  )
+        if (file.exists(fn)) out = read_write_fast(fn)
         res = c( res, out )
       }
       res = sort( unique( res))
@@ -1083,8 +1083,8 @@ netmensuration.scanmar = function( DS, p, nm=NULL, YRS=NULL, setid=NULL, debugid
           }
         }
       }
-      fn = file.path( scanmar.filtered.dir, paste( "scanmar.filtered.indices", YR, "rdata", sep=".")  )
-      save( out, file=fn, compress= TRUE)
+      fn = file.path( scanmar.filtered.dir, paste( "scanmar.filtered.indices", YR, "rdz", sep=".")  )
+      read_write_fast( out, file=fn )
       nc = length( out)
       nu = length( uid )
       print( paste(fn, nc, nu) )

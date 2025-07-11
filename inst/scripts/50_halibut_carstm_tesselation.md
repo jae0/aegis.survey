@@ -79,7 +79,7 @@ if (redo_data) {
  
 
   M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE, quantile_upper_limit=0.99, 
-    fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
+    fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdz" ) )
 }
 
 
@@ -110,7 +110,7 @@ carstm_map(  sppoly=sppoly, vn="dummy_var",
 
 
 M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, quantile_upper_limit=0.99, 
-    fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdata" ) )
+    fn=file.path( p$modeldir, p$speciesname, "carstm_inputs_tesselation.rdz" ) )
 
 ip = which(M$tag == "predictions")
 io = which(M$tag == "observations")
@@ -195,7 +195,7 @@ sims = carstm_posterior_simulations( pN=pN, pW=pW, pH=pH, pa_threshold=0.05 ) * 
 RES[[p$carstm_model_type]] = carstm_posterior_simulations_summary( sims ) 
 
 
-read_write_fast( data=RES, file=results_file  )
+read_write_fast( data=RES, fn=results_file  )
 # RES = aegis::read_write_fast( results_file )
   
 
@@ -413,7 +413,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
     dev.off()
  
 
-  read_write_fast( data=RES, file=results_file )
+  read_write_fast( data=RES, fn=results_file )
   # RES = aegis::read_write_fast( results_file )
     
 
@@ -491,7 +491,7 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
   ) 
 
   if (0) {
-    u = aegis::read_write_fast('/home/jae/tmp/temp_depth_habitat.RDS')
+    u = aegis::read_write_fast('/home/jae/tmp/temp_depth_habitat.rdz')
     dev.new()
     plot( habitat~yr, u, type="b", ylim=c(0.29, 0.4))
     lines( habitat_lb~yr, u)
@@ -512,8 +512,8 @@ ggplot( dta, aes(year, mean, fill=Method, colour=Method) ) +
 
   }
 
-  fn_optimal = file.path( outputdir, "optimal_habitat.RDS" )
-  read_write_fast( data=o, file=fn_optimal )
+  fn_optimal = file.path( outputdir, "optimal_habitat.rdz" )
+  read_write_fast( data=o, fn=fn_optimal )
   o = aegis::read_write_fast(fn_optimal)
  
   if (plot_map) {

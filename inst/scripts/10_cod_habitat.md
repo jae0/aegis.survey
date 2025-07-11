@@ -107,7 +107,7 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
  
     redo_survey_data = FALSE
     # redo_survey_data = TRUE
-    M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, fn=file.path( p$modeldir, p$speciesname,  "carstm_inputs_stratanal.rdata" )  )
+    M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, fn=file.path( p$modeldir, p$speciesname,  "carstm_inputs_stratanal.rdz" )  )
 
 
   }
@@ -156,7 +156,7 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
     redo_survey_data = FALSE
     # redo_survey_data = TRUE
     sppoly = areal_units( p=p, return_crs=projection_proj4string("lonlat_wgs84"), redo=FALSE, areal_units_constraint="survey", verbose=TRUE )
-    M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, fn=file.path( p$modeldir, p$speciesname,  "carstm_inputs_tesselation.rdata" )  )
+    M = survey_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=redo_survey_data, quantile_upper_limit=0.99, fn=file.path( p$modeldir, p$speciesname,  "carstm_inputs_tesselation.rdz" )  )
 
 
   }
@@ -287,7 +287,7 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
 
   RES[[mf]] = params
     
-  save(RES, file=results_file, compress=TRUE)   # load(results_file)     # store some of the aggregate timeseries in this list
+  read_write_fast(RES, file=results_file)   # load(results_file)     # store some of the aggregate timeseries in this list
 
   # to reload:
   fit = carstm_model( p=RES[[mf]]$pH, DS="modelled_fit" ) 
@@ -422,12 +422,12 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   require(tmap)
 
     additional_features =  
-      tm_shape( st_transform( maritimes_groundfish_strata(areal_units_timeperiod = p$areal_units_timeperiod), plot_crs ) ) + 
+      tm_shape( st_transform( maritimes_groundfish_strata(areal_units_timeperiod = p$areal_units_timeperiod), crs=plot_crs ) ) + 
         tm_borders( col="darkgrey", alpha=0.9, lwd=1.5)   + 
-      tm_shape( aegis.bathymetry::isobath_db(  depths=c( seq(0, 500, by=100), 1000), project_to=plot_crs  ), projection=plot_crs ) +
-        tm_lines( col="slategray", alpha=0.5, lwd=0.5) 
+      tm_shape( aegis.bathymetry::isobath_db(  depths=c( seq(0, 500, by=100), 1000), project_to=plot_crs  ), crs=plot_crs ) +
+        tm_lines( col="slategray", col_alpha=0.5, lwd=0.5) 
       #   +
-      # tm_shape( aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs ), projection=plot_crs ) +
+      # tm_shape( aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs ), crs=plot_crs ) +
       #   tm_polygons( col="lightgray", alpha=0.5 , border.alpha =0.5)
 
     (additional_features)

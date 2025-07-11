@@ -134,7 +134,7 @@ carstm_optimal_habitat = function(
 
   message("This will take a while ... ")
 
-  fn_monitor = file.path( work_root, "temp_depth_habitat.RDS")
+  fn_monitor = file.path( work_root, "temp_depth_habitat.rdz")
   message( "load the following to monitor : u = aegis::read_write_fast(", fn_monitor, ")" ) 
   
 
@@ -215,7 +215,7 @@ carstm_optimal_habitat = function(
     h_zt$habitat_ub  = rowMeans(summ_ub, na.rm=TRUE)   # mean across space then sims
     h_zt$habitat_sa_ub = rowMeans(summh_ub, na.rm=TRUE)
 
-    read_write_fast( data=h_zt, file=fn_monitor )  # temp save
+    read_write_fast( data=h_zt, fn=fn_monitor )  # temp save
   
   }
  

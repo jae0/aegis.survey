@@ -24,7 +24,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
       for ( YR in yrs ) {
-        fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+        fn = file.path( fn.root, paste( YR,"rdz", sep="."))
         gscat = ROracle::dbGetQuery( connect,  paste(
           "select i.*, substr(mission,4,4) year " ,
           " from groundfish.gscat i " ,
@@ -32,8 +32,8 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
         )
 
         names(gscat) =  tolower( names(gscat) )
-        print(fny)
-        save(gscat, file=fny, compress=T)
+        print(fn)
+        read_write_fast(gscat, file=fn)
         gc()  # garbage collection
         print(YR)
       }
@@ -48,7 +48,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
       dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
 
       for ( YR in yrs ) {
-        fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+        fn = file.path( fn.root, paste( YR,"rdz", sep="."))
         gsdet = ROracle::dbGetQuery( connect,  paste(
           "select i.*, substr(mission,4,4) year" ,
           " from groundfish.gsdet i " ,
@@ -56,8 +56,8 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
         )
         names(gsdet) =  tolower( names(gsdet) )
         gsdet$mission = as.character( gsdet$mission )
-        save(gsdet, file=fny, compress=T)
-        print(fny)
+        read_write_fast(gsdet, file=fn)
+        print(fn)
         gc()  # garbage collection
         print(YR)
       }
@@ -72,13 +72,13 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
       dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
 
       for ( YR in yrs ) {
-        fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+        fn = file.path( fn.root, paste( YR,"rdz", sep="."))
         gsinf = ROracle::dbGetQuery( connect,  paste(
           "select * from groundfish.gsinf where EXTRACT(YEAR from SDATE) = ", YR )
         )
         names(gsinf) =  tolower( names(gsinf) )
-        save(gsinf, file=fny, compress=T)
-        print(fny)
+        read_write_fast(gsinf, file=fn )
+        print(fn)
         gc()  # garbage collection
         print(YR)
       }
@@ -87,11 +87,11 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-      fn = file.path( outdir,   "gsgear.rdata")
+      fn = file.path( outdir,   "gsgear.rdz")
       gsgear =  ROracle::dbGetQuery(connect, "select * from groundfish.gsgear", as.is=T)
       ROracle::dbDisconnect(connect)
       names(gsgear) =  tolower( names(gsgear) )
-      save(gsgear, file=fn, compress=T)
+      read_write_fast(gsgear, file=fn)
       print(fn)
 
     ROracle::dbDisconnect(connect)
@@ -100,11 +100,11 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
       
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-      fn = file.path( outdir,   "gslist.rdata")
+      fn = file.path( outdir,   "gslist.rdz")
       gslist = ROracle::dbGetQuery(connect, "select * from groundfish.gs_survey_list")
       ROracle::dbDisconnect(connect)
       names(gslist) =  tolower( names(gslist) )
-      save(gslist, file=fn, compress=T)
+      read_write_fast(gslist, file=fn)
       print(fn)
   
     ROracle::dbDisconnect(connect)
@@ -112,23 +112,23 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-      fnmiss = file.path( outdir,   "gsmissions.rdata")
+      fn = file.path( outdir,   "gsmissions.rdz")
       gsmissions = ROracle::dbGetQuery(connect, "select MISSION, VESEL, CRUNO from groundfish.gsmissions")
       ROracle::dbDisconnect(connect)
       names(gsmissions) =  tolower( names(gsmissions) )
-      save(gsmissions, file=fnmiss, compress=T)
-      print(fnmiss)
+      read_write_fast(gsmissions, file=fn)
+      print(fn)
 
     ROracle::dbDisconnect(connect)
 
     
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-      fnspc = file.path( outdir,   "spcodes.rdata" )
+      fnspc = file.path( outdir,   "spcodes.rdz" )
       spcodes = ROracle::dbGetQuery(connect, "select * from groundfish.gsspecies", as.is=T)
       ROracle::dbDisconnect(connect)
       names(spcodes) =  tolower( names(spcodes) )
-      save(spcodes, file=fnspc, compress=T)
+      read_write_fast(spcodes, file=fnspc)
       print( fnspc )
       print("Should follow up with a refresh of the taxonomy.db " )
 
@@ -156,10 +156,10 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("spcodes", "spcodes.rawdata", "spcodes.redo", "spcodes.rawdata.redo", "gstaxa", "gstaxa.redo"  ) ) {
 
-    fnspc = file.path( p$datadir, "spcodes.rdata" )
+    fnspc = file.path( p$datadir, "spcodes.rdz" )
 
     if ( DS %in% c( "spcodes", "spcodes.rawdata", "gstaxa" ) ) {
-      load( fnspc )
+      spcodes = read_write_fast( fnspc )
       return( spcodes )
     }
 
@@ -169,7 +169,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
       spcodes = ROracle::dbGetQuery(connect, "select * from groundfish.gsspecies", as.is=T)
       ROracle::dbDisconnect(connect)
       names(spcodes) =  tolower( names(spcodes) )
-      save(spcodes, file=fnspc, compress=T)
+      read_write_fast(spcodes, file=fnspc)
       print( fnspc )
       print("Should follow up with a refresh of the taxonomy.db " )
       return( fnspc )
@@ -188,11 +188,11 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 		out = NULL
     if ( is.null(DS) | DS=="gscat.rawdata" ) {
-      fl = list.files( path=fn.root, pattern="*.rdata", full.names=T )
-				for ( fny in fl ) {
-				load (fny)
-				out = rbind( out, gscat )
-			}
+      fl = list.files( path=fn.root, pattern="*.rdz", full.names=T )
+      for ( fn in fl ) {
+        gscat = read_write_fast(fn)
+        out = rbind( out, gscat )
+      }
 			return (out)
     }
 
@@ -200,7 +200,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
 		for ( YR in p$yrs ) {
-			fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gscat = ROracle::dbGetQuery( connect,  paste(
         "select i.*, substr(mission,4,4) year " ,
         " from groundfish.gscat i " ,
@@ -208,8 +208,8 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
       )
 
       names(gscat) =  tolower( names(gscat) )
-      print(fny)
-      save(gscat, file=fny, compress=T)
+      print(fn)
+      read_write_fast(gscat, file=fn)
 			gc()  # garbage collection
 			print(YR)
 		}
@@ -226,10 +226,10 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gscat.base", "gscat.base.redo"  ) ) {
 
-    fn = file.path( p$datadir, "gscat.base.rdata")
+    fn = file.path( p$datadir, "gscat.base.rdz")
 
     if ( DS=="gscat.base" ) {
-      load( fn )
+      gscat = read_write_fast( fn )
       return (gscat)
     }
 
@@ -271,7 +271,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 		kk = which( gscat$totno == 0 )
     if (length(kk)>0) gscat$totno[kk] = NA
 
-    save(gscat, file=fn, compress=T)
+    read_write_fast(gscat, file=fn)
     return( fn )
   }
 
@@ -285,9 +285,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 		out = NULL
     if ( DS=="gsdet.rawdata" ) {
-      fl = list.files( path=fn.root, pattern="*.rdata", full.names=T  )
-				for ( fny in fl ) {
-				load (fny)
+      fl = list.files( path=fn.root, pattern="*.rdz", full.names=T  )
+				for ( fn in fl ) {
+				gsdet = read_write_fast(fn)
 				out = rbind( out, gsdet )
 			}
 			return (out)
@@ -297,7 +297,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
 		for ( YR in p$yrs ) {
-			fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gsdet = ROracle::dbGetQuery( connect,  paste(
         "select i.*, substr(mission,4,4) year" ,
         " from groundfish.gsdet i " ,
@@ -305,8 +305,8 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
       )
       names(gsdet) =  tolower( names(gsdet) )
       gsdet$mission = as.character( gsdet$mission )
-      save(gsdet, file=fny, compress=T)
-      print(fny)
+      read_write_fast(gsdet, file=fn)
+      print(fn)
 			gc()  # garbage collection
 			print(YR)
 		}
@@ -330,10 +330,10 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
   #      6=tagging, 7=mesh/gear studies, 8=explorartory fishing, 9=hydrography
   # --------- codes ----------------
 
-    fn = file.path( p$datadir, "gsdet.rdata")
+    fn = file.path( p$datadir, "gsdet.rdz")
 
     if ( DS=="gsdet" ) {
-      load( fn )
+      gsdet = read_write_fast( fn )
       return (gsdet)
     }
 
@@ -356,7 +356,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     gsdet$mass = gsdet$mass / 1000 # convert from grams to kg
     gsdet = gsdet[, c("id", "spec",  "individual", "sex", "mat", "len", "mass", "age") ]
 
-    save(gsdet, file=fn, compress=T)
+    read_write_fast(gsdet, file=fn)
 
     return( fn )
   }
@@ -372,9 +372,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 		out = NULL
     if ( is.null(DS) | DS=="gsinf.rawdata" ) {
-      fl = list.files( path=fn.root, pattern="*.rdata", full.names=T  )
-      for ( fny in fl ) {
-        load (fny)
+      fl = list.files( path=fn.root, pattern="*.rdz", full.names=T  )
+      for ( fn in fl ) {
+        gsinf = read_write_fast(fn)
         if ( is.null(out) ) {
           out = gsinf
         } else {
@@ -389,13 +389,13 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
 		for ( YR in p$yrs ) {
-			fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gsinf = ROracle::dbGetQuery( connect,  paste(
         "select * from groundfish.gsinf where EXTRACT(YEAR from SDATE) = ", YR )
       )
       names(gsinf) =  tolower( names(gsinf) )
-      save(gsinf, file=fny, compress=T)
-      print(fny)
+      read_write_fast(gsinf, file=fn)
+      print(fn)
 			gc()  # garbage collection
 			print(YR)
 		}
@@ -411,10 +411,10 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
   if (DS %in% c("gsinf", "gsinf.redo" ) ) {
-    fn = file.path( p$datadir, "gsinf.rdata")
+    fn = file.path( p$datadir, "gsinf.rdz")
 
     if ( DS=="gsinf" ) {
-      load( fn )
+      gsinf = read_write_fast( fn )
       return (gsinf)
     }
 
@@ -560,7 +560,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     tokeep = intersect( names(gsinf), tokeep )
     gsinf = gsinf[, tokeep ]
 
-    save(gsinf, file=fn, compress=T)
+    read_write_fast(gsinf, file=fn)
     return(fn)
   }
 
@@ -575,9 +575,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 		out = NULL
     if ( is.null(DS) | DS=="gshyd.profiles.rawdata" ) {
-      fl = list.files( path=fn.root, pattern="*.rdata", full.names=T  )
-				for ( fny in fl ) {
-				load (fny)
+      fl = list.files( path=fn.root, pattern="*.rdz", full.names=T  )
+				for ( fn in fl ) {
+				gshyd = read_write_fast(fn)
 				out = rbind( out, gshyd )
 			}
 			return (out)
@@ -587,7 +587,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
 		for ( YR in p$yrs ) {
-			fny = file.path( fn.root, paste( YR,"rdata", sep="."))
+			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gshyd = ROracle::dbGetQuery( connect,  paste(
         "select i.*, j.YEAR " ,
         " from groundfish.gshyd i, groundfish.gsmissions j " ,
@@ -602,8 +602,8 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 	     #    gshyd <- makeGSHYD(o)
       # }
       gshyd$mission = as.character( gshyd$mission )
-      save(gshyd, file=fny, compress=T)
-      print(fny)
+      read_write_fast(gshyd, file=fn)
+      print(fn)
 			gc()  # garbage collection
 			print(YR)
 		}
@@ -619,9 +619,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gshyd.profiles", "gshyd.profiles.redo" ) ) {
     # full profiles
-    fn = file.path( p$datadir,"gshyd.profiles.rdata")
+    fn = file.path( p$datadir,"gshyd.profiles.rdz")
     if ( DS=="gshyd.profiles" ) {
-      load( fn )
+      gshyd = read_write_fast( fn )
       return (gshyd)
     }
 
@@ -629,7 +629,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     gshyd$id = paste(gshyd$mission, gshyd$setno, sep=".")
     gshyd = gshyd[, c("id", "sdepth", "
     ", "sal", "oxyml" )]
-    save(gshyd, file=fn, compress=T)
+    read_write_fast(gshyd, file=fn)
     return( fn )
   }
 
@@ -640,9 +640,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gshyd", "gshyd.redo") ) {
     # hydrographic info at deepest point
-    fn = file.path( p$datadir,"gshyd.rdata")
+    fn = file.path( p$datadir,"gshyd.rdz")
     if ( DS=="gshyd" ) {
-      load( fn )
+      gshyd = read_write_fast( fn )
       return (gshyd)
     }
     gshyd = groundfish_survey_db( DS="gshyd.profiles", yrs=p$yrs )
@@ -684,7 +684,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     gshyd$bottom_salinity = NULL
 
 
-    save(gshyd, file=fn, compress=T)
+    read_write_fast(gshyd, file=fn)
     return( fn )
   }
 
@@ -693,9 +693,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gshyd.georef", "gshyd.georef.redo") ) {
     # hydrographic info georeferenced
-    fn = file.path( p$datadir,"gshyd.georef.rdata")
+    fn = file.path( p$datadir,"gshyd.georef.rdz")
     if ( DS=="gshyd.georef" ) {
-      load( fn )
+      gshyd = read_write_fast( fn )
       return (gshyd)
     }
     gsinf = groundfish_survey_db( DS="gsinf", yrs=p$yrs )
@@ -707,7 +707,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     gshyd = groundfish_survey_db( DS="gshyd.profiles", yrs=p$yrs )
     gshyd = merge( gshyd, gsinf, by="id", all.x=T, all.y=F, sort=F )
     gshyd$sal[gshyd$sal<5]=NA
-    save(gshyd, file=fn, compress=T)
+    read_write_fast(gshyd, file=fn)
     return( fn )
   }
 
@@ -716,9 +716,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
   if (DS %in% c("gsstratum", "gsstratum.obdc.redo") ) {
-    fn = file.path( p$datadir,"gsstratum.rdata")
+    fn = file.path( p$datadir,"gsstratum.rdz")
     if ( DS=="gsstratum" ) {
-      load( fn )
+      gsstratum = read_write_fast( fn )
       return (gsstratum)
     }
 
@@ -727,7 +727,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     gsstratum =  ROracle::dbGetQuery(connect, "select * from groundfish.gsstratum", as.is=T)
     ROracle::dbDisconnect(connect)
     names(gsstratum) =  tolower( names(gsstratum) )
-    save(gsstratum, file=fn, compress=T)
+    read_write_fast(gsstratum, file=fn)
     print(fn)
     return( fn )
   }
@@ -737,9 +737,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
   if (DS %in% c("gsgear", "gsgear.rawdata.redo") ) {
-    fn = file.path( p$datadir,"gsgear.rdata")
+    fn = file.path( p$datadir,"gsgear.rdz")
     if ( DS=="gsgear" ) {
-      load( fn )
+      gsgear = read_write_fast( fn )
       return (gsgear)
     }
 
@@ -748,7 +748,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     gsgear =  ROracle::dbGetQuery(connect, "select * from groundfish.gsgear", as.is=T)
     ROracle::dbDisconnect(connect)
     names(gsgear) =  tolower( names(gsgear) )
-    save(gsgear, file=fn, compress=T)
+    read_write_fast(gsgear, file=fn)
     print(fn)
     return( fn )
   }
@@ -758,9 +758,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
  if (DS %in% c("gslist", "gslist.rawdata.redo") ) {
-    fn = file.path( p$datadir,"gslist.rdata")
+    fn = file.path( p$datadir,"gslist.rdz")
     if ( DS=="gslist" ) {
-      load( fn )
+      gslist = read_write_fast( fn )
       return (gslist)
     }
 
@@ -769,7 +769,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     gslist = ROracle::dbGetQuery(connect, "select * from groundfish.gs_survey_list")
     ROracle::dbDisconnect(connect)
     names(gslist) =  tolower( names(gslist) )
-    save(gslist, file=fn, compress=T)
+    read_write_fast(gslist, file=fn)
     print(fn)
     return( fn )
   }
@@ -777,10 +777,10 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 # ----------------------
 
   if (DS %in% c("gsmissions", "gsmissions.rawdata.redo") ) {
-    fnmiss = file.path( p$datadir,"gsmissions.rdata")
+    fn = file.path( p$datadir,"gsmissions.rdz")
 
     if ( DS=="gsmissions" ) {
-      load( fnmiss )
+      gsmissions = read_write_fast( fn )
       return (gsmissions)
     }
 
@@ -790,9 +790,9 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
       gsmissions = ROracle::dbGetQuery(connect, "select MISSION, VESEL, CRUNO from groundfish.gsmissions")
       ROracle::dbDisconnect(connect)
       names(gsmissions) =  tolower( names(gsmissions) )
-      save(gsmissions, file=fnmiss, compress=T)
-    print(fnmiss)
-    return( fnmiss )
+      read_write_fast(gsmissions, file=fn)
+    print(fn)
+    return( fn )
   }
 
 
@@ -806,11 +806,11 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
   # then do some sanity checks on the SA estimates and
   # then compute best estimates where data are missing
 
-  fn = file.path( p$datadir, "gsinf.sweptarea.rdata" )
+  fn = file.path( p$datadir, "gsinf.sweptarea.rdz" )
 
   if (DS=="sweptarea") {
     gsinf = NULL
-    if (file.exists(fn)) load(fn)
+    if (file.exists(fn)) gsinf = read_write_fast(fn)
     return( gsinf )
   }
 
@@ -1104,7 +1104,7 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
     # surface area / areal expansion correction factor: cf_tow
     gsinf$cf_tow = 1 / gsinf$sweptarea
     # nodata = which( !is.finite( gsinf$cf_tow ))
-  save( gsinf, file=fn, compress=TRUE )
+  read_write_fast( gsinf, file=fn )
   return( fn )
 }
 
@@ -1113,9 +1113,9 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
 
 
   if (DS %in% c("set.base", "set.base.redo") ) {
-    fn = file.path(p$datadir, "set.base.rdata")
+    fn = file.path(p$datadir, "set.base.rdz")
     if ( DS=="set.base" ) {
-      load( fn )
+      set = read_write_fast( fn )
       return ( set )
     }
     gsinf = groundfish_survey_db( DS="sweptarea", yrs=p$yrs )
@@ -1129,7 +1129,7 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
     if (length(which(duplicated(set$id)))>0 ) stop("Duplicates found ...")
     set$oxysat = NA # do later in aegis
 
-    save ( set, file=fn, compress=T)
+    read_write_fast ( set, file=fn)
     return( fn  )
   }
 
@@ -1139,9 +1139,9 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
   if (DS %in% c("gscat", "gscat.redo") ) {
     # merge vessel info to compute trapable units / cf_cat
 
-    fn = file.path( p$datadir, "gscat.rdata")
+    fn = file.path( p$datadir, "gscat.rdz")
     if ( DS=="gscat" ) {
-      load( fn )
+      gscat = read_write_fast( fn )
       return (gscat)
     }
 
@@ -1218,7 +1218,7 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
     gscat$cf_cat = gscat$cf_tow * gscat$cf_vessel  # these are multipliers to get totwgt and totno as per unit surface area of "Alfred Needler comparable units"
 
     # ---- NOTE ::: sampwgt seems to be unreliable  -- recompute where necessary in "det"
-    save(gscat, file=fn, compress=T )
+    read_write_fast(gscat, file=fn )
 
     return (fn)
   }

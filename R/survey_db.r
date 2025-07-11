@@ -8,9 +8,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
   if (DS %in% c("set.init") ) {
     # survet sets
     set = NULL # trip/set loc information
-    fn = file.path( surveydir, "set.init.rdata"  )
+    fn = file.path( surveydir, "set.init.rdz"  )
     if ( !redo ) {
-      if (file.exists( fn) ) load( fn)
+      if (file.exists( fn) ) set = read_write_fast( fn)
       return ( set )
     }
 
@@ -94,7 +94,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       rm (y); gc()
     }
 
-    save( set, file=fn, compress=T )
+    read_write_fast( set, file=fn )
     return (set)
   }
 
@@ -106,9 +106,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # all species caught
     cat = NULL # trip/cat loc information
-    fn = file.path( surveydir, "cat.init.rdata"  )
+    fn = file.path( surveydir, "cat.init.rdz"  )
     if ( !redo ) {
-      if (file.exists( fn) ) load( fn)
+      if (file.exists( fn) ) cat = read_write_fast( fn)
       return ( cat )
     }
 
@@ -237,7 +237,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     cat = merge(x=cat, y=lh, by=c("spec"), all.x=T, all.y=F, sort=F)
     cat = cat[ which( cat$itis.tsn > 0 ), ]
 
-    save( cat, file=fn, compress=T )
+    read_write_fast( cat, file=fn )
     return (cat)
   }
 
@@ -249,9 +249,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
   if (DS %in% c( "det.init" ) ) {
     # all species caught
     det = NULL # biologicals
-    fn = file.path( surveydir, "det.init.rdata"  )
+    fn = file.path( surveydir, "det.init.rdz"  )
     if ( !redo ) {
-      if (file.exists( fn) ) load( fn)
+      if (file.exists( fn) ) det = read_write_fast( fn)
       return ( det )
     }
 
@@ -338,7 +338,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     }
 
 
-    save( det, file=fn, compress=T )
+    read_write_fast( det, file=fn )
     return (det)
   }
 
@@ -347,13 +347,13 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
   if ( DS=="areal_units_input" ) {
 
-    fn = file.path( p$datadir,  "areal_units_input.rdata" )
+    fn = file.path( p$datadir,  "areal_units_input.rdz" )
     if ( !file.exists(p$datadir)) dir.create( p$datadir, recursive=TRUE, showWarnings=FALSE )
 
     xydata = NULL
     if (!redo)  {
       if (file.exists(fn)) {
-        load( fn)
+        xydata = read_write_fast( fn)
         return( xydata )
       }
     }
@@ -364,7 +364,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     xydata = st_transform( xydata, st_crs( p$areal_units_proj4string_planar_km ))
     xydata = xydata[ geo_subset( spatial_domain=p$spatial_domain, Z=xydata ) , ]
 
-    save(xydata, file=fn, compress=TRUE )
+    read_write_fast(xydata, file=fn )
     return( xydata )
   }
 
@@ -376,9 +376,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # lookup missing information
 
     set = NULL # trip/set loc information
-    fn = file.path( surveydir, "set.base.rdata"  )
+    fn = file.path( surveydir, "set.base.rdz"  )
     if ( !redo ) {
-      if (file.exists( fn) ) load( fn)
+      if (file.exists( fn) ) set = read_write_fast( fn)
       if( year.filter) if (exists("yrs", p) ) set = set[ set$yr %in% p$yrs, ]  # select to correct years
       return ( set )
     }
@@ -433,7 +433,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     set$oxysat = oxygen_concentration_to_saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
 
-    save( set, file=fn, compress=T )
+    read_write_fast( set, file=fn )
     return (set)
   }
 
@@ -447,19 +447,19 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     ddir = file.path( project.datadirectory("aegis"), "data" )
     dir.create( ddir, showWarnings=FALSE, recursive=TRUE )
 
-    fn = file.path( ddir, "bio.length.weight.parameters.rdata" )
-    fn2 = file.path( ddir, "bio.length.weight.residuals.rdata" )
+    fn = file.path( ddir, "bio.length.weight.parameters.rdz" )
+    fn2 = file.path( ddir, "bio.length.weight.residuals.rdz" )
 
     if ( !redo ) {
       if (DS=="lengthweight.parameters" ) {
         res = NULL
-        if (file.exists( fn ) ) load( fn )
+        if (file.exists( fn ) ) res = read_write_fast( fn )
         return( res )
       }
 
       if (DS=="lengthweight.residuals") {
         lwr = NULL
-        if (file.exists( fn2 ) ) load( fn2 )
+        if (file.exists( fn2 ) ) lwr = read_write_fast( fn2 )
         return( lwr )
       }
     }
@@ -531,8 +531,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     ooo = which( abs( x$residual ) > 4 )
     if (length(ooo) > 0 ) x$residual [ooo] = NA
     lwr = x
-    save( lwr, file=fn2, compress=TRUE )
-    save( res, file=fn, compress=TRUE )
+    read_write_fast( lwr, file=fn2 )
+    read_write_fast( res, file=fn )
     return( list(res=res, lwr=lwr) )
 
   }
@@ -545,9 +545,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # error checking, imputation, etc
     det = NULL
-    fn = file.path( surveydir, "det.rdata"  )
+    fn = file.path( surveydir, "det.rdz"  )
     if (  !redo ) {
-      if (file.exists( fn) ) load( fn)
+      if (file.exists( fn) ) det = read_write_fast( fn)
       return ( det )
     }
 
@@ -750,7 +750,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     ## remaining NA's with cf_det are mostly due to bad hauls, broken nets etc.
 
-    save (det, file=fn, compress=TRUE )
+    read_write_fast (det, file=fn )
     return (det)
   }
 
@@ -761,9 +761,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
   if (DS %in% c("cat" ) ) {
     # all species caught
     cat = NULL # biologicals
-    fn = file.path( surveydir, "cat.rdata"  )
+    fn = file.path( surveydir, "cat.rdz"  )
     if ( !redo ) {
-      if (file.exists( fn) ) load( fn)
+      if (file.exists( fn) ) cat = read_write_fast( fn)
       return ( cat )
     }
 
@@ -810,7 +810,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       cat$mass[oo] = cat$totwgt[oo] / cat$totno[oo]
     }
  
-    save (cat, file=fn, compress=TRUE )
+    read_write_fast (cat, file=fn )
     return (cat)
 
   }
@@ -825,9 +825,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # survet sets
     set = NULL # trip/set loc information
-    fn = file.path( surveydir, "set.rdata"  )
+    fn = file.path( surveydir, "set.rdz"  )
     if (  !redo ) {
-      if (file.exists( fn) ) load( fn)
+      if (file.exists( fn) ) set = read_write_fast( fn)
       return ( set )
     }
 
@@ -882,7 +882,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$A[ which(!is.finite(set$A))] = 0
     set$Pr.Reaction[ which(!is.finite(set$Pr.Reaction))] = 0
 
-    save( set, file=fn, compress=T )
+    read_write_fast( set, file=fn )
     return (set)
   }
 
@@ -1383,7 +1383,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if ( !redo ) {
       if (file.exists( fn) ) {
         message( "Loading previously saved carstm_inputs ... ", fn)
-        load( fn)
+        M = read_write_fast( fn)
         return ( M )
       }
     }
@@ -1515,7 +1515,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     M$cyclic = match( M$dyri, discretize_data( span=c( 0, 1, p$nw) ) ) 
     M$cyclic_space = M$cyclic # copy cyclic for space - cyclic component .. for groups, must be numeric index
   
-    save( M, file=fn, compress=TRUE )
+    read_write_fast( M, file=fn )
 
     return(M)
 
