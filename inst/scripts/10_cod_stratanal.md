@@ -485,7 +485,15 @@ as.data.table(RES[["stratanal.sweptarea"]])[ year %in% 2017:2010, ][ order(year,
 set = stratanal_data(  p=p, toget="stratanal", selection=selection, trawlable_units="sweptarea", sppoly=sppoly )
 
 set$strata_year = paste( set$AUID, set$yr, sep=".")
-nn = applySummary( set[, c("strata_year", "totno")]  )
+
+setDT(set)
+nn = set[, 
+  .(  mean=mean(totno, na.rm=TRUE),
+      sd  = sd (totno, na.rm=TRUE),
+      n   = length( which(is.finite(totno)))
+  ),
+  by = .(strata_year)
+]
 
 V = expand.grid( AUID=unique(set$AUID), yr=sort( unique(set$yr) ) )
 V$strata_year = paste( V$AUID, V$yr, sep=".")

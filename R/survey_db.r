@@ -1,14 +1,13 @@
 
 survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=FALSE, redo=FALSE, sppoly=NULL, quantile_upper_limit=0.99, fn=NULL ) {
   #\\ assimilation of all survey data into a coherent form
-  surveydir = project.datadirectory( "aegis", "survey" )
 
-  dir.create( surveydir, showWarnings=FALSE, recursive=TRUE )
+  dir.create( project.datadirectory( "aegis", "survey" ), showWarnings=FALSE, recursive=TRUE )
 
   if (DS %in% c("set.init") ) {
     # survet sets
     set = NULL # trip/set loc information
-    fn = file.path( surveydir, "set.init.rdz"  )
+    fn = file.path( project.datadirectory( "aegis", "survey" ), "set.init.rdz"  )
     if ( !redo ) {
       if (file.exists( fn) ) set = read_write_fast( fn)
       return ( set )
@@ -106,7 +105,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # all species caught
     cat = NULL # trip/cat loc information
-    fn = file.path( surveydir, "cat.init.rdz"  )
+    fn = file.path( project.datadirectory( "aegis", "survey" ), "cat.init.rdz"  )
     if ( !redo ) {
       if (file.exists( fn) ) cat = read_write_fast( fn)
       return ( cat )
@@ -118,26 +117,33 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if ( "groundfish" %in% p$data_sources ) {
 
       x = aegis.survey::groundfish_survey_db(DS="gscat", yrs=p$yrs )  #kg/set, no/set
+      setDT(x)
       x$data.source = "groundfish"
       x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
       x$id2 = paste(x$id, x$spec_bio, sep=".")
-      x = x[x$spec_bio > 0, ]
+      x = x[spec_bio > 0, ]
 
       # meansize.crude
       # fix missing numbers and mass estimates:
       # zeros for one while nonzeros for correpsonding records
       x$meanwgt = x$totwgt / x$totno  # kg / individual
+ 
+      mw = x[ 
+        is.finite( meanwgt* cf_cat), 
+        .(meanweight.crude=sum(meanwgt * cf_cat) / sum(cf_cat)), 
+        by=.(spec_bio)
+      ]
 
-      mw = applyMean( x[, c("spec_bio", "meanwgt", "cf_cat")], newnames=c("spec_bio", "meanweight.crude") )
+
 
       # meansize directly:
       k = groundfish_survey_db( DS="gsdet", yrs=p$yrs )
       k$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=k$spec )
-      ml = applyMean( k[,c( "spec_bio", "len")], newnames=c("spec_bio", "meanlength.direct") )
-      mw = merge( mw, ml, by="spec_bio", all=T, sort=T )
-
-      mm = applyMean( k[,c( "spec_bio", "mass")], newnames=c("spec_bio", "meanweight.direct"))
-      mw = merge(mw, mm, by="spec_bio", all=T, sort=T )
+      setDT(k)
+      ml = k[ is.finite(len), .(meanlength.direct=mean(len)), by=.(spec_bio) ]
+      mm = k[ is.finite(mass), .(meanweight.direct=mean(mass)), by=.(spec_bio) ]
+      mw = merge( mw, ml, by="spec_bio", all=T, sort=T ) 
+      mw = merge( mw, mm, by="spec_bio", all=T, sort=T )
 
       # directly determined mean size has greater reliability --- replace
       mw$meanweight = mw$meanweight.crude
@@ -249,7 +255,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
   if (DS %in% c( "det.init" ) ) {
     # all species caught
     det = NULL # biologicals
-    fn = file.path( surveydir, "det.init.rdz"  )
+    fn = file.path( project.datadirectory( "aegis", "survey" ), "det.init.rdz"  )
     if ( !redo ) {
       if (file.exists( fn) ) det = read_write_fast( fn)
       return ( det )
@@ -376,7 +382,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # lookup missing information
 
     set = NULL # trip/set loc information
-    fn = file.path( surveydir, "set.base.rdz"  )
+    fn = file.path( project.datadirectory( "aegis", "survey" ), "set.base.rdz"  )
     if ( !redo ) {
       if (file.exists( fn) ) set = read_write_fast( fn)
       if( year.filter) if (exists("yrs", p) ) set = set[ set$yr %in% p$yrs, ]  # select to correct years
@@ -545,7 +551,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # error checking, imputation, etc
     det = NULL
-    fn = file.path( surveydir, "det.rdz"  )
+    fn = file.path( project.datadirectory( "aegis", "survey" ), "det.rdz"  )
     if (  !redo ) {
       if (file.exists( fn) ) det = read_write_fast( fn)
       return ( det )
@@ -761,7 +767,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
   if (DS %in% c("cat" ) ) {
     # all species caught
     cat = NULL # biologicals
-    fn = file.path( surveydir, "cat.rdz"  )
+    fn = file.path( project.datadirectory( "aegis", "survey" ), "cat.rdz"  )
     if ( !redo ) {
       if (file.exists( fn) ) cat = read_write_fast( fn)
       return ( cat )
@@ -825,7 +831,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # survet sets
     set = NULL # trip/set loc information
-    fn = file.path( surveydir, "set.rdz"  )
+    fn = file.path( project.datadirectory( "aegis", "survey" ), "set.rdz"  )
     if (  !redo ) {
       if (file.exists( fn) ) set = read_write_fast( fn)
       return ( set )
