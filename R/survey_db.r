@@ -128,6 +128,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       # zeros for one while nonzeros for correpsonding records
       x$meanwgt = x$totwgt / x$totno  # kg / individual
  
+      # weighted mean by species
       mw = x[ 
         is.finite( meanwgt* cf_cat), 
         .(meanweight.crude=sum(meanwgt * cf_cat) / sum(cf_cat)), 
