@@ -278,7 +278,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if ( "groundfish" %in% p$data_sources ) {
 
       x = aegis.survey::groundfish_survey_db( DS="gsdet", yrs=p$yrs )
-      x$data.source = "groundfish"
+      setDT(x)
+
+			x$data.source = "groundfish"
 
       x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
       x$id2 = paste(x$id, x$spec_bio, sep=".")
@@ -319,7 +321,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       oo = which( mt %in% c(1) ); if (length(oo)>0) x$mat[oo] = 0  # immature
       oo = which( mt %in% c(2,3,4,5,6,7,8) ); if (length(oo)>0) x$mat[oo] = 1 # mature  -- investmvent into gonads has begun
 
-      det = rbind( det, x[, det.names] )
+      det = rbind( det, x[, ..det.names] )
       rm (x); gc()
 
     }
@@ -327,7 +329,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if ( "snowcrab" %in% p$data_sources ) {
       # snow crab only ... add bycatch from survey :: TODO
       x = bio.snowcrab::snowcrab.db( DS ="det.georeferenced" )
-      x$data.source = "snowcrab"
+      setDT(x)
+
+			x$data.source = "snowcrab"
       x$spec = 2526
       x$spec_bio =  taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec ) # snow crab using groundfish codes
       x$id = paste( x$trip, x$set, sep="." )
@@ -340,7 +344,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       x$mat = as.numeric( as.character( x$mat) )
       x$mass = x$mass /1000  # g to kg
 
-      det = rbind( det, x[, det.names] )
+      det = rbind( det, x[, ..det.names] )
       rm (x); gc()
     }
 
