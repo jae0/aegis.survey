@@ -29,7 +29,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       # 9=hydrography
 
       y = aegis.survey::groundfish_survey_db(DS="set.base", yrs=p$yrs )
-      y$data.source = "groundfish"
+      setDT(y)
+
+			y$data.source = "groundfish"
       y$sa = y$sweptarea  # sa is in km^2 .. best estimate given data
       # y$sa_towdistance_wing = y$wing.sa
       y$sa_towdistance = y$sakm2  # sakm2==(41 * ft2m * m2km ) * ( gsinf$dist * nmi2mi * mi2ft * ft2m * m2km )  # surface area sampled in km^2 ; suvery_db:gsinf
@@ -52,19 +54,23 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
       y$gear = y$geardesc
       y$setquality = NA
-      y$setquality[ which( y$settype %in% c(1,2,4,5,8) ) ] = "good"
+      
+			y$setquality[ which( y$settype %in% c(1,2,4,5,8) ) ] = "good"
       gsvn = c("data.source", "id", "timestamp", "yr", "lon", "lat",
                 "z", "temp", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "cf_tow" )
-      set = rbind( set, y[ ,gsvn ] )
+      set = rbind( set, y[ , ..gsvn ] )
       names(set) = set.names
       rm (y); gc()
     }
 
+
     if ( "snowcrab" %in% p$data_sources ) {
       ps = bio.snowcrab::snowcrab_parameters( yrs=1999:max(p$yrs) )  # to obtain planar projection information and force snowcrab to use it
       y =  bio.snowcrab::snowcrab.db( p=ps, DS ="set.clean" )
-      y$data.source = "snowcrab"
-      y$gear ="Nephrops trawl"
+      setDT(y)
+
+			y$data.source = "snowcrab"
+      y$gear = "Nephrops trawl"
       y$id = paste( y$trip, y$set, sep="." )
       y = planar2lonlat ( y, proj.type=ps$aegis_proj4string_planar_km )  # plon+plat required for lookups
 
@@ -87,8 +93,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       y$cf_tow = 1/y$sa
       y$sa_towdistance = y$sa  #copy
 
-      set = rbind( set, y[ , set.names ] )  # sa is in km^2
-
+      set = rbind( set, y[ , ..set.names ] )  # sa is in km^2
 
       rm (y); gc()
     }
@@ -118,7 +123,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
       x = aegis.survey::groundfish_survey_db(DS="gscat", yrs=p$yrs )  #kg/set, no/set
       setDT(x)
-      x$data.source = "groundfish"
+      
+			x$data.source = "groundfish"
       x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
       x$id2 = paste(x$id, x$spec_bio, sep=".")
       x = x[spec_bio > 0, ]
@@ -136,11 +142,11 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       ]
 
 
-
       # meansize directly:
       k = groundfish_survey_db( DS="gsdet", yrs=p$yrs )
-      k$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=k$spec )
       setDT(k)
+      
+			k$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=k$spec )
       ml = k[ is.finite(len), .(meanlength.direct=mean(len)), by=.(spec_bio) ]
       mm = k[ is.finite(mass), .(meanweight.direct=mean(mass)), by=.(spec_bio) ]
       mw = merge( mw, ml, by="spec_bio", all=T, sort=T ) 
@@ -208,14 +214,16 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       # qn = quantile( x$cf_cat, 0.99, na.rm=TRUE )
       # x$cf_cat[ x$cf_cat > qn ] = qn
 
-      x = x[, cat.names]
+      x = x[, ..cat.names]
       cat = rbind( cat, x )
       rm (x); gc()
     }
 
     if ( "snowcrab" %in% p$data_sources ) {
       x = bio.snowcrab::snowcrab.db( DS ="cat.georeferenced" ) # sa corrected ; kg/km2; no./km2
-      x$data.source = "snowcrab"
+      setDT(x)
+
+			x$data.source = "snowcrab"
       x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
       x$id = paste( x$trip, x$set, sep="." )
       x$id2 = paste( x$trip, x$set, x$spec_bio, sep="." )
@@ -226,7 +234,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
       x$totno[ x$totno > 500 ] = 500
 
-      x = x[, cat.names]
+      x = x[, ..cat.names]
 
       # snow crab are assumed to be real zeros .. find them and force 0 value
       iissp = taxonomy.recode( from="spec", to="parsimonious", tolookup=2526 ) # snow crab using groundfish codes
@@ -235,12 +243,16 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       oo = which( !is.finite(x$totwgt) & x$spec_bio== iissp )  # snow crab are assumed to be real zeros
       if (length(oo) > 0 ) x$totwgt[oo] = 0
 
-      cat = rbind( cat, x[,names(cat)]  )
+			catnm = names(cat)
+      cat = rbind( cat, x[,..catnm]  )
       rm (x); gc()
     }
 
     lh = taxonomy.db( "life.history" )
-    lh = lh[,c("spec", "name.common", "name.scientific", "itis.tsn" )]
+		setDT(lh)
+
+    tnm = c("spec", "name.common", "name.scientific", "itis.tsn" )
+		lh = lh[, ..tnm]
     cat = merge(x=cat, y=lh, by=c("spec"), all.x=T, all.y=F, sort=F)
     cat = cat[ which( cat$itis.tsn > 0 ), ]
 
@@ -630,7 +642,10 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # estimate metabolic_rates estimates (requires temperature estimate )
     set = survey_db( DS="set.base", p=p  ) # kg, no
-    set = set[ , c("id", "t")]  # temperature is required to estimate MR ..
+    setDT( set )
+
+		snm = c("id", "t")
+		set = set[ , ..snm]  # temperature is required to estimate MR ..
 
     det = merge( det, set, by="id", all.x=T, all.y=F, sort=F )
 
@@ -693,7 +708,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       smr = A * Pr.Reaction  #  == b0 * (mass.g)^b1 * exp(  b2 * temperature.C ) * from.ml.O2.per.g.per.hr.to.W.per.kg
       mr = smr * mass.g
 
-      x = data.frame( smr=smr, mr=mr, Ea=Ea, A=A, Pr.Reaction=Pr.Reaction )
+      x = data.table( smr=smr, mr=mr, Ea=Ea, A=A, Pr.Reaction=Pr.Reaction )
 
       ## units:
       ## smr,A ~ {W/kg};
@@ -790,7 +805,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     setDT(det)
     setDT(cat)
 
-    cat = set[, c("id", "gear") ] [ cat , on=.(id) ] # merge
+		snm =  c("id", "gear") 
+    cat = set[, ..snm] [ cat, on=.(id) ] # merge
     oo = which( duplicated( cat$id2) )
     if (length( oo) > 0 ) cat = cat[ -oo, ]
 
