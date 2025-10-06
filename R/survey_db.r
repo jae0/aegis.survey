@@ -194,14 +194,18 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
         x$totwgt[q[1]] = sum( x$totwgt[q], na.rm=T )
         s = c(s, q[2:length(q)])
       }
-      if (length(s)>0) x = x[-s,]
+			
+			s = unique(s)
 
-      oo = which( duplicated( x$id2) )
+      if (length(s)>0) x = x[-s,]
+      
+			oo = which( duplicated( x$id2) )
       if ( length( oo )>0 ) {
         print( x[ oo , "id2"] )
         stop("Duplcated id2's in gscat"  )
       }
 
+			ll = NULL
       ll = which( !is.finite(x$totno) & !is.finite(x$totwgt) )
       if (length(ll) > 0) x = x[-ll,]
 
