@@ -98,7 +98,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       rm (y); gc()
     }
 
-    read_write_fast( set, file=fn )
+    read_write_fast( set, fn=fn )
     return (set)
   }
 
@@ -260,7 +260,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     cat = merge(x=cat, y=lh, by=c("spec"), all.x=T, all.y=F, sort=F)
     cat = cat[ which( cat$itis.tsn > 0 ), ]
 
-    read_write_fast( cat, file=fn )
+    read_write_fast( cat, fn=fn )
     return (cat)
   }
 
@@ -365,7 +365,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     }
 
 
-    read_write_fast( det, file=fn )
+    read_write_fast( det, fn=fn )
     return (det)
   }
 
@@ -391,7 +391,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     xydata = st_transform( xydata, st_crs( p$areal_units_proj4string_planar_km ))
     xydata = xydata[ geo_subset( spatial_domain=p$spatial_domain, Z=xydata ) , ]
 
-    read_write_fast(xydata, file=fn )
+    read_write_fast(xydata, fn=fn )
     return( xydata )
   }
 
@@ -460,7 +460,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     set$oxysat = oxygen_concentration_to_saturation( t.C=set$t, sal.ppt=set$sal, oxy.ml.l=set$oxyml)
 
-    read_write_fast( set, file=fn )
+    read_write_fast( set, fn=fn )
     return (set)
   }
 
@@ -470,7 +470,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
   if (DS %in% c(  "lengthweight.parameters", "lengthweight.residuals") ) {
 
     ## TODO -- make parallel require(multicore)
-
+    ## NOTE: location is outside of survey.db .. /home/jae/bio.data/aegis/data
     ddir = file.path( project.datadirectory("aegis"), "data" )
     dir.create( ddir, showWarnings=FALSE, recursive=TRUE )
 
@@ -558,8 +558,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     ooo = which( abs( x$residual ) > 4 )
     if (length(ooo) > 0 ) x$residual [ooo] = NA
     lwr = x
-    read_write_fast( lwr, file=fn2 )
-    read_write_fast( res, file=fn )
+    read_write_fast( lwr, fn=fn2 )
+    read_write_fast( res, fn=fn )
     return( list(res=res, lwr=lwr) )
 
   }
@@ -780,7 +780,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     ## remaining NA's with cf_det are mostly due to bad hauls, broken nets etc.
 
-    read_write_fast (det, file=fn )
+    read_write_fast (det, fn=fn )
     return (det)
   }
 
@@ -841,7 +841,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       cat$mass[oo] = cat$totwgt[oo] / cat$totno[oo]
     }
  
-    read_write_fast (cat, file=fn )
+    read_write_fast (cat, fn=fn )
     return (cat)
 
   }
@@ -913,7 +913,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$A[ which(!is.finite(set$A))] = 0
     set$Pr.Reaction[ which(!is.finite(set$Pr.Reaction))] = 0
 
-    read_write_fast( set, file=fn )
+    read_write_fast( set, fn=fn )
     return (set)
   }
 
@@ -1546,7 +1546,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     M$cyclic = match( M$dyri, discretize_data( span=c( 0, 1, p$nw) ) ) 
     M$cyclic_space = M$cyclic # copy cyclic for space - cyclic component .. for groups, must be numeric index
   
-    read_write_fast( M, file=fn )
+    read_write_fast( M, fn=fn )
 
     return(M)
 
