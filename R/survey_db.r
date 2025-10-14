@@ -887,10 +887,10 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     # summaries from cat .. weighted by cf to make per standard unit
     # NOTE: cat$totno and cat$totwgt are not cf corrected
     cat_summary = cat[, .(
-        totno_per_set = sum(totno, na.rm=TRUE),  # totno per set
-        totwgt_per_set= sum(totwgt, na.rm=TRUE), # totno per set
-        totno_adjusted= sum(totno*vessel_correction / sweptarea, na.rm=TRUE),
-        totwgt_adjusted=sum(totwgt*vessel_correction / sweptarea, na.rm=TRUE)
+        totno_per_set = sum(totno_per_set, na.rm=TRUE),  # totno per set
+        totwgt_per_set= sum(totwgt_per_set, na.rm=TRUE), # totno per set
+        totno_adjusted= sum(totno_per_set*vessel_correction / sweptarea, na.rm=TRUE),
+        totwgt_adjusted=sum(totwgt_per_set*vessel_correction / sweptarea, na.rm=TRUE)
       ), 
       by=.(id)
     ]
@@ -953,7 +953,9 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     if (add_groundfish_strata) {
       areal_units_timeperiod = "pre2014"  # "pre2014" for older
       sppoly = maritimes_groundfish_strata( areal_units_timeperiod=areal_units_timeperiod )
+      setDF(set)
       set = maritimes_groundfish_strata_identify( Y=set, sppoly=sppoly, xyvars=c("lon", "lat"), planar_crs_km=p$aegis_proj4string_planar_km )
+      setDT(set)
     }
 
     # filter non-biologicals ... i.e, set characteristics
@@ -1321,7 +1323,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       det_summary = det[, .(
           totno=.N, 
           totwgt=sum(mass, na.rm=TRUE),
-          totno_adjusted=sum(cf_det_wgt, na.rm=TRUE),
+          totno_adjusted=sum(cf_det_no, na.rm=TRUE),
           totwgt_adjusted=sum(mass*cf_det_wgt, na.rm=TRUE),
           mr=sum(mr*cf_det_wgt, na.rm=TRUE),
           smr=mean(smr*cf_det_wgt, na.rm=TRUE), 
