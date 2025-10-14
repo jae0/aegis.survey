@@ -79,8 +79,10 @@ stratanal_data = function( selection=NULL, toget="", sppoly=NULL, trawlable_unit
     set$sa_towdistance = (41 * ft2m * m2km ) * dtow_km
   }
 
+  
+
   set$nh = switch( trawlable_units,
-    sweptarea = as.numeric(set$au_sa_km2) * set$cf_cat, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by sweptarea
+    sweptarea = as.numeric(set$au_sa_km2) * set$vessel_correction / set$sweptarea, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by sweptarea
     standardtow = as.numeric(set$au_sa_km2) / standardtow_sakm2, # convert strata area to trawlable units 41ft by 1.75 nm, divide area by 0.011801
     towdistance = as.numeric(set$au_sa_km2) / set$sa_towdistance # convert strata area to trawlable units 41ft by 1.75 nm, divide area by 0.011801
   )

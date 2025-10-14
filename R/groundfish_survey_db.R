@@ -1,12 +1,25 @@
 
 
-groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmensuration.do=FALSE,  outdir = getwd() ) {
+groundfish_survey_db = function( 
+  yrs=NULL, 
+  datadir=NULL,
+  DS="refresh.all.data.tables", 
+  netmensuration.do=FALSE,  
+  outdir = getwd() ) {
 
   if (is.null(yrs)) {
-    p = groundfish_parameters()
+    pgf = groundfish_parameters()
   } else {
-    p = groundfish_parameters( yrs=yrs )
+    pgf = groundfish_parameters( yrs=yrs )
   }
+
+
+  if (is.null(yrs)) yrs = pgf$yrs
+
+  if (is.null(datadir)) datadir = pgf$datadir
+
+  p = NULL
+
 
   # ----------------
   if (DS =="download_from_oracle_as_raw_tables_locally") {
@@ -156,7 +169,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("spcodes", "spcodes.rawdata", "spcodes.redo", "spcodes.rawdata.redo", "gstaxa", "gstaxa.redo"  ) ) {
 
-    fnspc = file.path( p$datadir, "spcodes.rdz" )
+    fnspc = file.path( datadir, "spcodes.rdz" )
 
     if ( DS %in% c( "spcodes", "spcodes.rawdata", "gstaxa" ) ) {
       spcodes = read_write_fast( fnspc )
@@ -183,7 +196,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 	if (DS %in% c( "gscat.rawdata", "gscat.rawdata.redo" ) ) {
 
-    fn.root =  file.path( p$datadir, "trawl", "gscat" )
+    fn.root =  file.path( datadir, "trawl", "gscat" )
 		dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
 
 		out = NULL
@@ -199,7 +212,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-		for ( YR in p$yrs ) {
+		for ( YR in yrs ) {
 			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gscat = ROracle::dbGetQuery( connect,  paste(
         "select i.*, substr(mission,4,4) year " ,
@@ -226,14 +239,14 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gscat.base", "gscat.base.redo"  ) ) {
 
-    fn = file.path( p$datadir, "gscat.base.rdz")
+    fn = file.path( datadir, "gscat.base.rdz")
 
     if ( DS=="gscat.base" ) {
       gscat = read_write_fast( fn )
       return (gscat)
     }
 
-    gscat = groundfish_survey_db( DS="gscat.rawdata", yrs=p$yrs  )  # kg/set
+    gscat = groundfish_survey_db( DS="gscat.rawdata", yrs=yrs  )  # kg/set
     gscat$year = NULL
 
     gscat = gscat[ - which(gscat$spec %in% c(9000, 9630, 1200, 9400) ), ]  # 9000 = unident, digested remains; 9630 = organic debris; 1200 fish eggs
@@ -280,7 +293,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
 	if (DS %in% c( "gsdet.rawdata", "gsdet.rawdata.redo" ) ) {
-    fn.root =  file.path( p$datadir, "trawl", "gsdet" )
+    fn.root =  file.path( datadir, "trawl", "gsdet" )
 		dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
 
 		out = NULL
@@ -296,7 +309,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-		for ( YR in p$yrs ) {
+		for ( YR in yrs ) {
 			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gsdet = ROracle::dbGetQuery( connect,  paste(
         "select i.*, substr(mission,4,4) year" ,
@@ -330,14 +343,14 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
   #      6=tagging, 7=mesh/gear studies, 8=explorartory fishing, 9=hydrography
   # --------- codes ----------------
 
-    fn = file.path( p$datadir, "gsdet.rdz")
+    fn = file.path( datadir, "gsdet.rdz")
 
     if ( DS=="gsdet" ) {
       gsdet = read_write_fast( fn )
       return (gsdet)
     }
 
-    gsdet = groundfish_survey_db( DS="gsdet.rawdata", yrs=p$yrs )
+    gsdet = groundfish_survey_db( DS="gsdet.rawdata", yrs=yrs )
     gsdet$year = NULL
 
     oo = which(!is.finite(gsdet$spec) )
@@ -367,7 +380,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 	if (DS %in% c( "gsinf.rawdata", "gsinf.rawdata.redo" ) ) {
 
-    fn.root =  file.path(p$datadir, "trawl", "gsinf" )
+    fn.root =  file.path(datadir, "trawl", "gsinf" )
 		dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
 
 		out = NULL
@@ -388,7 +401,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-		for ( YR in p$yrs ) {
+		for ( YR in yrs ) {
 			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gsinf = ROracle::dbGetQuery( connect,  paste(
         "select * from groundfish.gsinf where EXTRACT(YEAR from SDATE) = ", YR )
@@ -411,18 +424,18 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
   if (DS %in% c("gsinf", "gsinf.redo" ) ) {
-    fn = file.path( p$datadir, "gsinf.rdz")
+    fn = file.path( datadir, "gsinf.rdz")
 
     if ( DS=="gsinf" ) {
       gsinf = read_write_fast( fn )
       return (gsinf)
     }
 
-    gsinf = groundfish_survey_db( DS="gsinf.rawdata", yrs=p$yrs )
+    gsinf = groundfish_survey_db( DS="gsinf.rawdata", yrs=yrs )
     names(gsinf)[which(names(gsinf)=="type")] = "settype"
     gsinf$vessel =  substring(gsinf$mission, 1, 3)
 
-    gsgear = groundfish_survey_db( DS="gsgear", yrs=p$yrs )
+    gsgear = groundfish_survey_db( DS="gsgear", yrs=yrs )
     gsinf = merge (gsinf, gsgear, by="gear", all.x=TRUE, all.y=FALSE, sort= FALSE )
 
     # fix some time values that have lost the zeros due to numeric conversion
@@ -570,7 +583,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 	if (DS %in% c( "gshyd.profiles.rawdata" , "gshyd.profiles.rawdata.redo" ) ) {
 
-    fn.root =  file.path(p$datadir, "trawl", "gshyd" )
+    fn.root =  file.path(datadir, "trawl", "gshyd" )
 		dir.create( fn.root, recursive = TRUE, showWarnings = FALSE  )
 
 		out = NULL
@@ -586,7 +599,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
     connect = ROracle::dbConnect( DBI::dbDriver("Oracle"), dbname=oracle.groundfish.server, username=oracle.personal.user, password=oracle.personal.password, believeNRows=F)
 
-		for ( YR in p$yrs ) {
+		for ( YR in yrs ) {
 			fn = file.path( fn.root, paste( YR,"rdz", sep="."))
       gshyd = ROracle::dbGetQuery( connect,  paste(
         "select i.*, j.YEAR " ,
@@ -619,13 +632,13 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gshyd.profiles", "gshyd.profiles.redo" ) ) {
     # full profiles
-    fn = file.path( p$datadir,"gshyd.profiles.rdz")
+    fn = file.path( datadir,"gshyd.profiles.rdz")
     if ( DS=="gshyd.profiles" ) {
       gshyd = read_write_fast( fn )
       return (gshyd)
     }
 
-    gshyd = groundfish_survey_db( DS="gshyd.profiles.rawdata", yrs=p$yrs )
+    gshyd = groundfish_survey_db( DS="gshyd.profiles.rawdata", yrs=yrs )
     gshyd$id = paste(gshyd$mission, gshyd$setno, sep=".")
     gshyd = gshyd[, c("id", "sdepth", "
     ", "sal", "oxyml" )]
@@ -640,12 +653,12 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gshyd", "gshyd.redo") ) {
     # hydrographic info at deepest point
-    fn = file.path( p$datadir,"gshyd.rdz")
+    fn = file.path( datadir,"gshyd.rdz")
     if ( DS=="gshyd" ) {
       gshyd = read_write_fast( fn )
       return (gshyd)
     }
-    gshyd = groundfish_survey_db( DS="gshyd.profiles", yrs=p$yrs )
+    gshyd = groundfish_survey_db( DS="gshyd.profiles", yrs=yrs )
     nr = nrow( gshyd)
 
     # candidate depth estimates from profiles
@@ -661,7 +674,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
     oo = which( duplicated( gshyd$id ) )
     if (length(oo) > 0) stop( "Duplicated data in GSHYD" )
 
-    gsinf = groundfish_survey_db( DS="gsinf", yrs=p$yrs )
+    gsinf = groundfish_survey_db( DS="gsinf", yrs=yrs )
     gsinf = gsinf[, c("id", "bottom_temperature", "bottom_salinity", "bottom_depth" ) ]
     gshyd = merge( gshyd, gsinf, by="id", all.x=T, all.y=F, sort=F )
 
@@ -693,18 +706,18 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
   if (DS %in% c("gshyd.georef", "gshyd.georef.redo") ) {
     # hydrographic info georeferenced
-    fn = file.path( p$datadir,"gshyd.georef.rdz")
+    fn = file.path( datadir,"gshyd.georef.rdz")
     if ( DS=="gshyd.georef" ) {
       gshyd = read_write_fast( fn )
       return (gshyd)
     }
-    gsinf = groundfish_survey_db( DS="gsinf", yrs=p$yrs )
+    gsinf = groundfish_survey_db( DS="gsinf", yrs=yrs )
     gsinf$timestamp = gsinf$sdate
     gsinf$yr = lubridate::year( gsinf$timestamp)
     gsinf$longitude = gsinf$lon
     gsinf$latitude = gsinf$lat
     gsinf = gsinf[ , c( "id", "lon", "lat", "yr", "timestamp" ) ]
-    gshyd = groundfish_survey_db( DS="gshyd.profiles", yrs=p$yrs )
+    gshyd = groundfish_survey_db( DS="gshyd.profiles", yrs=yrs )
     gshyd = merge( gshyd, gsinf, by="id", all.x=T, all.y=F, sort=F )
     gshyd$sal[gshyd$sal<5]=NA
     read_write_fast(gshyd, file=fn)
@@ -716,7 +729,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
   if (DS %in% c("gsstratum", "gsstratum.obdc.redo") ) {
-    fn = file.path( p$datadir,"gsstratum.rdz")
+    fn = file.path( datadir,"gsstratum.rdz")
     if ( DS=="gsstratum" ) {
       gsstratum = read_write_fast( fn )
       return (gsstratum)
@@ -737,7 +750,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
   if (DS %in% c("gsgear", "gsgear.rawdata.redo") ) {
-    fn = file.path( p$datadir,"gsgear.rdz")
+    fn = file.path( datadir,"gsgear.rdz")
     if ( DS=="gsgear" ) {
       gsgear = read_write_fast( fn )
       return (gsgear)
@@ -758,7 +771,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 
 
  if (DS %in% c("gslist", "gslist.rawdata.redo") ) {
-    fn = file.path( p$datadir,"gslist.rdz")
+    fn = file.path( datadir,"gslist.rdz")
     if ( DS=="gslist" ) {
       gslist = read_write_fast( fn )
       return (gslist)
@@ -777,7 +790,7 @@ groundfish_survey_db = function( yrs=NULL, DS="refresh.all.data.tables", netmens
 # ----------------------
 
   if (DS %in% c("gsmissions", "gsmissions.rawdata.redo") ) {
-    fn = file.path( p$datadir,"gsmissions.rdz")
+    fn = file.path( datadir,"gsmissions.rdz")
 
     if ( DS=="gsmissions" ) {
       gsmissions = read_write_fast( fn )
@@ -806,7 +819,7 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
   # then do some sanity checks on the SA estimates and
   # then compute best estimates where data are missing
 
-  fn = file.path( p$datadir, "gsinf.sweptarea.rdz" )
+  fn = file.path( datadir, "gsinf.sweptarea.rdz" )
 
   if (DS=="sweptarea") {
     gsinf = NULL
@@ -814,9 +827,9 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
     return( gsinf )
   }
 
-  gsinf = groundfish_survey_db( DS="gsinf", yrs=p$yrs )
+  gsinf = groundfish_survey_db( DS="gsinf", yrs=yrs )
 
-  gsinf_bc = netmensuration.scanmar( DS="bottom.contact", p=p )
+  gsinf_bc = netmensuration.scanmar( DS="bottom.contact", p=pgf )
 
   toreject = which( !is.na( gsinf_bc$bc.error.flag ) )
 
@@ -1100,10 +1113,8 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
       ii = intersect( which( gsinf$sweptarea < qr[1] | gsinf$sweptarea > qr[2] ) , u)
       if (length(ii) > 0) gsinf$sweptarea[ii] = median(gsinf$sweptarea[u], na.rm=TRUE)
     }
-
-    # surface area / areal expansion correction factor: cf_tow
-    gsinf$cf_tow = 1 / gsinf$sweptarea
-    # nodata = which( !is.finite( gsinf$cf_tow ))
+ 
+    # nodata = which( !is.finite( gsinf$sweptarea ))
   read_write_fast( gsinf, file=fn )
   return( fn )
 }
@@ -1113,14 +1124,14 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
 
 
   if (DS %in% c("set.base", "set.base.redo") ) {
-    fn = file.path(p$datadir, "set.base.rdz")
+    fn = file.path(datadir, "set.base.rdz")
     if ( DS=="set.base" ) {
       set = read_write_fast( fn )
       return ( set )
     }
-    gsinf = groundfish_survey_db( DS="sweptarea", yrs=p$yrs )
+    gsinf = groundfish_survey_db( DS="sweptarea", yrs=yrs )
 
-    gshyd = groundfish_survey_db( DS="gshyd", yrs=p$yrs ) # historical hydrogra[hy data (upto 2015 or so..) .. already contains temp data from gsinf
+    gshyd = groundfish_survey_db( DS="gshyd", yrs=yrs ) # historical hydrogra[hy data (upto 2015 or so..) .. already contains temp data from gsinf
     set = merge(x=gsinf, y=gshyd, by=c("id"), all.x=TRUE, all.y=FALSE, sort=FALSE)
     rm (gshyd, gsinf)
     oo = which( !is.finite( set$sdate)) # NED1999842 has no accompanying gsinf data ... drop it
@@ -1137,18 +1148,18 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
 
 
   if (DS %in% c("gscat", "gscat.redo") ) {
-    # merge vessel info to compute trapable units / cf_cat
-
-    fn = file.path( p$datadir, "gscat.rdz")
+    # merge vessel info to compute trapable units 
+    
+    fn = file.path( datadir, "gscat.rdz")
     if ( DS=="gscat" ) {
       gscat = read_write_fast( fn )
       return (gscat)
     }
 
-    gscat = groundfish_survey_db( DS="gscat.base", yrs=p$yrs ) #kg/set, no/set
+    gscat = groundfish_survey_db( DS="gscat.base", yrs=yrs ) #kg/set, no/set
     gscat = gscat[, c("id", "spec", "totwgt", "totno", "sampwgt" )] # kg, no/set
 
-    set = groundfish_survey_db( DS="set.base", yrs=p$yrs )
+    set = groundfish_survey_db( DS="set.base", yrs=yrs )
     gscat = merge(x=gscat, y=set, by=c("id"), all.x=T, all.y=F, sort=F, suffixes=c("", ".set"))
     rm (set)
 
@@ -1201,21 +1212,21 @@ if (DS %in% c("sweptarea", "sweptarea.redo" )) {
         ids = substring(gscat$id,1,3)
         spec = gscat$spec
 
-        gscat$cf_vessel = 1  # initialise .. default 1==no change
-        gscat$cf_vessel[ which((ids=="HAM" & spec==cod)) ] = vc$cod[HAM]
-        gscat$cf_vessel[ which((ids=="HAM" & spec==witch)) ] = vc$witch[HAM]
-        gscat$cf_vessel[ which((ids=="HAM" & spec==yellowtail)) ] = vc$yellowtail[HAM]
-        gscat$cf_vessel[ which((ids=="ATC" & spec==cod)) ] = vc$cod[ATC]
-        gscat$cf_vessel[ which((ids=="ATC" & spec==haddock)) ] = vc$haddock[ATC]
-        gscat$cf_vessel[ which((ids=="ATC" & spec==plaicesmall && len<=28)) ] = vc$plaicesmall[ATC]
-        gscat$cf_vessel[ which((ids=="ATC" & spec==witch)) ] = vc$witch[ATC]
-        gscat$cf_vessel[ which((ids=="ATC" & spec==yellowtail)) ] = vc$yellowtail[ATC]
+        gscat$vessel_correction = 1  # initialise .. default 1==no change
+        gscat$vessel_correction[ which((ids=="HAM" & spec==cod)) ] = vc$cod[HAM]
+        gscat$vessel_correction[ which((ids=="HAM" & spec==witch)) ] = vc$witch[HAM]
+        gscat$vessel_correction[ which((ids=="HAM" & spec==yellowtail)) ] = vc$yellowtail[HAM]
+        gscat$vessel_correction[ which((ids=="ATC" & spec==cod)) ] = vc$cod[ATC]
+        gscat$vessel_correction[ which((ids=="ATC" & spec==haddock)) ] = vc$haddock[ATC]
+        gscat$vessel_correction[ which((ids=="ATC" & spec==plaicesmall && len<=28)) ] = vc$plaicesmall[ATC]
+        gscat$vessel_correction[ which((ids=="ATC" & spec==witch)) ] = vc$witch[ATC]
+        gscat$vessel_correction[ which((ids=="ATC" & spec==yellowtail)) ] = vc$yellowtail[ATC]
+
     }
 
-    # ignore vessel corrections
-    gscat$cf_vessel = 1  # initialise .. default 1==no change
+    # ignoring vessel "corrections" .. they are simplistic and not reliable
+    gscat$vessel_correction = 1  # initialise .. default 1==no change; and just track vessel
 
-    gscat$cf_cat = gscat$cf_tow * gscat$cf_vessel  # these are multipliers to get totwgt and totno as per unit surface area of "Alfred Needler comparable units"
 
     # ---- NOTE ::: sampwgt seems to be unreliable  -- recompute where necessary in "det"
     read_write_fast(gscat, file=fn )

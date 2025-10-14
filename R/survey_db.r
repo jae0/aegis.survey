@@ -14,7 +14,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     }
 
     set.names =  c("data.source", "id", "timestamp", "yr", "lon", "lat",
-                  "z", "t", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "cf_tow" )
+                  "z", "t", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "sweptarea" )
 
     if ( "groundfish" %in% p$data_sources ) {
       # settype:
@@ -28,7 +28,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       # 8=explorartory fishing,
       # 9=hydrography
 
-      y = aegis.survey::groundfish_survey_db(DS="set.base", yrs=p$yrs )
+      y = groundfish_survey_db(DS="set.base", yrs=p$yrs )
       setDT(y)
 
 			y$data.source = "groundfish"
@@ -57,7 +57,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       
 			y$setquality[ which( y$settype %in% c(1,2,4,5,8) ) ] = "good"
       gsvn = c("data.source", "id", "timestamp", "yr", "lon", "lat",
-                "z", "temp", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "cf_tow" )
+                "z", "temp", "sal", "oxyml", "sa", "sa_towdistance", "gear", "vessel", "setquality", "settype", "sweptarea" )
       set = rbind( set, y[ , ..gsvn ] )
       names(set) = set.names
       rm (y); gc()
@@ -90,7 +90,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       k = which( !is.finite(y$sa ) )
       if (length(k) > 0) y$sa[k] = median( y$sa[-k] )
       
-      y$cf_tow = 1/y$sa
+      y$sweptarea = y$sa
       y$sa_towdistance = y$sa  #copy
 
       set = rbind( set, y[ , ..set.names ] )  # sa is in km^2
@@ -117,50 +117,53 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     }
 
     ###  NOTE:: cf == correction factor is a reweighting required to make each totno and totwgt comparable for each set and species subsampling
-
-    cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno", "totwgt", "cf_cat" )
+    cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno_per_set", "totwgt_per_set", "vessel_correction", "sweptarea" )
+    
     if ( "groundfish" %in% p$data_sources ) {
 
-      x = aegis.survey::groundfish_survey_db(DS="gscat", yrs=p$yrs )  #kg/set, no/set
+      x = groundfish_survey_db( DS="gscat"  )  #kg/set, no/set
       setDT(x)
       
 			x$data.source = "groundfish"
       x$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=x$spec )
       x$id2 = paste(x$id, x$spec_bio, sep=".")
       x = x[spec_bio > 0, ]
+      
+      setnames(x, "totno",  "totno_per_set")
+      setnames(x, "totwgt", "totwgt_per_set")
+
 
       # meansize.crude
       # fix missing numbers and mass estimates:
       # zeros for one while nonzeros for correpsonding records
-      x$meanwgt = x$totwgt / x$totno  # kg / individual
+      x$meanwgt_per_set = x$totwgt_per_set / x$totno_per_set  # kg / individual
  
       # weighted mean by species
-      mw = x[ 
-        is.finite( meanwgt* cf_cat), 
-        .(meanweight.crude=sum(meanwgt * cf_cat) / sum(cf_cat)), 
+      mw = x[, 
+        .(meanweight_crude = sum(meanwgt_per_set * vessel_correction/sweptarea) / sum(vessel_correction/sweptarea)), 
         by=.(spec_bio)
       ]
-
+      mw = mw[is.finite(meanweight_crude),]
 
       # meansize directly:
       k = groundfish_survey_db( DS="gsdet", yrs=p$yrs )
       setDT(k)
       
 			k$spec_bio = taxonomy.recode( from="spec", to="parsimonious", tolookup=k$spec )
-      ml = k[ is.finite(len), .(meanlength.direct=mean(len)), by=.(spec_bio) ]
-      mm = k[ is.finite(mass), .(meanweight.direct=mean(mass)), by=.(spec_bio) ]
+      ml = k[ is.finite(len), .(meanlength_direct=mean(len)), by=.(spec_bio) ]
+      mm = k[ is.finite(mass), .(meanweight_direct=mean(mass)), by=.(spec_bio) ]
       mw = merge( mw, ml, by="spec_bio", all=T, sort=T ) 
       mw = merge( mw, mm, by="spec_bio", all=T, sort=T )
 
       # directly determined mean size has greater reliability --- replace
-      mw$meanweight = mw$meanweight.crude
-      ii = which( is.finite(mw$meanweight.direct))
-      mw$meanweight[ii] = mw$meanweight.direct[ii]
+      mw$meanweight = mw$meanweight_crude
+      ii = which( is.finite(mw$meanweight_direct))
+      mw$meanweight[ii] = mw$meanweight_direct[ii]
       mw = mw[which(is.finite(mw$meanweight)) ,]
 
       print( "Estimating catches from mean weight information... ")
 
-      ii = which( x$totwgt > 0  & !is.finite(x$totno) )
+      ii = which( x$totwgt_per_set > 0  & !is.finite(x$totno_per_set) )
       if (length(ii)>0) {
         # replace each number estimate with a best guess based upon average body weight in the historical record
         uu = unique( x$spec_bio[ii] )
@@ -168,11 +171,11 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           os =  which( mw$spec_bio==u )
           if (length( os)==0 ) next()
           toreplace = intersect( ii, which( x$spec_bio==u) )
-          x$totno[toreplace] = ceiling(x$totwgt[toreplace] / mw$meanweight[os])
+          x$totno_per_set[toreplace] = ceiling(x$totwgt_per_set[toreplace] / mw$meanweight[os])
         }
       }
 
-      jj = which( x$totno >  0 & !is.finite(x$totwgt) )
+      jj = which( x$totno_per_set >  0 & !is.finite(x$totwgt_per_set) )
       if (length(jj)>0) {
         # replace each number estimate with a best guess based upon average body weight in the historical record
         uu = unique( x$spec_bio[jj] )
@@ -180,7 +183,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
           os =  which( mw$spec_bio==u )
           if (length( os)==0 ) next()
           toreplace = intersect( jj, which( x$spec_bio==u) )
-          x$totwgt[toreplace] = x$totno[toreplace] * mw$meanweight[os]
+          x$totwgt_per_set[toreplace] = x$totno_per_set[toreplace] * mw$meanweight[os]
         }
       }
 
@@ -190,8 +193,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       s = NULL
       for (i in d) {
         q = which(x$id2 == x$id2[i])
-        x$totno[q[1]]  = sum( x$totno[q], na.rm=T )
-        x$totwgt[q[1]] = sum( x$totwgt[q], na.rm=T )
+        x$totno_per_set[q[1]]  = sum( x$totno_per_set[q], na.rm=T )
+        x$totwgt_per_set[q[1]] = sum( x$totwgt_per_set[q], na.rm=T )
         s = c(s, q[2:length(q)])
       }
 			
@@ -206,18 +209,15 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       }
 
 			ll = NULL
-      ll = which( !is.finite(x$totno) & !is.finite(x$totwgt) )
+      ll = which( !is.finite(x$totno_per_set) & !is.finite(x$totwgt_per_set) )
       if (length(ll) > 0) x = x[-ll,]
 
 
 
       # if without sweptarea, then another gear, use SA based upon positional info: sakm2
-      isana = which(! is.finite( x$cf_cat))
-      if (length(isana) > 0) x$cf_cat[isana] = x$cf_vessel[isana] / x$sakm2[isana]
-
-      # qn = quantile( x$cf_cat, 0.99, na.rm=TRUE )
-      # x$cf_cat[ x$cf_cat > qn ] = qn
-
+      isana = which(! is.finite( x$sweptarea))
+      if (length(isana) > 0) x$sweptarea[isana] = x$sakm2[isana]
+ 
       x = x[, ..cat.names]
       cat = rbind( cat, x )
       rm (x); gc()
@@ -232,18 +232,19 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       x$id = paste( x$trip, x$set, sep="." )
       x$id2 = paste( x$trip, x$set, x$spec_bio, sep="." )
 
-      x$totno = ceiling(x$totno * x$sa) # return to total rather than density
-      x$totwgt = x$totmass * x$sa  # return to total rather than density
-      x$cf_cat = 1 / x$sa  # == cf_tow (ie., no vessel "corrections")
+      x$totno_per_set = ceiling(x$totno * x$sa) # return to total per set rather than density
+      x$totwgt_per_set = x$totmass * x$sa  # return to total per set rather than density
+      x$vessel_correction = 1  #  (ie., no vessel "corrections")
+      x$sweptarea = x$sa  
 
-      x$totno[ x$totno > 500 ] = 500
+      x$totno_per_set[ x$totno_per_set > 500 ] = 500
 
       x = x[, ..cat.names]
 
       # snow crab are assumed to be real zeros .. find them and force 0 value
       iissp = taxonomy.recode( from="spec", to="parsimonious", tolookup=2526 ) # snow crab using groundfish codes
-      oo = which( !is.finite(x$totno) & x$spec_bio==iissp  )
-      if (length(oo) > 0 ) x$totno[oo] = 0
+      oo = which( !is.finite(x$totno_per_set) & x$spec_bio==iissp  )
+      if (length(oo) > 0 ) x$totno_per_set[oo] = 0
       oo = which( !is.finite(x$totwgt) & x$spec_bio== iissp )  # snow crab are assumed to be real zeros
       if (length(oo) > 0 ) x$totwgt[oo] = 0
 
@@ -293,7 +294,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     det.names =  c("data.source", "id", "id2", "individual", "spec", "spec_bio", "sex", "mass", "len", "mat")
     if ( "groundfish" %in% p$data_sources ) {
 
-      x = aegis.survey::groundfish_survey_db( DS="gsdet", yrs=p$yrs )
+      x = groundfish_survey_db( DS="gsdet", yrs=p$yrs )
       setDT(x)
 
 			x$data.source = "groundfish"
@@ -744,19 +745,18 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     setDT(cat)
 
     det_summary = det[, .(
-        massTotdet=sum(mass, na.rm=TRUE), 
-        noTotdet=sum(len, na.rm=TRUE),
-        noTotCat=.N
+        det_totwgt_per_set=sum(mass, na.rm=TRUE), 
+        det_totno_per_set=.N
       ), 
       by=.(id2)
     ]
     cat = det_summary[cat, on=.(id2) ] # merge
 
     # set-->kg/km^2, det-->km
-    cat$massTotdet[ which( !is.finite (cat$massTotdet ))] = 0  ### when missing it means no determinations were made
-    cat$cf_det_wgt =  cat$massTotdet * cat$cf_cat / cat$totwgt   # cf_det is the multiplier required to make each det measurement scale properly to totwgt in units of Alfred Needler  .. subsample
-    cat$noTotdet[ which( !is.finite (cat$noTotdet ))] = 0  ### when missing it means no determinations were made
-    cat$cf_det_no = cat$noTotdet * cat$cf_cat / cat$totno   # cf_det is the multiplier required to make each det measurement scale properly to totno in units of Alfred Needler  .. subsample
+    cat$det_totwgt_per_set[ which( !is.finite (cat$det_totwgt_per_set ))] = 0  ### when missing it means no determinations were made
+    cat$cf_det_wgt =  ( cat$det_totwgt_per_set / cat$totwgt ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totwgt  .. subsample
+    cat$det_totno_per_set[ which( !is.finite (cat$det_totno_per_set ))] = 0  ### when missing it means no determinations were made
+    cat$cf_det_no  = ( cat$det_totno_per_set / cat$totno ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totno  .. subsample
 
     # assume no subsampling -- all weights determined from the subsample
     oo = which ( !is.finite( cat$cf_det_wgt ) |  cat$cf_det_wgt==0 )
@@ -875,20 +875,30 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     setDT(det)
     setDT(cat)
 
+    # NOTE: convention:: 
+    #   cf is correction factor (multiplier to observations to get adjusted values)
+    #   wt is weight (divisor to observations to get adjusted values)
+    #   expected == value expected after correction/adjustment for sampling, subsampling etc
+
+        #   cf = expected / observed
+        #   wt = observed / expected
+        #   cf = 1/wt
+
     # summaries from cat .. weighted by cf to make per standard unit
     # NOTE: cat$totno and cat$totwgt are not cf corrected
     cat_summary = cat[, .(
-        totno=sum(totno, na.rm=TRUE),
-        totwgt=sum(totwgt, na.rm=TRUE),
-        totno_adjusted=sum(totno*cf_cat, na.rm=TRUE),
-        totwgt_adjusted=sum(totwgt*cf_cat, na.rm=TRUE)
+        totno_per_set = sum(totno, na.rm=TRUE),  # totno per set
+        totwgt_per_set= sum(totwgt, na.rm=TRUE), # totno per set
+        totno_adjusted= sum(totno*vessel_correction / sweptarea, na.rm=TRUE),
+        totwgt_adjusted=sum(totwgt*vessel_correction / sweptarea, na.rm=TRUE)
       ), 
       by=.(id)
     ]
     set = cat_summary[set, on=.(id) ] # merge
 
-    set$cf_set_mass = set$totwgt_adjusted / set$totwgt
-    set$cf_set_no = set$totno_adjusted / set$totno
+    set$cf_set_mass = set$totwgt_adjusted / set$totwgt_per_set
+    set$cf_set_no = set$totno_adjusted / set$totno_per_set
+
     # NOTE:: these should be == or ~= 1/set$sa ( done this way in case there has been other adjustmensts such as subampling, etc ..) .. these become offets required to express totwgt or totno as areal density per unit km^2 in Poisson models
 
     # summaries from det
@@ -1028,8 +1038,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     
     setDT(cat)
     cat_summary = cat[, .(
-        totno_adjusted=sum(totno*cf_cat, na.rm=TRUE),
-        totwgt_adjusted=sum(totwgt*cf_cat, na.rm=TRUE)
+        totno_adjusted=sum(totno*vessel_correction / sweptarea, na.rm=TRUE),
+        totwgt_adjusted=sum(totwgt*vessel_correction / sweptarea, na.rm=TRUE)
       ), 
       by=.(id)
     ]
@@ -1045,10 +1055,10 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$cf_set_no = set$totno_adjusted / set$totno
 
     ii = which(!is.finite(set$cf_set_mass ))
-    if (length(ii) > 0) set$cf_set_mass[ii] = set$cf_tow[ii]
+    if (length(ii) > 0) set$cf_set_mass[ii] = 1/set$sweptarea[ii]
 
     ii = which(!is.finite(set$cf_set_no ))
-    if (length(ii) > 0) set$cf_set_no[ii] = set$cf_tow[ii]
+    if (length(ii) > 0) set$cf_set_no[ii] = 1/set$sweptarea[ii]
 
 
     # NOTE:: these should be == or ~= 1/set$sa ( done this way in case there has been other adjustmensts such as subampling, etc ..) .. these become offets required to express totwgt or totno at a common areal density per unit km^2 in Poisson models
@@ -1135,9 +1145,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       }
     }
 
-    # indiviudal measurements filter
-    # catvars= c("id", "totno", "totwgt", "cf_cat")
-    cat = aegis.survey::survey_db(DS="cat", p=p) #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
+    # indiviudal measurements filter 
+    cat = survey_db(DS="cat", p=p) #export from grounfish survey database .. weight (kg) and num per unit area (km^2)
     cat = cat[ which( cat$id %in% unique( set$id) ), ]
       if (exists("selection", p)) {
         if (exists("biologicals", p$selection)) {  # filter biologicals
@@ -1149,8 +1158,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     cat$data.source = NULL
     set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE, suffixes=c("", ".cat") )
-    set$totno_adjusted = set$totno * set$cf_cat
-    set$totwgt_adjusted = set$totwgt * set$cf_cat
+    set$totno_adjusted = set$totno * set$vessel_correction / set$sweptarea
+    set$totwgt_adjusted = set$totwgt * set$cf_vessel / set$sweptarea
 
     set$totno_adjusted[ which(!is.finite(set$totno_adjusted))] = 0
     set$totwgt_adjusted[ which(!is.finite(set$totwgt_adjusted))] = 0
@@ -1271,11 +1280,11 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       isc = filter_data( cat, p$selection$biologicals )
       if (length(isc) > 0) cat = cat[isc,]
       isc = NULL
-      # catvars= c("id", "totno", "totwgt", "cf_cat")
+      
       cat$data.source = NULL
       set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE, suffixes=c("", ".cat") )
-      set$totno_adjusted = set$totno * set$cf_cat
-      set$totwgt_adjusted = set$totwgt * set$cf_cat
+      set$totno_adjusted = set$totno * set$cf_vessel / set$sweptarea
+      set$totwgt_adjusted = set$totwgt * set$cf_vessel / set$sweptarea
     }
     
     if (data_source_base=="det") {
@@ -1346,10 +1355,10 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     set$cf_set_no = set$totno_adjusted / set$totno
 
     ii = which(!is.finite(set$cf_set_mass ))
-    if (length(ii) > 0) set$cf_set_mass[ii] = set$cf_tow[ii]
+    if (length(ii) > 0) set$cf_set_mass[ii] = 1/set$sweptarea[ii]
 
     ii = which(!is.finite(set$cf_set_no ))
-    if (length(ii) > 0) set$cf_set_no[ii] = set$cf_tow[ii]
+    if (length(ii) > 0) set$cf_set_no[ii] = 1/set$sweptarea[ii]
 
  
     # aggeragate measurement filter
