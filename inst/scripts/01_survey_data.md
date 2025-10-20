@@ -45,7 +45,7 @@ This requires DFO oracle database connectivity. Adapt to your own data base syst
 
 require( aegis.survey )
 
-year.assessment = 2024
+year.assessment = 2025
 yrs = 1970:year.assessment
 
 
