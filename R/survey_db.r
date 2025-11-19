@@ -754,9 +754,10 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # set-->kg/km^2, det-->km
     cat$det_totwgt_per_set[ which( !is.finite (cat$det_totwgt_per_set ))] = 0  ### when missing it means no determinations were made
-    cat$cf_det_wgt =  ( cat$det_totwgt_per_set / cat$totwgt ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totwgt  .. subsample
+    cat$cf_det_wgt =  ( cat$det_totwgt_per_set / cat$totwgt ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totwgt  including subsampling corrections
+
     cat$det_totno_per_set[ which( !is.finite (cat$det_totno_per_set ))] = 0  ### when missing it means no determinations were made
-    cat$cf_det_no  = ( cat$det_totno_per_set / cat$totno ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totno  .. subsample
+    cat$cf_det_no  = ( cat$det_totno_per_set / cat$totno ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totno  including subsampling corrections
 
     # assume no subsampling -- all weights determined from the subsample
     oo = which ( !is.finite( cat$cf_det_wgt ) |  cat$cf_det_wgt==0 )
@@ -1466,6 +1467,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       direct_biomass = 1 / set[, "cf_set_mass"]  # sa, subsampling
     )
 
+    set$data_offset = set$data_offset * set$vessel_corection  # the latter is ==1 but groundfish have misc species and vessel specific values which we ignore, can ignore but here in case you prefer use it
+
     set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
     set = set[ which(  is.finite(set$data_offset)   ),  ]
  
@@ -1495,7 +1498,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       p=p,
       M=set,
       sppoly=sppoly,
-      APS_data_offset=1,
+      APS_data_offset=1, #ie. SA
       vars_to_retain= p$vars_to_retain
     )
 
