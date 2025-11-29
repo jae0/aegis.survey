@@ -1444,7 +1444,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       polys = st_transform( st_union(sppoly), crs_lonlat )
     )
 
-    set = set[which(is.finite(inside)), ]
+    set = set[which(inside), ]
 
 
     p$selection$survey$strata_toremove = oo  

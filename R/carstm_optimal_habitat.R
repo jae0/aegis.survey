@@ -46,7 +46,7 @@ carstm_optimal_habitat = function(
     polys =  domain
   )
 
-  Z = Z[which(is.finite(inside)), ]
+  Z = Z[which(inside), ]
   inside = NULL; gc()
 
 
