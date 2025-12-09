@@ -390,7 +390,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     xydata = st_as_sf ( xydata, coords= c('lon', 'lat') )
     st_crs(xydata) = st_crs(projection_proj4string("lonlat_wgs84"))
     xydata = st_transform( xydata, st_crs( p$areal_units_proj4string_planar_km ))
-    xydata = xydata[ geo_subset( spatial_domain=p$spatial_domain, Z=xydata ) , ]
+    xydata = xydata[ filter_by_spatial_domain( spatial_domain=p$spatial_domain, Z=xydata ) , ]
 
     read_write_fast(xydata, fn=fn )
     return( xydata )

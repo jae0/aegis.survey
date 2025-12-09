@@ -179,7 +179,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
 
     if ( exists("spatial_domain", p)) {
       # need to be careful with extrapolation ...  filter depths
-      ii = geo_subset( spatial_domain=p$spatial_domain, Z=M )
+      ii = filter_by_spatial_domain( spatial_domain=p$spatial_domain, Z=M )
       if (length(ii)> 0 ) {
         nM = nrow(M)
         M = M[ ii , ] 
