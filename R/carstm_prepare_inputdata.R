@@ -103,10 +103,10 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
   ooo = which( is.na(M$AUID ) )
   if (length(ooo) > 0 )  {
       print("Dropping data with no associated areal units (probably need to alter sppoly):\n")
-      print( M[ooo,] )
-      plot(sppoly["AUID"], reset=FALSE)
-      plot(st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ), add=TRUE ) 
-      plot(st_as_sf( M[ooo,], coords=c("lon","lat"), crs=crs_lonlat ), col="red", add=TRUE ) 
+      head( M[ooo,] )
+      # plot(sppoly["AUID"], reset=FALSE)
+      # plot(st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ), add=TRUE ) 
+      # plot(st_as_sf( M[ooo,], coords=c("lon","lat"), crs=crs_lonlat ), col="red", add=TRUE ) 
       # message( "If dropping these locations, in red, is OK, then press 'c' to continue.")
       # browser() 
       M = M[ - ooo, ]
