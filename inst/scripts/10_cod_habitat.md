@@ -180,16 +180,6 @@ NOTE ::  it is now redundant as habitat is also done in 10b_cod_carstm_tessilati
   
  
 
-  p$space_name = sppoly$AUID 
-  p$space_id = 1:nrow(sppoly)
-
-  p$time_name = as.character(p$yrs)
-  p$time_id =  1:p$ny
-
-  p$cyclic_name = as.character(p$cyclic_levels)
-  p$cyclic_id = 1:p$nw
-
-
   res = carstm_model( p=p, data=M, sppoly=sppoly, redo_fit=TRUE, 
     posterior_simulations_to_retain="predictions", 
     control.family=list( control.link=list(model="logit") ), ## this is the default for binomial, just here to show wher to use it
