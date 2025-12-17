@@ -1,9 +1,18 @@
 
-carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
+carstm_prepare_inputdata = function( 
+  p, M, sppoly, 
+  dimensionality = NULL,
   carstm_prediction_surface_parameters = NULL, 
-  lookup_projects=c("bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" ), 
-  APS_data_offset=1, NA_remove=TRUE, vars_to_retain=NULL, vars_to_drop=NULL, lookup_exhaustive=TRUE, 
-  retain_positions_outside_of_boundary= 0, tz="America/Halifax"
+  lookup_projects=c(
+    "bathymetry", "substrate", "temperature", "speciescomposition_pca1", "speciescomposition_pca2" 
+  ), 
+  APS_data_offset=1, 
+  NA_remove=TRUE, 
+  vars_to_retain=NULL, 
+  vars_to_drop=NULL, 
+  lookup_exhaustive=TRUE, 
+  retain_positions_outside_of_boundary= 0, 
+  tz="America/Halifax"
 ) {
 
   # covariates only with stmv
@@ -302,7 +311,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         output_format="points", 
         variable_name="t.mean", 
         space_resolution = p$pres,
-        time_resolution = 1/10 ,   
+        time_resolution = 1/12 ,   
         tz=tz,
         year.assessment=p$year.assessment
       )
@@ -326,7 +335,7 @@ carstm_prepare_inputdata = function( p, M, sppoly, dimensionality = NULL,
         statvars=c("mean"),
         year.assessment=p$year.assessment,
         space_resolution = p$pres,
-        time_resolution = 1/10 ,  # fraction of year (2 months)
+        time_resolution = 1/12 ,  # fraction of year (2 months)
         tz=tz, 
         returntype = "vector"
       )
