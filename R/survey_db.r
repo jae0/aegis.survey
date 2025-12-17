@@ -117,7 +117,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     }
 
     ###  NOTE:: cf == correction factor is a reweighting required to make each totno and totwgt comparable for each set and species subsampling
-    cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno_per_set", "totwgt_per_set", "vessel_correction", "sweptarea" )
+    cat.names =  c("data.source", "id", "id2", "spec", "spec_bio", "totno_per_set", "totwgt_per_set", "sweptarea" )
     
     if ( "groundfish" %in% p$data_sources ) {
 
@@ -140,7 +140,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
  
       # weighted mean by species
       mw = x[, 
-        .(meanweight_crude = sum(meanwgt_per_set * vessel_correction/sweptarea) / sum(vessel_correction/sweptarea)), 
+        .(meanweight_crude = sum(meanwgt_per_set * sweptarea) / sum(sweptarea)), 
         by=.(spec_bio)
       ]
       mw = mw[is.finite(meanweight_crude),]
@@ -234,7 +234,6 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
       x$totno_per_set = ceiling(x$totno * x$sa) # return to total per set rather than density
       x$totwgt_per_set = x$totmass * x$sa  # return to total per set rather than density
-      x$vessel_correction = 1  #  (ie., no vessel "corrections")
       x$sweptarea = x$sa  
 
       x$totno_per_set[ x$totno_per_set > 500 ] = 500
@@ -754,10 +753,10 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     # set-->kg/km^2, det-->km
     cat$det_totwgt_per_set[ which( !is.finite (cat$det_totwgt_per_set ))] = 0  ### when missing it means no determinations were made
-    cat$cf_det_wgt =  ( cat$det_totwgt_per_set / cat$totwgt ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totwgt  including subsampling corrections
+    cat$cf_det_wgt =  ( cat$det_totwgt_per_set / cat$totwgt ) * (1 / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totwgt  including subsampling corrections
 
     cat$det_totno_per_set[ which( !is.finite (cat$det_totno_per_set ))] = 0  ### when missing it means no determinations were made
-    cat$cf_det_no  = ( cat$det_totno_per_set / cat$totno ) * (cat$vessel_correction / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totno  including subsampling corrections
+    cat$cf_det_no  = ( cat$det_totno_per_set / cat$totno ) * ( 1 / cat$sweptarea)   # cf_det is the multiplier required to make each det measurement scale properly to totno  including subsampling corrections
 
     # assume no subsampling -- all weights determined from the subsample
     oo = which ( !is.finite( cat$cf_det_wgt ) |  cat$cf_det_wgt==0 )
@@ -890,8 +889,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     cat_summary = cat[, .(
         totno_per_set = sum(totno_per_set, na.rm=TRUE),  # totno per set
         totwgt_per_set= sum(totwgt_per_set, na.rm=TRUE), # totno per set
-        totno_adjusted= sum(totno_per_set*vessel_correction / sweptarea, na.rm=TRUE),
-        totwgt_adjusted=sum(totwgt_per_set*vessel_correction / sweptarea, na.rm=TRUE)
+        totno_adjusted= sum(totno_per_set  / sweptarea, na.rm=TRUE),
+        totwgt_adjusted=sum(totwgt_per_set / sweptarea, na.rm=TRUE)
       ), 
       by=.(id)
     ]
@@ -1041,8 +1040,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
     
     setDT(cat)
     cat_summary = cat[, .(
-        totno_adjusted=sum(totno*vessel_correction / sweptarea, na.rm=TRUE),
-        totwgt_adjusted=sum(totwgt*vessel_correction / sweptarea, na.rm=TRUE)
+        totno_adjusted  = sum(totno  / sweptarea, na.rm=TRUE),
+        totwgt_adjusted = sum(totwgt / sweptarea, na.rm=TRUE)
       ), 
       by=.(id)
     ]
@@ -1161,8 +1160,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
 
     cat$data.source = NULL
     set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE, suffixes=c("", ".cat") )
-    set$totno_adjusted = set$totno * set$vessel_correction / set$sweptarea
-    set$totwgt_adjusted = set$totwgt * set$cf_vessel / set$sweptarea
+    set$totno_adjusted = set$totno  / set$sweptarea
+    set$totwgt_adjusted = set$totwgt / set$sweptarea
 
     set$totno_adjusted[ which(!is.finite(set$totno_adjusted))] = 0
     set$totwgt_adjusted[ which(!is.finite(set$totwgt_adjusted))] = 0
@@ -1286,8 +1285,8 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       
       cat$data.source = NULL
       set = merge( set, cat, by="id", all.x=TRUE, all.y=FALSE, suffixes=c("", ".cat") )
-      set$totno_adjusted = set$totno * set$cf_vessel / set$sweptarea
-      set$totwgt_adjusted = set$totwgt * set$cf_vessel / set$sweptarea
+      set$totno_adjusted = set$totno   / set$sweptarea
+      set$totwgt_adjusted = set$totwgt / set$sweptarea
     }
     
     if (data_source_base=="det") {
@@ -1468,7 +1467,7 @@ survey_db = function( p=NULL, DS=NULL, year.filter=TRUE, add_groundfish_strata=F
       direct_biomass = 1 / set[, "cf_set_mass"]  # sa, subsampling
     )
 
-    set$data_offset = set$data_offset * set$vessel_corection  # the latter is ==1 but groundfish have misc species and vessel specific values which we ignore, can ignore but here in case you prefer use it
+    # set$data_offset = set$data_offset * set$vessel_corection  # the latter is ==1 but groundfish have misc species and vessel specific values which we ignore, can ignore but here in case you prefer use it
 
     set$data_offset[which(!is.finite(set$data_offset))] = median(set$data_offset, na.rm=TRUE )  # just in case missing data
     set = set[ which(  is.finite(set$data_offset)   ),  ]
