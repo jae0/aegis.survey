@@ -33,7 +33,6 @@ carstm_prepare_inputdata = function(
   # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
   # degreedays = number of degree days in a given year – annual
 
-  browser()
   
   if (is.null(dimensionality)) {
     if (exists("dimensionality", p)) {
@@ -130,7 +129,6 @@ carstm_prepare_inputdata = function(
   if ("bathymetry" %in% lookup_parameters_names) {
     require(aegis.bathymetry)
     message( "lookup: bathymetry observations")
-
     vn = "z"
     aegis_project = "bathymetry"
     pL = carstm_prediction_surface_parameters[[aegis_project]]
@@ -185,7 +183,7 @@ carstm_prepare_inputdata = function(
       array_map( "xy->1", LU[,.(plon,plat)], gridparams=p$gridparams ) 
     )
     vns = intersect(  c( "z", "dZ", "ddZ", "b.sdSpatial", "b.sdObs", "b.phi", "b.nu", "b.localrange" ), names(LU) )
-    for (vn in setdiff( vns, "z") ) M[[ vn]] = LU[ iML, vn ]
+    for (vn in setdiff( vns, "z") ) M[[ vn]] = LU[[vn]][ iML ]
     LU =  iML = vns = NULL
 
     if ( exists("spatial_domain", p)) {
@@ -219,7 +217,6 @@ carstm_prepare_inputdata = function(
     vn = "substrate.grainsize"
     aegis_project = "substrate"
     pL = carstm_prediction_surface_parameters[[aegis_project]]
-
     if (!(exists(vn, M ))) M[[vn]] = NA
     iM = which(!is.finite( M[[vn]] ))
     if (length(iM) > 0) {
@@ -261,11 +258,11 @@ carstm_prepare_inputdata = function(
 
     # yes substrate source coordinate system is same as for bathy .. to match substrate source for the data
     p_bathymetry_stmv = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
-
     LUB = bathymetry_db( p=p_bathymetry_stmv, DS="baseline", varnames="all" )
+    setDT(LUB)
     iML = match( 
-      array_map( "xy->1", M[, c("plon","plat")],  gridparams=p$gridparams ), 
-      array_map( "xy->1", LUB[,c("plon","plat")], gridparams=p$gridparams ) 
+      array_map( "xy->1", M[, .(plon,plat)],  gridparams=p$gridparams ), 
+      array_map( "xy->1", LUB[,.(plon,plat)], gridparams=p$gridparams ) 
     )
 
     p_substrate_stmv = substrate_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
@@ -276,7 +273,7 @@ carstm_prepare_inputdata = function(
         "s.sdTotal", "s.sdSpatial", "s.sdObs", "s.phi", "s.nu", "s.localrange" 
       ), names(LU) )
 
-    for (vn in vns  ) M[[ vn]] = LU[ iML, vn ]
+    for (vn in vns  ) M[[ vn]] = LU[[vn]][ iML ]
     
     if (NA_remove) {
       ii = which( !is.finite( rowSums(M[, vns, with=FALSE] )  ))
