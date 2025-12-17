@@ -311,7 +311,7 @@ carstm_prepare_inputdata = function(
         output_format="points", 
         variable_name="t.mean", 
         space_resolution = p$pres,
-        time_resolution = 1/12 ,   
+        time_resolution = 1/p$nw ,   
         tz=tz,
         year.assessment=p$year.assessment
       )
@@ -335,7 +335,7 @@ carstm_prepare_inputdata = function(
         statvars=c("mean"),
         year.assessment=p$year.assessment,
         space_resolution = p$pres,
-        time_resolution = 1/12 ,  # fraction of year (2 months)
+        time_resolution = 1/p$nw ,  # fraction of year (2 months)
         tz=tz, 
         returntype = "vector"
       )
@@ -894,7 +894,6 @@ carstm_prepare_inputdata = function(
   if ( "temperature" %in% lookup_parameters_names ) {
     require(aegis.temperature)
     message( "lookup: temperature predictions")
-
     vn = "t"
     aegis_project = "temperature"
     pL = carstm_prediction_surface_parameters[[aegis_project]]
