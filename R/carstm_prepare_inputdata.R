@@ -33,7 +33,7 @@ carstm_prepare_inputdata = function(
   # tamplitude = amplitude of temperature swings in a year (tmax-tmin) – annual
   # degreedays = number of degree days in a given year – annual
 
-  
+  browser()
   
   if (is.null(dimensionality)) {
     if (exists("dimensionality", p)) {
@@ -140,7 +140,7 @@ carstm_prepare_inputdata = function(
     if (length(iM) > 0) {
       alu = aegis_lookup(  
         pL=pL,    
-        LOCS=M[ iM, c("lon", "lat")],  
+        LOCS=M[ iM, .(lon, lat)],  
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="aggregated_data", pL=pL ),
         project_class="core", 
         output_format="points" ,  
@@ -159,7 +159,7 @@ carstm_prepare_inputdata = function(
     if (length(iM) > 0) {
        alu = aegis_lookup(  
         pL=pL,    
-        LOCS=M[ iM, c("lon", "lat")],  
+        LOCS=M[ iM, .(lon, lat)],  
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="stmv", DS="complete", pL=pL ),
         project_class="stmv", 
         output_format="points" ,  
@@ -178,9 +178,11 @@ carstm_prepare_inputdata = function(
     p_bathymetry_stmv = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv" )
 
     LU = bathymetry_db( p=p_bathymetry_stmv, DS="baseline", varnames="all" )
+    setDT(LU)
+
     iML = match( 
-      array_map( "xy->1", M[, c("plon","plat")], gridparams=p$gridparams ), 
-      array_map( "xy->1", LU[,c("plon","plat")], gridparams=p$gridparams ) 
+      array_map( "xy->1", M[, .(plon,plat)], gridparams=p$gridparams ), 
+      array_map( "xy->1", LU[,.(plon,plat)], gridparams=p$gridparams ) 
     )
     vns = intersect(  c( "z", "dZ", "ddZ", "b.sdSpatial", "b.sdObs", "b.phi", "b.nu", "b.localrange" ), names(LU) )
     for (vn in setdiff( vns, "z") ) M[[ vn]] = LU[ iML, vn ]
@@ -223,7 +225,7 @@ carstm_prepare_inputdata = function(
     if (length(iM) > 0) {
       alu = aegis_lookup( 
         pL=pL,  
-        LOCS=M[iM, c("lon", "lat")], 
+        LOCS=M[iM, .(lon, lat)], 
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="core", DS="aggregated_data", pL=pL ),
         project_class="core", 
         output_format="points",  
@@ -241,7 +243,7 @@ carstm_prepare_inputdata = function(
       alu = aegis_lookup(  
         pL=pL,
         parameters="substrate",    
-        LOCS=M[ iM, c("lon", "lat")],  
+        LOCS=M[ iM, .(lon, lat)],  
         LUT= aegis_survey_lookuptable( aegis_project=aegis_project, project_class="stmv", DS="complete", pL=pL ),
         project_class="stmv", 
         output_format="points" ,  
