@@ -293,7 +293,6 @@ carstm_prepare_inputdata = function(
   if ("temperature" %in% lookup_parameters_names) {
     require(aegis.temperature)
     message( "lookup: temperature observations")
-
     vn = "t"
     aegis_project = "temperature"
     pL = carstm_prediction_surface_parameters[[aegis_project]]
@@ -897,7 +896,6 @@ carstm_prepare_inputdata = function(
     aegis_project = "temperature"
     pL = carstm_prediction_surface_parameters[[aegis_project]]
     pc = pL[["project_class"]]
-
     APS[[ vn ]] = aegis_lookup( 
       pL=pL,   
       LOCS=APS[ , c("AUID", "timestamp")], 
